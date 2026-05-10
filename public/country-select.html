@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MATRIXON — Select Your Country</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --green:#00ff00;--dark-green:#00aa00;--bg:#020d02;
+      --card:#0a140a;--border:rgba(0,255,0,0.25);
+    }
+    body{
+      font-family:'Courier New',monospace;
+      background:var(--bg); color:var(--green);
+      min-height:100vh; overflow-x:hidden;
+    }
+    canvas#rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+    /* ── WRAPPER ── */
+    .cs-wrap{
+      position:relative;z-index:1;
+      min-height:100vh;display:flex;flex-direction:column;align-items:center;
+      padding:36px 20px 60px;
+    }
+
+    /* ── HEADER ── */
+    .cs-header{text-align:center;margin-bottom:30px;}
+    .cs-title{
+      font-size:28px;letter-spacing:4px;
+      text-shadow:0 0 12px var(--green);margin-bottom:8px;
+    }
+    .cs-sub{font-size:13px;color:#558855;letter-spacing:2px;}
+
+    /* ── USER DISPLAY (flag lands here) ── */
+    #userDisplay{
+      display:inline-flex;align-items:center;gap:10px;
+      background:rgba(0,0,0,0.7);border:1px solid var(--border);
+      border-radius:30px;padding:10px 22px;margin-bottom:28px;
+      font-size:16px;letter-spacing:1px;
+    }
+    #flyTarget{display:inline-block;font-size:22px;min-width:28px;text-align:center;}
+
+    /* ── SEARCH ── */
+    #countrySearch{
+      width:100%;max-width:480px;padding:12px 18px;
+      background:rgba(0,0,0,0.7);border:1px solid var(--border);
+      border-radius:30px;color:var(--green);font-family:monospace;
+      font-size:14px;outline:none;margin-bottom:24px;
+      transition:.3s;
+    }
+    #countrySearch:focus{border-color:var(--green);box-shadow:0 0 12px rgba(0,255,0,0.3);}
+    #countrySearch::placeholder{color:#336633;}
+
+    /* ── GRID ── */
+    #countryGrid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+      gap:12px;width:100%;max-width:1000px;
+      margin-bottom:36px;
+    }
+
+    /* ── COUNTRY CARD ── */
+    .cc{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:14px;padding:18px 10px;text-align:center;
+      cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+    }
+    .cc:hover{
+      border-color:var(--green);background:rgba(0,255,0,0.06);
+      transform:translateY(-4px) scale(1.04);
+      box-shadow:0 0 18px rgba(0,255,0,0.25);
+    }
+    .cc.selected{
+      border-color:var(--green);background:rgba(0,255,0,0.12);
+      box-shadow:0 0 24px rgba(0,255,0,0.5);
+      transform:translateY(-4px) scale(1.06);
+    }
+    .cc-flag{font-size:38px;display:block;margin-bottom:8px;line-height:1;}
+    .cc-name{font-size:11px;color:#aaffaa;letter-spacing:.5px;line-height:1.3;}
+
+    /* ── FLYING CLONE ── */
+    .flying-flag{
+      position:fixed;z-index:9999;pointer-events:none;font-size:38px;
+      animation:flyAnim .8s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    @keyframes flyAnim{
+      0%  {transform:translate(0,0) scale(1);opacity:1;}
+      40% {transform:translate(calc(var(--tx)*0.4),calc(var(--ty)*0.4)) scale(1.6);opacity:1;}
+      100%{transform:translate(var(--tx),var(--ty)) scale(0.7);opacity:0;}
+    }
+
+    /* ── CONFIRM BUTTON ── */
+    #confirmBtn{
+      display:none;padding:14px 50px;
+      background:linear-gradient(to right,#00cc44,#00ff88);
+      color:#001a00;font-weight:bold;font-size:16px;
+      border:none;border-radius:40px;cursor:pointer;
+      letter-spacing:2px;font-family:monospace;
+      transition:.3s;box-shadow:0 0 20px rgba(0,255,0,0.4);
+      animation:pulsBtn 1.5s infinite;
+    }
+    @keyframes pulsBtn{
+      0%,100%{box-shadow:0 0 20px rgba(0,255,0,0.4);}
+      50%{box-shadow:0 0 35px rgba(0,255,0,0.8);}
+    }
+    #confirmBtn.show{display:block;}
+    #confirmBtn:hover{transform:scale(1.08);}
+
+    /* Selected indicator */
+    #selectedInfo{
+      font-size:14px;color:var(--dark-green);margin-bottom:12px;
+      opacity:0;transition:.4s;text-align:center;
+    }
+    #selectedInfo.show{opacity:1;}
+  </style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+
+<div class="cs-wrap">
+  <div class="cs-header">
+    <div class="cs-title">⚑ SELECT YOUR COUNTRY</div>
+    <div class="cs-sub">This will be shown on the leaderboard — choose once</div>
+  </div>
+
+  <!-- User + flag landing spot -->
+  <div id="userDisplay">
+    <span id="flyTarget">🌐</span>
+    <span id="usernameLabel">Player</span>
+  </div>
+
+  <!-- Search -->
+  <input id="countrySearch" type="text" placeholder="🔍  Search country..." autocomplete="off">
+
+  <!-- Grid -->
+  <div id="countryGrid"></div>
+
+  <div id="selectedInfo"></div>
+  <button id="confirmBtn" onclick="confirmCountry()">✓ &nbsp;CONFIRM SELECTION</button>
+</div>
+
+<script src="config.js"></script>
+<script>
+MatrixAuth.requireAuth();
+
+/* ── MATRIX RAIN ── */
+(function(){
+  const c=document.getElementById('rain'),ctx=c.getContext('2d');
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  resize();window.addEventListener('resize',()=>{resize();init();});
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&アイウエオカキク';
+  const fs=14;let cols,drops;
+  function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(0).map(()=>Math.floor(Math.random()*-40));}
+  init();
+  setInterval(()=>{
+    ctx.fillStyle='rgba(0,0,0,0.06)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px monospace';
+    drops.forEach((d,i)=>{
+      ctx.fillStyle=d*fs<80?'#ccffcc':'#00ff00';
+      ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*fs,d*fs);
+      if(d*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;
+    });
+  },45);
+})();
+
+/* ── COUNTRIES ── */
+const COUNTRIES = [
+  {code:'IN',name:'India',flag:'🇮🇳'},{code:'US',name:'United States',flag:'🇺🇸'},
+  {code:'GB',name:'United Kingdom',flag:'🇬🇧'},{code:'CN',name:'China',flag:'🇨🇳'},
+  {code:'JP',name:'Japan',flag:'🇯🇵'},{code:'DE',name:'Germany',flag:'🇩🇪'},
+  {code:'FR',name:'France',flag:'🇫🇷'},{code:'BR',name:'Brazil',flag:'🇧🇷'},
+  {code:'CA',name:'Canada',flag:'🇨🇦'},{code:'AU',name:'Australia',flag:'🇦🇺'},
+  {code:'RU',name:'Russia',flag:'🇷🇺'},{code:'KR',name:'South Korea',flag:'🇰🇷'},
+  {code:'IT',name:'Italy',flag:'🇮🇹'},{code:'ES',name:'Spain',flag:'🇪🇸'},
+  {code:'MX',name:'Mexico',flag:'🇲🇽'},{code:'ID',name:'Indonesia',flag:'🇮🇩'},
+  {code:'TR',name:'Turkey',flag:'🇹🇷'},{code:'SA',name:'Saudi Arabia',flag:'🇸🇦'},
+  {code:'ZA',name:'South Africa',flag:'🇿🇦'},{code:'AR',name:'Argentina',flag:'🇦🇷'},
+  {code:'PL',name:'Poland',flag:'🇵🇱'},{code:'NG',name:'Nigeria',flag:'🇳🇬'},
+  {code:'PK',name:'Pakistan',flag:'🇵🇰'},{code:'BD',name:'Bangladesh',flag:'🇧🇩'},
+  {code:'EG',name:'Egypt',flag:'🇪🇬'},{code:'TH',name:'Thailand',flag:'🇹🇭'},
+  {code:'VN',name:'Vietnam',flag:'🇻🇳'},{code:'PH',name:'Philippines',flag:'🇵🇭'},
+  {code:'MY',name:'Malaysia',flag:'🇲🇾'},{code:'SG',name:'Singapore',flag:'🇸🇬'},
+  {code:'NL',name:'Netherlands',flag:'🇳🇱'},{code:'SE',name:'Sweden',flag:'🇸🇪'},
+  {code:'NO',name:'Norway',flag:'🇳🇴'},{code:'CH',name:'Switzerland',flag:'🇨🇭'},
+  {code:'BE',name:'Belgium',flag:'🇧🇪'},{code:'AT',name:'Austria',flag:'🇦🇹'},
+  {code:'PT',name:'Portugal',flag:'🇵🇹'},{code:'GR',name:'Greece',flag:'🇬🇷'},
+  {code:'CZ',name:'Czech Republic',flag:'🇨🇿'},{code:'RO',name:'Romania',flag:'🇷🇴'},
+  {code:'HU',name:'Hungary',flag:'🇭🇺'},{code:'UA',name:'Ukraine',flag:'🇺🇦'},
+  {code:'IL',name:'Israel',flag:'🇮🇱'},{code:'AE',name:'UAE',flag:'🇦🇪'},
+  {code:'QA',name:'Qatar',flag:'🇶🇦'},{code:'KE',name:'Kenya',flag:'🇰🇪'},
+  {code:'GH',name:'Ghana',flag:'🇬🇭'},{code:'ET',name:'Ethiopia',flag:'🇪🇹'},
+  {code:'NZ',name:'New Zealand',flag:'🇳🇿'},{code:'FI',name:'Finland',flag:'🇫🇮'},
+  {code:'DK',name:'Denmark',flag:'🇩🇰'},{code:'CO',name:'Colombia',flag:'🇨🇴'},
+  {code:'CL',name:'Chile',flag:'🇨🇱'},{code:'PE',name:'Peru',flag:'🇵🇪'},
+  {code:'IR',name:'Iran',flag:'🇮🇷'},{code:'IQ',name:'Iraq',flag:'🇮🇶'},
+  {code:'LK',name:'Sri Lanka',flag:'🇱🇰'},{code:'NP',name:'Nepal',flag:'🇳🇵'},
+  {code:'MM',name:'Myanmar',flag:'🇲🇲'},{code:'KZ',name:'Kazakhstan',flag:'🇰🇿'},
+];
+COUNTRIES.sort((a,b)=>a.name.localeCompare(b.name));
+
+let selectedCountry = null;
+const API = window.MATRIXON_API;
+const username = localStorage.getItem('matrixon_user') || 'player';
+
+document.getElementById('usernameLabel').textContent = username;
+
+function renderGrid(list){
+  const grid = document.getElementById('countryGrid');
+  grid.innerHTML='';
+  list.forEach(c=>{
+    const div=document.createElement('div');
+    div.className='cc'+(selectedCountry&&selectedCountry.code===c.code?' selected':'');
+    div.dataset.code=c.code;
+    div.innerHTML=`<span class="cc-flag">${c.flag}</span><span class="cc-name">${c.name}</span>`;
+    div.onclick=(e)=>selectCountry(c,div);
+    grid.appendChild(div);
+  });
+}
+renderGrid(COUNTRIES);
+
+document.getElementById('countrySearch').addEventListener('input',function(){
+  const q=this.value.toLowerCase();
+  renderGrid(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);
+});
+
+function selectCountry(c, cardEl){
+  selectedCountry=c;
+  // Highlight card
+  document.querySelectorAll('.cc').forEach(el=>el.classList.remove('selected'));
+  cardEl.classList.add('selected');
+  // Animate flag flying to user display
+  flyFlag(c.flag, cardEl);
+}
+
+function flyFlag(flag, fromEl){
+  const fromRect = fromEl.getBoundingClientRect();
+  const toEl = document.getElementById('flyTarget');
+  const toRect = toEl.getBoundingClientRect();
+
+  // Clone
+  const clone = document.createElement('div');
+  clone.className='flying-flag';
+  clone.textContent=flag;
+  clone.style.left = (fromRect.left + fromRect.width/2 - 19)+'px';
+  clone.style.top  = (fromRect.top  + fromRect.height/2 - 19)+'px';
+
+  const tx = (toRect.left + toRect.width/2 - 19) - (fromRect.left + fromRect.width/2 - 19);
+  const ty = (toRect.top  + toRect.height/2 - 19) - (fromRect.top  + fromRect.height/2 - 19);
+  clone.style.setProperty('--tx', tx+'px');
+  clone.style.setProperty('--ty', ty+'px');
+  document.body.appendChild(clone);
+
+  // Update target after animation
+  setTimeout(()=>{
+    clone.remove();
+    toEl.textContent = flag;
+    toEl.style.animation='none';
+    toEl.offsetHeight; // reflow
+    toEl.style.animation='flagPop .4s cubic-bezier(.22,1,.36,1)';
+  }, 800);
+
+  // Show confirm
+  const info=document.getElementById('selectedInfo');
+  info.textContent='Selected: '+selectedCountry.flag+' '+selectedCountry.name;
+  info.classList.add('show');
+  const btn=document.getElementById('confirmBtn');
+  btn.classList.add('show');
+}
+
+async function confirmCountry(){
+  if(!selectedCountry) return;
+  try {
+    await fetch(`${API}/profile/update`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+      username,
+      country_code: selectedCountry.code,
+      country_flag: selectedCountry.flag,
+      country_name: selectedCountry.name
+    })
+    });
+  } catch(e){}
+  localStorage.setItem('matrixon_country_set','1');  // FIXED: mark country as selected
+  localStorage.setItem('matrixon_country_code',selectedCountry.code);
+  localStorage.setItem('matrixon_country_flag',selectedCountry.flag);
+  localStorage.setItem('matrixon_country_name',selectedCountry.name);
+  window.location.href='learning.html'; // go to learning, not leaderboard, after first setup
+}
+
+// Flag pop keyframe injected
+const style=document.createElement('style');
+style.textContent=`@keyframes flagPop{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.4) rotate(5deg)}100%{transform:scale(1) rotate(0)}}`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>

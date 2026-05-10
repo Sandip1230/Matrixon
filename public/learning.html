@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MATRIXON Learning</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --g:#00ff88; --b:#00d4ff; --g2:#00ff00; --dark:#000508;
+      --league-color: #00bfff; --league-color2: #0080ff;
+      --league-glow1: rgba(0,191,255,0.55); --league-glow2: rgba(0,128,255,0.2);
+      --league-glow3: rgba(0,191,255,0.9);  --league-glow4: rgba(0,128,255,0.4);
+      --league-bg: rgba(0,15,35,0.97);
+      --league-border: rgba(0,191,255,0.35);
+      --league-badge-bg: rgba(0,80,180,0.25);
+      --league-badge-border: rgba(0,191,255,0.5);
+      --league-badge-text: #00bfff;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: #020d04;
+      overflow-x: hidden;
+      min-height: 100vh;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--g);
+      cursor: crosshair;
+    }
+
+    /* ── MATRIX RAIN ── */
+    #matrixRain {
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      z-index: 0; pointer-events: none; opacity: 0.55;
+    }
+
+    /* ── TOP NAV BAR ── */
+    #topNav {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 58px;
+      background: rgba(0,5,2,0.92);
+      border-bottom: 1px solid rgba(0,255,136,0.15);
+      backdrop-filter: blur(12px);
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      box-shadow: 0 2px 30px rgba(0,255,136,0.06);
+    }
+
+    #backBtn {
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 16px;
+      background: transparent;
+      border: 1px solid rgba(0,255,136,0.3);
+      color: rgba(0,255,136,0.7);
+      cursor: pointer;
+      border-radius: 6px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    #backBtn:hover {
+      border-color: var(--g);
+      color: var(--g);
+      background: rgba(0,255,136,0.05);
+    }
+    #backBtn::before { content: '←'; font-size: 14px; }
+
+    #navBrand {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: 18px;
+      letter-spacing: 6px;
+      color: var(--g);
+      text-shadow: 0 0 14px rgba(0,255,136,0.6);
+      flex: 1;
+      text-align: center;
+    }
+    #navBrand span { color: var(--b); }
+
+    #navStatus {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px;
+      color: rgba(0,255,136,0.5);
+      letter-spacing: 2px;
+    }
+    .nav-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--g);
+      box-shadow: 0 0 8px var(--g);
+      animation: navDotPulse 2s infinite;
+    }
+    @keyframes navDotPulse {
+      0%,100% { opacity:1; } 50% { opacity:0.3; }
+    }
+
+    /* ── MUTE BAR ── */
+    #muteBar {
+      display:none; position:fixed; top:58px; left:0; right:0; z-index:3000;
+      background:rgba(60,0,0,0.92); text-align:center;
+      font-family:'Share Tech Mono',monospace; font-size:12px;
+      color:#ff8888; padding:6px; letter-spacing:2px;
+      border-bottom:1px solid rgba(255,51,51,0.4);
+    }
+    #muteBar.show { display:block; }
+
+    /* ── OVERLAYS ── */
+    #acctOverlay { display:none; position:fixed; inset:0; z-index:1999; }
+    #acctOverlay.show { display:block; }
+    #sideOverlay { display:none; position:fixed; inset:0; z-index:1098; background:rgba(0,0,0,0.5); }
+    #sideOverlay.show { display:block; }
+
+    /* ── ACCOUNT BUTTON — HOLOGRAPHIC ID CARD ── */
+    #acctWrap {
+      position: relative;
+      flex-shrink: 0;
+      width: 110px; height: 38px;
+      overflow: visible;
+    }
+
+    /* The holographic card itself */
+    #acctBtn {
+      position: relative; z-index: 10;
+      width: 110px; height: 38px;
+      border-radius: 8px;
+      background: linear-gradient(135deg,
+        rgba(0,8,20,0.97) 0%,
+        rgba(0,20,40,0.97) 50%,
+        rgba(0,8,20,0.97) 100%);
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 0;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.3s;
+      box-shadow:
+        0 0 0 1px rgba(0,191,255,0.3),
+        0 0 12px rgba(0,191,255,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    /* Animated holographic shimmer stripe */
+    #acctBtn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(105deg,
+        transparent 30%,
+        rgba(0,255,200,0.06) 45%,
+        rgba(0,191,255,0.1) 50%,
+        rgba(120,80,255,0.06) 55%,
+        transparent 70%);
+      background-size: 200% 100%;
+      animation: holoShimmer 3s ease-in-out infinite;
+      pointer-events: none; border-radius: 8px;
+    }
+    /* Top edge highlight */
+    #acctBtn::after {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.5) 40%, rgba(0,255,150,0.4) 60%, transparent 100%);
+      pointer-events: none;
+    }
+
+    @keyframes holoShimmer {
+      0%   { background-position: -100% 0; }
+      50%  { background-position: 200% 0; }
+      100% { background-position: -100% 0; }
+    }
+
+    /* Left accent stripe — like a card chip slot */
+    #acctStripe {
+      width: 3px; height: 100%;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #00d4ff 0%, #00ff88 50%, #7040ff 100%);
+      box-shadow: 0 0 6px rgba(0,212,255,0.6);
+      animation: stripeFlow 2s ease-in-out infinite alternate;
+    }
+    @keyframes stripeFlow {
+      0%   { opacity: 0.6; box-shadow: 0 0 4px rgba(0,212,255,0.5); }
+      100% { opacity: 1;   box-shadow: 0 0 10px rgba(0,255,136,0.8); }
+    }
+
+    /* Avatar circle inside the card */
+    #acctAvatarCircle {
+      width: 26px; height: 26px; border-radius: 50%;
+      flex-shrink: 0;
+      margin: 0 7px 0 6px;
+      border: 1px solid rgba(0,191,255,0.5);
+      background: rgba(0,30,60,0.8);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 0 6px rgba(0,191,255,0.3);
+    }
+    #acctAvatarImg { width:100%; height:100%; object-fit:cover; display:none; border-radius:50%; }
+    #acctAvatarDefault { font-size:13px; line-height:1; pointer-events:none; }
+
+    /* Text block */
+    #acctTextBlock {
+      display: flex; flex-direction: column; gap: 1px;
+      flex: 1; min-width: 0; padding-right: 6px;
+    }
+    #acctNameLine {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; letter-spacing: 1px;
+      color: #00d4ff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    #acctStatusLine {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px; letter-spacing: 1.5px;
+      color: rgba(0,255,136,0.55);
+      display: flex; align-items: center; gap: 3px;
+    }
+    .acct-ping {
+      width: 4px; height: 4px; border-radius: 50%;
+      background: #00ff88;
+      box-shadow: 0 0 4px #00ff88;
+      animation: navDotPulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    #acctBtn:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 0 0 1px rgba(0,255,136,0.5),
+        0 4px 20px rgba(0,191,255,0.2),
+        0 0 30px rgba(0,255,136,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    #acctBtn.open-state {
+      box-shadow:
+        0 0 0 1px rgba(0,255,136,0.6),
+        0 0 24px rgba(0,255,136,0.25),
+        inset 0 0 15px rgba(0,255,136,0.04);
+      animation: none;
+    }
+
+    /* old #acctLabel compat — hidden, text is now in card */
+    #acctLabel { display: none; }
+
+    /* ══ HUD COMMAND STRIP — slides down from avatar card ══ */
+
+    /* Invisible orbit ring kept for JS compat but hidden */
+    #acctRing { display: none; }
+
+    /* The drop-strip container */
+    #acctCommandStrip {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-8px) scaleY(0.92);
+      transform-origin: top right;
+      transition: opacity 0.28s ease, transform 0.3s cubic-bezier(.22,1,.36,1);
+      z-index: 20;
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(0,6,16,0.97);
+      border: 1px solid rgba(0,191,255,0.22);
+      box-shadow:
+        0 8px 40px rgba(0,0,0,0.7),
+        0 0 0 1px rgba(0,255,136,0.06),
+        0 0 30px rgba(0,191,255,0.08);
+    }
+    #acctWrap.open #acctCommandStrip {
+      opacity: 1;
+      transform: translateY(0) scaleY(1);
+      pointer-events: auto;
+    }
+
+    /* Strip header line */
+    #acctCommandStrip::before {
+      content: '';
+      display: block;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,191,255,0.5), rgba(0,255,136,0.4), transparent);
+      flex-shrink: 0;
+    }
+
+    /* BASE BUTTON in strip */
+    .rb {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 11px 16px;
+      font-family: 'Share Tech Mono', monospace;
+      position: relative;
+      overflow: hidden;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.18s ease, padding-left 0.18s ease;
+      background: transparent;
+    }
+    .rb:last-child { border-bottom: none; }
+
+    /* Left accent bar that sweeps in on hover */
+    .rb::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
+      transform: scaleY(0);
+      transform-origin: center;
+      transition: transform 0.2s ease;
+      pointer-events: none;
+    }
+    .rb:hover::before { transform: scaleY(1); }
+
+    /* Scan-line shimmer on hover */
+    .rb::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%);
+      transform: translateX(-100%);
+      transition: transform 0.4s ease;
+      pointer-events: none;
+    }
+    .rb:hover::after { transform: translateX(100%); }
+    .rb:hover { padding-left: 20px; }
+
+    /* ── SWITCH BUTTON — Cyan ── */
+    #rb-switch { color: #00dcff; }
+    #rb-switch::before { background: rgba(0,220,255,0.8); box-shadow: 0 0 8px rgba(0,220,255,0.6); }
+    #rb-switch:hover { background: rgba(0,40,70,0.6); }
+
+    /* ── EXIT BUTTON — Red ── */
+    #rb-exit { color: #ff3050; }
+    #rb-exit::before { background: rgba(255,40,60,0.8); box-shadow: 0 0 8px rgba(255,40,60,0.5); }
+    #rb-exit:hover { background: rgba(50,0,8,0.6); }
+
+    /* ── MUTE BUTTON — Green ── */
+    #rb-mute { color: #00ff88; }
+    #rb-mute::before { background: rgba(0,255,120,0.7); box-shadow: 0 0 8px rgba(0,255,120,0.4); }
+    #rb-mute:hover { background: rgba(0,30,12,0.6); }
+    #rb-mute.muted-on { color: #ff4466 !important; background: rgba(30,0,8,0.3); }
+    #rb-mute.muted-on::before { background: rgba(255,50,80,0.8) !important; }
+
+    /* ── LOGOUT BUTTON — Purple ── */
+    #rb-logout { color: #cc88ff; }
+    #rb-logout::before { background: rgba(180,80,255,0.7); box-shadow: 0 0 8px rgba(150,50,255,0.4); }
+    #rb-logout:hover { background: rgba(20,0,40,0.6); }
+
+    /* ── BUTTON LABEL + ICON STYLES ── */
+    .rb .rb-icon {
+      font-size: 17px; line-height: 1; flex-shrink: 0;
+      width: 22px; text-align: center;
+      filter: drop-shadow(0 0 4px currentColor);
+      transition: transform 0.2s, filter 0.2s;
+    }
+    .rb:hover .rb-icon {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 14px currentColor);
+    }
+    .rb .rb-label {
+      font-size: 11px; letter-spacing: 2px;
+      color: currentColor; opacity: 0.8;
+      text-shadow: 0 0 6px currentColor;
+      transition: opacity 0.2s, letter-spacing 0.2s;
+      flex: 1;
+    }
+    .rb:hover .rb-label { opacity: 1; letter-spacing: 2.5px; }
+
+    /* ── RIGHT ARROW indicator per row ── */
+    .rb .rb-arrow {
+      font-size: 9px; opacity: 0;
+      color: currentColor;
+      transition: opacity 0.2s, transform 0.2s;
+      transform: translateX(-4px);
+    }
+    .rb:hover .rb-arrow { opacity: 0.6; transform: translateX(0); }
+
+    /* ── CORNER TICK MARKS — hidden in new layout ── */
+    .rb-tick { display: none; }
+
+    @keyframes scanH {
+      0%   { transform: translateX(-120%); }
+      100% { transform: translateX(220%); }
+    }
+    @keyframes scanV {
+      0%   { transform: translateY(-100%); opacity:0; }
+      10%  { opacity:1; }
+      90%  { opacity:1; }
+      100% { transform: translateY(800%); opacity:0; }
+    }
+    @keyframes crystalShine {
+      0%,100% { opacity:0; }
+      50% { opacity:1; }
+    }
+    @keyframes scanlines {
+      0%   { background-position: 0 0; }
+      100% { background-position: 0 5px; }
+    }
+
+    /* muted-on label/icon override */
+    .rb.muted-on .rb-icon, .rb.muted-on .rb-label { color:#ff4466 !important; }
+
+    /* ── SIDEBAR ARROW ── */
+    #sidebarArrow {
+      position:fixed; left:0; top:50%; transform:translateY(-50%);
+      z-index:1100;
+      background:rgba(0,8,3,0.95);
+      border:1px solid rgba(0,255,136,0.2);
+      border-left:none;
+      color:rgba(0,255,136,0.6);
+      font-size:18px; padding:12px 8px;
+      cursor:pointer;
+      border-radius:0 8px 8px 0;
+      transition:left 0.35s ease, color 0.2s, background 0.2s;
+      box-shadow:4px 0 16px rgba(0,255,136,0.1);
+      user-select:none; line-height:1;
+    }
+    #sidebarArrow:hover { color:#fff; background:rgba(0,30,10,0.98); }
+    #sidebarArrow.open { left:288px; }
+
+    /* ── SIDEBAR PANEL ── */
+    #sidePanel {
+      position:fixed; left:-300px; top:0; width:288px; height:100vh;
+      background:rgba(0,4,1,0.98);
+      border-right:1px solid var(--league-border);
+      z-index:1099;
+      display:flex; flex-direction:column;
+      overflow-y:auto; overflow-x:hidden;
+      transition:left 0.35s cubic-bezier(.4,0,.2,1);
+      box-shadow:6px 0 40px var(--league-glow2);
+    }
+    #sidePanel.open { left:0; }
+    #sidePanel::-webkit-scrollbar { width:3px; }
+    #sidePanel::-webkit-scrollbar-thumb { background:rgba(0,255,136,0.3); border-radius:2px; }
+    #sidePanel::-webkit-scrollbar-track { background:transparent; }
+
+    #panelHeader {
+      padding:32px 20px 22px;
+      text-align:center;
+      border-bottom:1px solid rgba(0,255,136,0.1);
+      background:linear-gradient(180deg, rgba(0,20,8,0.6) 0%, transparent 100%);
+    }
+    #panelPicWrap {
+      width:80px; height:80px; border-radius:50%;
+      border:2px solid var(--league-color);
+      box-shadow:0 0 16px var(--league-glow1), 0 0 32px var(--league-glow2);
+      margin:0 auto 14px;
+      overflow:hidden;
+      background:var(--league-bg);
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      animation:panelAvatarGlow 2.5s infinite;
+      transition: transform 0.2s;
+    }
+    #panelPicWrap:hover { transform: scale(1.06); }
+    @keyframes panelAvatarGlow {
+      0%,100%{box-shadow:0 0 16px var(--league-glow1),0 0 32px var(--league-glow2)}
+      50%{box-shadow:0 0 28px var(--league-glow3),0 0 52px var(--league-glow4)}
+    }
+    #panelAvatarImg { width:100%; height:100%; object-fit:cover; display:none; }
+    #panelAvatarDefault { font-size:38px; line-height:1; }
+    #panelNickname {
+      font-size:15px; color:var(--league-color);
+      font-family:'Share Tech Mono',monospace; letter-spacing:1px;
+      margin-bottom:6px; font-weight:bold;
+    }
+    #panelLeagueTag {
+      display:inline-block; margin:4px auto 8px;
+      padding:3px 12px;
+      background:var(--league-badge-bg);
+      border:1px solid var(--league-badge-border);
+      border-radius:20px;
+      font-family:'Share Tech Mono',monospace; font-size:11px;
+      color:var(--league-badge-text); letter-spacing:2px;
+      text-transform:uppercase;
+      box-shadow:0 0 10px var(--league-glow2);
+    }
+    #panelUID { font-size:10px; color:rgba(0,255,136,0.25); font-family:'Share Tech Mono',monospace; margin-top:2px; }
+    #panelNav { flex:1; padding:10px 0; }
+    .panel-item {
+      display:flex; align-items:center; gap:12px;
+      padding:12px 22px; color:rgba(170,255,170,0.7);
+      font-family:'Share Tech Mono',monospace; font-size:13px;
+      cursor:pointer; transition:.2s;
+      border-left:3px solid transparent;
+    }
+    .panel-item:hover { background:rgba(0,255,0,0.06); color:#00ff88; border-left-color:rgba(0,255,136,0.5); }
+    .panel-item .pi-icon { font-size:16px; width:20px; text-align:center; }
+    .panel-divider {
+      font-size:10px; color:rgba(0,255,136,0.2);
+      letter-spacing:3px; padding:14px 22px 6px;
+      font-family:'Share Tech Mono',monospace;
+    }
+    #modeToggleItem {
+      display:flex; align-items:center; gap:12px;
+      padding:12px 22px; cursor:pointer; transition:.2s;
+      border-left:3px solid transparent;
+    }
+    #modeToggleItem:hover { background:rgba(0,255,0,0.06); border-left-color:rgba(0,255,136,0.5); }
+    #modeSwitch {
+      width:36px; height:19px; background:#0a0a0a;
+      border-radius:10px; border:1px solid rgba(0,255,136,0.2);
+      position:relative; transition:.3s; margin-left:auto;
+    }
+    #modeSwitch::after {
+      content:''; position:absolute; left:2px; top:2px;
+      width:13px; height:13px;
+      background:rgba(0,255,136,0.3); border-radius:50%; transition:.3s;
+    }
+    #modeSwitch.light { background:#001a08; border-color:#00ff88; }
+    #modeSwitch.light::after { left:19px; background:#00ff88; }
+    #modeLbl { font-family:'Share Tech Mono',monospace; font-size:13px; color:rgba(170,255,170,0.7); }
+    .soon-badge {
+      margin-left:auto; font-size:9px;
+      background:rgba(0,255,136,0.07); border:1px solid rgba(0,255,136,0.15);
+      color:rgba(0,255,136,0.4); padding:2px 7px; border-radius:6px;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .learning-wrapper {
+      position: relative; z-index:1;
+      display: flex; flex-direction: column;
+      align-items: center;
+      padding: 80px 24px 48px;
+      min-height: 100vh;
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 28px; gap: 8px;
+    }
+    .page-title {
+      font-family: 'Orbitron', monospace; font-weight: 900;
+      font-size: clamp(18px, 3vw, 28px);
+      color: var(--g);
+      letter-spacing: 8px;
+      text-shadow: 0 0 16px rgba(0,255,136,0.5), 0 0 40px rgba(0,212,255,0.2);
+      text-align: center;
+    }
+    .page-subtitle {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; color: rgba(0,212,255,0.5);
+      letter-spacing: 4px; text-align: center;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .pulse-bar {
+      width: 40px; height: 1px;
+      background: linear-gradient(to right, transparent, rgba(0,212,255,0.5));
+    }
+    .pulse-bar.right {
+      background: linear-gradient(to left, transparent, rgba(0,212,255,0.5));
+    }
+
+    /* ── LEARNING LAYOUT ── */
+    .learning-layout {
+      display: grid;
+      grid-template-columns: 160px 1fr 160px;
+      gap: 20px;
+      width: 100%;
+      max-width: 1020px;
+      align-items: start;
+    }
+
+    /* ── SIDE PANELS (button trees) ── */
+    .tree {
+      display: flex; flex-direction: column;
+      gap: 8px; padding-top: 6px;
+    }
+    .tree-label {
+      font-size: 9px; letter-spacing: 3px;
+      color: rgba(0,212,255,0.35);
+      padding: 0 2px 8px;
+      border-bottom: 1px solid rgba(0,212,255,0.1);
+      margin-bottom: 4px;
+    }
+    .tree button {
+      padding: 10px 14px;
+      background: rgba(0,8,3,0.8);
+      border: 1px solid rgba(0,255,136,0.18);
+      color: rgba(200,255,220,0.8);
+      border-radius: 6px; cursor: pointer;
+      font-size: 12px; font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+      text-align: left; width: 100%;
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tree button::before {
+      content: '▶';
+      font-size: 8px;
+      color: rgba(0,255,136,0.4);
+      flex-shrink: 0;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .tree button:hover {
+      background: rgba(0,255,136,0.08);
+      border-color: rgba(0,255,136,0.5);
+      color: #fff;
+      transform: translateX(3px);
+      box-shadow: 0 0 14px rgba(0,255,136,0.12), inset 0 0 14px rgba(0,255,136,0.04);
+    }
+    .tree button:hover::before { color: var(--g); transform: translateX(2px); }
+    .tree button:active { transform: translateX(5px) scale(0.98); }
+
+    .right-tree button { text-align: right; flex-direction: row-reverse; }
+    .right-tree button:hover { transform: translateX(-3px); }
+
+    /* ── TERMINAL ── */
+    .terminal {
+      background: rgba(0,6,2,0.95);
+      border: 1px solid rgba(0,255,136,0.2);
+      border-radius: 10px;
+      box-shadow:
+        0 0 0 1px rgba(0,255,136,0.06),
+        0 0 30px rgba(0,255,136,0.12),
+        0 20px 60px rgba(0,0,0,0.6);
+      display: flex; flex-direction: column;
+      height: 400px;
+      overflow: hidden;
+    }
+
+    /* Terminal title bar */
+    .term-bar {
+      display: flex; align-items: center;
+      gap: 7px; padding: 10px 14px;
+      background: rgba(0,14,6,0.8);
+      border-bottom: 1px solid rgba(0,255,136,0.1);
+      flex-shrink: 0;
+    }
+    .term-dot { width:11px; height:11px; border-radius:50%; }
+    .term-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; color: rgba(0,255,136,0.3);
+      letter-spacing: 2px; margin-left: 6px; flex:1;
+    }
+    .term-conn {
+      font-size: 10px; color: rgba(0,255,136,0.4);
+      letter-spacing: 1px;
+    }
+
+    #terminal-output {
+      flex:1; overflow-y:auto;
+      font-size: 13.5px; color: var(--g);
+      font-family: 'Share Tech Mono', monospace;
+      padding: 14px 16px 8px;
+      line-height: 1.6;
+    }
+    #terminal-output::-webkit-scrollbar { width:4px; }
+    #terminal-output::-webkit-scrollbar-thumb { background:rgba(0,255,136,0.25); border-radius:4px; }
+    #terminal-output::-webkit-scrollbar-track { background:transparent; }
+    #terminal-output p { margin:2px 0; word-break:break-word; }
+    #terminal-output p.sys  { color:rgba(170,255,170,0.8); }
+    #terminal-output p.usr  { color:#ffff77; }
+    #terminal-output p.ai   { color:#44ffdd; }
+    #terminal-output p.err  { color:#ff6666; }
+    #terminal-output p.hint { color:rgba(120,180,120,0.6); font-style:italic; }
+
+    .terminal-input {
+      display: flex; align-items: center;
+      border-top: 1px solid rgba(0,255,136,0.12);
+      padding: 10px 16px;
+      background: rgba(0,10,4,0.5);
+      gap: 10px; flex-shrink: 0;
+    }
+    .prompt-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px; color: rgba(0,255,136,0.5);
+      white-space: nowrap;
+    }
+    .cursor {
+      color: var(--g); font-size:15px;
+      animation: blink 1s infinite; flex-shrink:0;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    #commandInput {
+      flex:1; background:transparent; border:none; outline:none;
+      color: var(--g); font-family:'Share Tech Mono',monospace;
+      font-size:14px; caret-color:var(--g);
+    }
+    #commandInput::placeholder { color:rgba(0,255,136,0.2); }
+
+    /* ── ACHIEVEMENT ANIMATIONS ── */
+    @keyframes explode {
+      0%   { transform:scale(1); opacity:1; filter:brightness(1); }
+      15%  { transform:scale(1.35) rotate(-3deg); filter:brightness(2.5) saturate(2); }
+      30%  { transform:scale(0.85) rotate(2deg); filter:brightness(1.8); }
+      50%  { transform:scale(1.25) rotate(-1deg); filter:brightness(2) saturate(1.8); box-shadow:0 0 60px var(--league-color),0 0 120px var(--league-color2); }
+      70%  { transform:scale(0.95) rotate(1deg); filter:brightness(1.3); }
+      85%  { transform:scale(1.08); filter:brightness(1.5); }
+      100% { transform:scale(1); opacity:1; filter:brightness(1); }
+    }
+    @keyframes achievementPop {
+      0%   { transform:scale(0) rotate(-10deg); opacity:0; }
+      60%  { transform:scale(1.12) rotate(2deg); opacity:1; }
+      80%  { transform:scale(0.96) rotate(-1deg); }
+      100% { transform:scale(1) rotate(0deg); opacity:1; }
+    }
+    @keyframes achievementSlideOut {
+      0%   { transform:translateX(0); opacity:1; }
+      100% { transform:translateX(120%); opacity:0; }
+    }
+    .achievement-toast {
+      position:fixed; bottom:30px; right:30px; z-index:9999;
+      background:rgba(0,6,2,0.97);
+      border:1px solid var(--league-color); border-radius:12px;
+      padding:14px 20px;
+      display:flex; align-items:center; gap:14px;
+      font-family:'Share Tech Mono',monospace;
+      box-shadow:0 0 30px var(--league-glow1), 0 0 60px var(--league-glow2);
+      animation:achievementPop 0.5s cubic-bezier(.22,1,.36,1) forwards;
+      max-width:300px;
+    }
+    .achievement-toast.hiding { animation:achievementSlideOut 0.4s ease-in forwards; }
+    .achievement-toast .ach-icon { font-size:28px; animation:explode 0.7s ease-out; }
+    .achievement-toast .ach-title { font-size:10px; color:var(--league-color); letter-spacing:2px; margin-bottom:3px; }
+    .achievement-toast .ach-name { font-size:14px; color:#fff; font-weight:bold; }
+    .explode-effect { animation:explode 0.8s cubic-bezier(.22,1,.36,1); }
+
+    /* ── LEAGUE THEMES ── */
+    @keyframes panelAvatarGlow {
+      0%,100%{box-shadow:0 0 16px var(--league-glow1),0 0 32px var(--league-glow2)}
+      50%{box-shadow:0 0 28px var(--league-glow3),0 0 52px var(--league-glow4)}
+    }
+
+    /* ── FOOTER HUD ── */
+    .hud-footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 32px;
+      background: rgba(0,5,2,0.85);
+      border-top: 1px solid rgba(0,255,136,0.08);
+      display: flex; align-items: center;
+      padding: 0 20px; gap: 24px;
+      font-size: 10px; font-family: 'Share Tech Mono', monospace;
+      color: rgba(0,255,136,0.25);
+      letter-spacing: 1.5px; z-index: 50;
+    }
+    .hud-footer span { display:flex; align-items:center; gap:6px; }
+    .hud-footer .hf-accent { color: rgba(0,212,255,0.35); }
+    .hud-footer .hf-val { color: rgba(0,255,136,0.4); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 800px) {
+      .learning-layout { grid-template-columns: 1fr; }
+      .tree { flex-direction: row; flex-wrap: wrap; }
+      .tree button { width: auto; flex: 1; min-width: 80px; }
+    }
+
+    /* ══════════════════════════════════════════
+       COURSE STRIP — embedded below the terminal
+       ══════════════════════════════════════════ */
+    .course-strip-section {
+      width: 100%; max-width: 1020px;
+      margin-top: 32px;
+    }
+    .cs-header-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .cs-title {
+      font-family: 'Orbitron', monospace; font-size: 13px; letter-spacing: 3px;
+      color: #9d4edd; text-shadow: 0 0 12px rgba(157,78,221,0.5);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .cs-title::before {
+      content: ''; width: 3px; height: 16px;
+      background: #9d4edd; border-radius: 2px;
+      box-shadow: 0 0 8px #9d4edd; display: inline-block;
+    }
+    .cs-view-all {
+      font-family: 'Share Tech Mono', monospace; font-size: 11px;
+      color: rgba(157,78,221,0.6); letter-spacing: 1px;
+      cursor: pointer; border: 1px solid rgba(157,78,221,0.25);
+      padding: 5px 14px; border-radius: 20px; transition: all 0.2s;
+      background: transparent;
+    }
+    .cs-view-all:hover {
+      color: #c77dff; border-color: #9d4edd;
+      background: rgba(157,78,221,0.1);
+      box-shadow: 0 0 16px rgba(157,78,221,0.2);
+    }
+    .cs-scroll-wrap {
+      display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px;
+      scrollbar-width: thin; scrollbar-color: rgba(157,78,221,0.35) transparent;
+    }
+    .cs-scroll-wrap::-webkit-scrollbar { height: 3px; }
+    .cs-scroll-wrap::-webkit-scrollbar-thumb { background: rgba(157,78,221,0.35); border-radius: 4px; }
+    .cs-card {
+      flex-shrink: 0; width: 220px;
+      background: linear-gradient(145deg, rgba(17,1,32,0.95), rgba(25,1,48,0.85));
+      border: 1px solid rgba(157,78,221,0.22);
+      border-radius: 16px; padding: 16px;
+      cursor: pointer; transition: all 0.35s cubic-bezier(.22,1,.36,1);
+      position: relative; overflow: hidden;
+    }
+    .cs-card:hover {
+      border-color: #9d4edd;
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(157,78,221,0.3);
+    }
+    .cs-card.cs-completed { border-color: rgba(6,255,165,0.28); }
+    .cs-card.cs-completed:hover { border-color: #06ffa5; box-shadow: 0 10px 30px rgba(6,255,165,0.2); }
+    .cs-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(to right, transparent, #9d4edd, transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .cs-card:hover::before { opacity: 1; }
+    .cs-card-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+    .cs-card-title {
+      font-family: 'Orbitron', monospace; font-size: 11px; letter-spacing: 1px;
+      color: #e0d0ff; margin-bottom: 6px; line-height: 1.4;
+    }
+    .cs-card-prog-wrap { margin: 8px 0 6px; }
+    .cs-card-prog-track {
+      height: 4px; background: rgba(157,78,221,0.12); border-radius: 4px; overflow: hidden;
+    }
+    .cs-card-prog-fill {
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(to right, #9d4edd, #c77dff);
+      transition: width 1.5s cubic-bezier(.22,1,.36,1);
+    }
+    .cs-card-prog-fill.green { background: linear-gradient(to right, #06ffa5, #00d4aa); }
+    .cs-card-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: 'Share Tech Mono', monospace; font-size: 9px;
+      color: rgba(224,208,255,0.4); margin-top: 4px;
+    }
+    .cs-card-meta .cs-pct { color: #c77dff; }
+    .cs-card-meta .cs-pct.green { color: #06ffa5; }
+    .cs-status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      display: inline-block; margin-right: 4px;
+      animation: csDotBlink 2s infinite;
+    }
+    @keyframes csDotBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .cs-card-badge {
+      position: absolute; top: 10px; right: 10px;
+      font-size: 8px; letter-spacing: 1px; font-family: 'Share Tech Mono', monospace;
+      padding: 2px 7px; border-radius: 8px;
+    }
+    .cs-badge-done { background: rgba(6,255,165,0.12); color: #06ffa5; border: 1px solid rgba(6,255,165,0.3); }
+    .cs-badge-prog { background: rgba(157,78,221,0.15); color: #c77dff; border: 1px solid rgba(157,78,221,0.35); }
+    .cs-badge-new  { background: rgba(0,245,255,0.08); color: #00f5ff; border: 1px solid rgba(0,245,255,0.25); }
+    .cs-stats-row {
+      display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;
+    }
+    .cs-stat-pill {
+      background: rgba(157,78,221,0.08); border: 1px solid rgba(157,78,221,0.2);
+      border-radius: 20px; padding: 5px 14px;
+      font-family: 'Share Tech Mono', monospace; font-size: 10px;
+      display: flex; align-items: center; gap: 6px; color: rgba(224,208,255,0.6);
+    }
+    .cs-stat-pill strong { color: #c77dff; font-size: 13px; }
+  </style>
+</head>
+<body>
+<script src="settings-apply.js"></script>
+
+<canvas id="matrixRain"></canvas>
+<div id="muteBar">🔇 &nbsp;MUTED — open the avatar menu and click Mute to restore</div>
+<div id="acctOverlay" onclick="closeAcctMenu()"></div>
+
+<!-- ══ TOP NAV BAR ══ -->
+<nav id="topNav">
+  <button id="backBtn">Back to Login</button>
+
+  <div id="navBrand">MATRIX<span>ON</span></div>
+
+  <div id="navStatus">
+    <div class="nav-dot"></div>
+    <span>SYS ONLINE</span>
+  </div>
+
+  <!-- Account button lives in the nav now -->
+  <div id="acctWrap">
+    <div id="acctRing"></div>
+    <div id="acctCommandStrip">
+      <div class="rb" id="rb-switch" onclick="switchAccount()" title="Switch Account">
+        <span class="rb-icon">⇄</span>
+        <span class="rb-label">SWITCH ACCOUNT</span>
+        <span class="rb-arrow">▶</span>
+      </div>
+      <div class="rb" id="rb-mute" onclick="toggleMute()" title="Toggle Mute">
+        <span class="rb-icon" id="muteIcon">🔊</span>
+        <span class="rb-label" id="muteLabel">MUTE AUDIO</span>
+        <span class="rb-arrow">▶</span>
+      </div>
+      <div class="rb" id="rb-logout" onclick="logOut()" title="Logout">
+        <span class="rb-icon">⏏</span>
+        <span class="rb-label">LOGOUT</span>
+        <span class="rb-arrow">▶</span>
+      </div>
+      <div class="rb" id="rb-exit" onclick="exitApp()" title="Exit App">
+        <span class="rb-icon">✕</span>
+        <span class="rb-label">EXIT APP</span>
+        <span class="rb-arrow">▶</span>
+      </div>
+    </div>
+    <div id="acctBtn" onclick="toggleAcctMenu()">
+      <div id="acctStripe"></div>
+      <div id="acctAvatarCircle">
+        <img id="acctAvatarImg" alt="">
+        <span id="acctAvatarDefault">👤</span>
+      </div>
+      <div id="acctTextBlock">
+        <div id="acctNameLine" id="acctLabel">AGENT</div>
+        <div id="acctStatusLine"><span class="acct-ping"></span>ONLINE</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ SIDEBAR ══ -->
+<div id="sidebarArrow" onclick="toggleSidebar()">&#10095;</div>
+<div id="sidePanel">
+  <div id="panelHeader">
+    <div id="panelPicWrap" onclick="window.location.href='profile.html'" title="View Profile">
+      <img id="panelAvatarImg" alt="">
+      <span id="panelAvatarDefault">👤</span>
+    </div>
+    <div id="panelNickname">Loading...</div>
+    <div id="panelLeagueTag">Trainee</div>
+    <div id="panelUID"></div>
+  </div>
+  <nav id="panelNav">
+    <div class="panel-item" onclick="window.location.href='profile.html'"><span class="pi-icon">👤</span> Profile</div>
+    <div class="panel-item" onclick="goToLeaderboard()"><span class="pi-icon">🏆</span> Leaderboard</div>
+    <div class="panel-item" onclick="glitchNavigate('courses.html')"><span class="pi-icon">📡</span> Course Lab</div>
+    <div class="panel-item" onclick="window.location.href='achievements.html'"><span class="pi-icon">🎖️</span> Achievements</div>
+    <div class="panel-divider">── MODE ──</div>
+    <div id="modeToggleItem" onclick="toggleMode()">
+      <span class="pi-icon">🌙</span><span id="modeLbl">Dark Mode</span><div id="modeSwitch"></div>
+    </div>
+    <div class="panel-divider">── SETTINGS ──</div>
+    <div class="panel-item" onclick="window.location.href='settings.html'"><span class="pi-icon">⚙️</span> Settings</div>
+  </nav>
+</div>
+<div id="sideOverlay" onclick="toggleSidebar()"></div>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="learning-wrapper">
+
+  <div class="page-header">
+    <div class="page-title">LEARNING TERMINAL</div>
+    <div class="page-subtitle">
+      <span class="pulse-bar"></span>
+      MATRIXON CORE v1.7.56 — AI ONLINE
+      <span class="pulse-bar right"></span>
+    </div>
+  </div>
+
+  <div class="learning-layout">
+
+    <!-- LEFT TOPICS -->
+    <div class="tree" id="leftTree">
+      <div class="tree-label">LANGUAGES</div>
+      <button onclick="injectCmd('learn python')">Python</button>
+      <button onclick="injectCmd('learn java')">Java</button>
+      <button onclick="injectCmd('learn html')">HTML</button>
+      <button onclick="injectCmd('learn css')">CSS</button>
+      <button onclick="injectCmd('learn javascript')">JavaScript</button>
+      <button onclick="injectCmd('learn c')">C</button>
+    </div>
+
+    <!-- TERMINAL -->
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="term-dot" style="background:#ff5f57;"></div>
+        <div class="term-dot" style="background:#ffbd2e;"></div>
+        <div class="term-dot" style="background:#28c840;"></div>
+        <div class="term-title">matrixon — bash</div>
+        <div class="term-conn">● CONNECTED</div>
+      </div>
+
+      <div id="terminal-output">
+        <p class="sys">&gt; MATRIXON Core v1.7.56 Loaded</p>
+        <p class="sys">&gt; Type <span style="color:#ffff55">'help'</span> for all commands</p>
+        <p class="hint">&gt; Or just ask anything — AI is online</p>
+      </div>
+
+      <div class="terminal-input">
+        <span class="prompt-label">matrixon:~$</span>
+        <span class="cursor">&#9608;</span>
+        <input type="text" id="commandInput" placeholder="type a command..." autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+
+    <!-- RIGHT TOPICS -->
+    <div class="tree right-tree" id="rightTree">
+      <div class="tree-label" style="text-align:right">TOPICS</div>
+      <button onclick="injectCmd('logic puzzles')">Logic Puzzles</button>
+      <button onclick="injectCmd('engineering basics')">Engineering</button>
+      <button onclick="injectCmd('basic electronics')">Electronics</button>
+      <button onclick="injectCmd('play game')">Play Games</button>
+      <button onclick="injectCmd('help')">Help</button>
+      <button onclick="injectCmd('exit')">Exit</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ COURSE STRIP ══ -->
+<div class="learning-wrapper" style="padding-top:0;padding-bottom:60px;">
+  <div class="course-strip-section">
+
+    <!-- Quick stats -->
+    <div class="cs-stats-row">
+      <div class="cs-stat-pill"><strong>12</strong> Enrolled</div>
+      <div class="cs-stat-pill"><strong>7</strong> Completed</div>
+      <div class="cs-stat-pill">⚡ <strong>4,280</strong> XP</div>
+      <div class="cs-stat-pill">🔥 <strong>12</strong>-day streak</div>
+    </div>
+
+    <div class="cs-header-row">
+      <div class="cs-title">⚡ YOUR COURSES</div>
+      <button class="cs-view-all" onclick="glitchNavigate('courses.html')">VIEW ALL →</button>
+    </div>
+
+    <div class="cs-scroll-wrap" id="csScrollWrap">
+      <!-- Populated by JS -->
+    </div>
+
+  </div>
+</div>
+<div class="hud-footer">
+  <span><span class="hf-accent">NODE</span> <span class="hf-val">192.168.0.1</span></span>
+  <span><span class="hf-accent">ENCRYPT</span> <span class="hf-val">AES-256</span></span>
+  <span><span class="hf-accent">FIREWALL</span> <span class="hf-val">ACTIVE</span></span>
+  <span style="margin-left:auto"><span class="hf-accent">PING</span> <span class="hf-val" id="footerPing" style="color:#00ff88">…</span></span>
+</div>
+
+<script>
+
+/* ══ MATRIX RAIN ══ */
+(function(){
+  const c=document.getElementById('matrixRain'),ctx=c.getContext('2d');
+  let ri=(window._matrixRainIntensity!==undefined?window._matrixRainIntensity:1);
+  window._setRainIntensity=v=>{ri=v;};
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  resize();window.addEventListener('resize',()=>{resize();init();});
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789アイウエオカキクケコサシスセソタチツテト';
+  const fs=14;let cols,drops;
+  function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(0).map(()=>Math.floor(Math.random()*-50));}
+  init();
+  setInterval(()=>{
+    ctx.fillStyle=`rgba(0,0,0,${0.05/ri})`;ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px monospace';
+    if(Math.random()<ri*0.7||ri===1){
+      for(let i=0;i<drops.length;i++){
+        const ch=chars[Math.floor(Math.random()*chars.length)];
+        ctx.fillStyle=drops[i]*fs<80?'#ccffcc':'#00ff00';
+        ctx.fillText(ch,i*fs,drops[i]*fs);
+        if(drops[i]*fs>c.height&&Math.random()>.975)drops[i]=0;
+        drops[i]++;
+      }
+    }
+  },45);
+})();
+
+const API='http://localhost:3000';
+const username=localStorage.getItem('matrixon_user')||'player';
+
+/* ══ LEAGUE THEME ENGINE ══ */
+const LEAGUE_THEMES = {
+  'Trainee':         { color:'#00bfff', color2:'#0080ff', g1:'rgba(0,191,255,0.55)',  g2:'rgba(0,128,255,0.2)',  g3:'rgba(0,191,255,0.9)',  g4:'rgba(0,128,255,0.4)',  bg:'rgba(0,15,35,0.97)',  border:'rgba(0,191,255,0.35)',  bb:'rgba(0,80,180,0.25)',  bbd:'rgba(0,191,255,0.5)',  bbt:'#00bfff' },
+  'Developer':       { color:'#b9f2ff', color2:'#89d4fe', g1:'rgba(185,242,255,0.55)',g2:'rgba(137,212,254,0.2)',g3:'rgba(185,242,255,0.9)',g4:'rgba(137,212,254,0.4)',bg:'rgba(5,15,30,0.97)',  border:'rgba(185,242,255,0.35)',bb:'rgba(100,180,255,0.15)',bbd:'rgba(185,242,255,0.5)',bbt:'#b9f2ff' },
+  'Senior Developer':{ color:'#da70d6', color2:'#ff69b4', g1:'rgba(218,112,214,0.55)',g2:'rgba(255,105,180,0.2)',g3:'rgba(218,112,214,0.9)',g4:'rgba(255,105,180,0.4)',bg:'rgba(20,0,25,0.97)',  border:'rgba(218,112,214,0.35)',bb:'rgba(160,0,180,0.2)',  bbd:'rgba(218,112,214,0.5)',bbt:'#da70d6' },
+  'Hacker':          { color:'#e0f0ff', color2:'#4fc3f7', g1:'rgba(224,240,255,0.55)',g2:'rgba(79,195,247,0.2)', g3:'rgba(224,240,255,0.9)',g4:'rgba(79,195,247,0.4)', bg:'rgba(0,5,18,0.97)',   border:'rgba(200,230,255,0.35)',bb:'rgba(60,120,200,0.18)',bbd:'rgba(200,230,255,0.5)',bbt:'#e0f0ff' },
+  'Master Hacker':   { color:'#e0f0ff', color2:'#4fc3f7', g1:'rgba(224,240,255,0.55)',g2:'rgba(79,195,247,0.2)', g3:'rgba(224,240,255,0.9)',g4:'rgba(79,195,247,0.4)', bg:'rgba(0,5,18,0.97)',   border:'rgba(200,230,255,0.35)',bb:'rgba(60,120,200,0.18)',bbd:'rgba(200,230,255,0.5)',bbt:'#e0f0ff' },
+  'Ace Developer':   { color:'#ffd700', color2:'#8b5e3c', g1:'rgba(255,215,0,0.55)',  g2:'rgba(139,94,60,0.2)',  g3:'rgba(255,215,0,0.9)',  g4:'rgba(139,94,60,0.4)',  bg:'rgba(20,10,0,0.97)',  border:'rgba(255,215,0,0.35)',  bb:'rgba(180,120,0,0.2)',  bbd:'rgba(255,215,0,0.5)',  bbt:'#ffd700' }
+};
+function applyLeagueTheme(leagueName){
+  const t=LEAGUE_THEMES[leagueName]||LEAGUE_THEMES['Trainee'];
+  const r=document.documentElement.style;
+  r.setProperty('--league-color',t.color); r.setProperty('--league-color2',t.color2);
+  r.setProperty('--league-glow1',t.g1);   r.setProperty('--league-glow2',t.g2);
+  r.setProperty('--league-glow3',t.g3);   r.setProperty('--league-glow4',t.g4);
+  r.setProperty('--league-bg',t.bg);      r.setProperty('--league-border',t.border);
+  r.setProperty('--league-badge-bg',t.bb);r.setProperty('--league-badge-border',t.bbd);
+  r.setProperty('--league-badge-text',t.bbt);
+}
+
+/* ══ ACCOUNT SWITCHER ══ */
+let acctOpen=false;
+let isMuted=localStorage.getItem('matrixon_muted')==='1';
+
+(async()=>{
+  document.getElementById('acctNameLine').textContent=username.toUpperCase().slice(0,10);
+  try{
+    const r=await fetch(`${API}/profile/${username}`);
+    const p=await r.json();
+    if(p.photo){
+      document.getElementById('acctAvatarImg').src=p.photo;
+      document.getElementById('acctAvatarImg').style.display='block';
+      document.getElementById('acctAvatarDefault').style.display='none';
+    }
+    const lvl=p.level||1;
+    let ln='Trainee';
+    if(lvl>=71)ln='Ace Developer';else if(lvl>=51)ln='Master Hacker';else if(lvl>=36)ln='Hacker';else if(lvl>=21)ln='Senior Developer';else if(lvl>=11)ln='Developer';
+    applyLeagueTheme(ln);
+    document.getElementById('panelLeagueTag').textContent=ln;
+    // Show league rank in card status line
+    const sl=document.getElementById('acctStatusLine');
+    if(sl) sl.innerHTML=`<span class="acct-ping"></span>${ln.toUpperCase()}`;
+  }catch(e){}
+  applyMuteState(isMuted);
+})();
+
+function toggleAcctMenu(){
+  acctOpen=!acctOpen;
+  document.getElementById('acctWrap').classList.toggle('open',acctOpen);
+  document.getElementById('acctBtn').classList.toggle('open-state',acctOpen);
+  document.getElementById('acctOverlay').classList.toggle('show',acctOpen);
+}
+function closeAcctMenu(){
+  acctOpen=false;
+  document.getElementById('acctWrap').classList.remove('open');
+  document.getElementById('acctBtn').classList.remove('open-state');
+  document.getElementById('acctOverlay').classList.remove('show');
+}
+function switchAccount(){ closeAcctMenu(); localStorage.removeItem('matrixon_user'); localStorage.removeItem('matrixon_country_set'); window.location.href='index.html'; }
+function logOut(){ closeAcctMenu(); localStorage.removeItem('matrixon_user'); window.location.href='index.html'; }
+function exitApp(){ closeAcctMenu(); addLine('&gt; Closing MATRIXON... Goodbye. 👋','sys'); setTimeout(()=>{ window.close(); setTimeout(()=>window.location.href='index.html',600); },800); }
+function toggleMute(){ isMuted=!isMuted; localStorage.setItem('matrixon_muted',isMuted?'1':'0'); applyMuteState(isMuted); closeAcctMenu(); }
+function applyMuteState(m){ document.getElementById('muteIcon').textContent=m?'🔇':'🔊'; document.getElementById('muteLabel').textContent=m?'UNMUTE AUDIO':'MUTE AUDIO'; document.getElementById('rb-mute').classList.toggle('muted-on',m); document.getElementById('muteBar').classList.toggle('show',m); document.querySelectorAll('audio,video').forEach(el=>el.muted=m); }
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&acctOpen)closeAcctMenu();});
+
+/* ══ SIDEBAR ══ */
+let sidebarOpen=false,isDark=true;
+function toggleSidebar(){
+  sidebarOpen=!sidebarOpen;
+  document.getElementById('sidePanel').classList.toggle('open',sidebarOpen);
+  document.getElementById('sidebarArrow').classList.toggle('open',sidebarOpen);
+  document.getElementById('sidebarArrow').innerHTML=sidebarOpen?'&#10094;':'&#10095;';
+  document.getElementById('sideOverlay').classList.toggle('show',sidebarOpen);
+  if(sidebarOpen)loadSidebarProfile();
+}
+async function loadSidebarProfile(){
+  try{
+    const r=await fetch(`${API}/profile/${username}`);
+    const p=await r.json();
+    if(p.photo){document.getElementById('panelAvatarImg').src=p.photo;document.getElementById('panelAvatarImg').style.display='block';document.getElementById('panelAvatarDefault').style.display='none';}
+    document.getElementById('panelNickname').textContent=p.nickname||username;
+    document.getElementById('panelUID').textContent=p.uid||'';
+    const lvl=p.level||1;
+    let ln='Trainee';
+    if(lvl>=71)ln='Ace Developer';else if(lvl>=51)ln='Master Hacker';else if(lvl>=36)ln='Hacker';else if(lvl>=21)ln='Senior Developer';else if(lvl>=11)ln='Developer';
+    document.getElementById('panelLeagueTag').textContent=ln;
+    applyLeagueTheme(ln);
+  }catch(e){document.getElementById('panelNickname').textContent=username;}
+}
+
+/* ══ ACHIEVEMENT TOAST ══ */
+function triggerAchievement(name, icon='🏅'){
+  const av=document.getElementById('panelPicWrap');
+  av.classList.remove('explode-effect'); void av.offsetWidth; av.classList.add('explode-effect');
+  av.addEventListener('animationend',()=>av.classList.remove('explode-effect'),{once:true});
+  const acctBtn=document.getElementById('acctBtn');
+  acctBtn.classList.remove('explode-effect'); void acctBtn.offsetWidth; acctBtn.classList.add('explode-effect');
+  acctBtn.addEventListener('animationend',()=>acctBtn.classList.remove('explode-effect'),{once:true});
+  const toast=document.createElement('div');
+  toast.className='achievement-toast';
+  toast.innerHTML=`<span class="ach-icon">${icon}</span><div><div class="ach-title">⚡ ACHIEVEMENT UNLOCKED</div><div class="ach-name">${name}</div></div>`;
+  document.body.appendChild(toast);
+  setTimeout(()=>{toast.classList.add('hiding');setTimeout(()=>toast.remove(),400);},3500);
+}
+function comingSoon(name){addLine('&gt; '+name+' — Coming Soon! 🚧','hint');if(sidebarOpen)toggleSidebar();}
+function goToLeaderboard(){if(sidebarOpen)toggleSidebar();glitchNavigate(localStorage.getItem('matrixon_country_set')?'Leaderboard.html':'country-select.html');}
+function toggleMode(){isDark=!isDark;document.getElementById('modeSwitch').classList.toggle('light',!isDark);document.getElementById('modeLbl').textContent=isDark?'Dark Mode':'Light Mode';document.body.style.filter=isDark?'':'invert(1) hue-rotate(180deg)';}
+
+/* ══ COURSE STRIP DATA & RENDER ══ */
+const STRIP_COURSES = [
+  { icon:'⚡', title:'Electronics Fundamentals', status:'completed', progress:100 },
+  { icon:'🔌', title:'Digital Logic & Boolean Algebra', status:'completed', progress:100 },
+  { icon:'🌊', title:'Signal Processing 101', status:'completed', progress:100 },
+  { icon:'🔬', title:'Semiconductor Physics', status:'inprogress', progress:62 },
+  { icon:'📡', title:'Microcontrollers & Embedded', status:'inprogress', progress:38 },
+  { icon:'🔧', title:'PCB Design with KiCad', status:'inprogress', progress:25 },
+  { icon:'🧲', title:'RF & Wireless Systems', status:'new', progress:0 },
+  { icon:'🤖', title:'AI Hardware Accelerators', status:'new', progress:0 },
+];
+(function renderCourseStrip(){
+  const wrap = document.getElementById('csScrollWrap');
+  if(!wrap) return;
+  const statusLabel = { completed:'DONE', inprogress:'ACTIVE', new:'NEW' };
+  const statusBadgeClass = { completed:'cs-badge-done', inprogress:'cs-badge-prog', new:'cs-badge-new' };
+  const dotColor = { completed:'#06ffa5', inprogress:'#9d4edd', new:'#00f5ff' };
+
+  wrap.innerHTML = STRIP_COURSES.map(c => `
+    <div class="cs-card ${c.status==='completed'?'cs-completed':''}" onclick="glitchNavigate('courses.html')">
+      <span class="cs-card-badge ${statusBadgeClass[c.status]}">${statusLabel[c.status]}</span>
+      <span class="cs-card-icon">${c.icon}</span>
+      <div class="cs-card-title">${c.title}</div>
+      <div class="cs-card-prog-wrap">
+        <div class="cs-card-prog-track">
+          <div class="cs-card-prog-fill ${c.status==='completed'?'green':''}" style="width:0%" data-target="${c.progress}"></div>
+        </div>
+      </div>
+      <div class="cs-card-meta">
+        <span><span class="cs-status-dot" style="background:${dotColor[c.status]}"></span>${c.status==='inprogress'?'IN PROGRESS':statusLabel[c.status]}</span>
+        <span class="cs-pct ${c.status==='completed'?'green':''}">${c.progress}%</span>
+      </div>
+    </div>
+  `).join('');
+
+  // Animate progress bars in
+  setTimeout(() => {
+    wrap.querySelectorAll('.cs-card-prog-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  }, 400);
+})();
+
+/* ══ TERMINAL ══ */
+const output=document.getElementById('terminal-output');
+const cmdInput=document.getElementById('commandInput');
+function scrollBottom(){output.scrollTop=output.scrollHeight;}
+function addLine(html,cls){const p=document.createElement('p');if(cls)p.className=cls;p.innerHTML=html;output.appendChild(p);scrollBottom();return p;}
+
+const builtins={
+  help(){addLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━','sys');addLine('&gt; BUILT-IN COMMANDS:','sys');addLine('&nbsp;&nbsp;learn python / java / html / css / javascript / c','sys');addLine('&nbsp;&nbsp;logic puzzles | engineering basics | basic electronics','sys');addLine('&nbsp;&nbsp;courses | play game | profile | settings | clear | exit','sys');addLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━','sys');addLine('&gt; AI MODE: anything else → AI answers','ai');},
+  clear(){output.innerHTML='';addLine('&gt; Terminal cleared.','sys');},
+  exit(){exitApp();},
+  profile(){glitchNavigate('profile.html');},
+  settings(){glitchNavigate('settings.html');},
+  'learn python'(){askAI('Give a 4-line terminal-style introduction to Python for beginners with one tip. Plain text only, no markdown.');},
+  'learn java'(){askAI('Give a 4-line terminal-style introduction to Java for beginners with one tip. Plain text only, no markdown.');},
+  'learn html'(){askAI('Give a 4-line terminal-style introduction to HTML for beginners with one tip. Plain text only, no markdown.');},
+  'learn css'(){askAI('Give a 4-line terminal-style introduction to CSS for beginners with one tip. Plain text only, no markdown.');},
+  'learn javascript'(){askAI('Give a 4-line terminal-style introduction to JavaScript for beginners with one tip. Plain text only, no markdown.');},
+  'learn c'(){askAI('Give a 4-line terminal-style introduction to C programming for beginners with one tip. Plain text only, no markdown.');},
+  'logic puzzles'(){askAI('Give me one short fun logic puzzle to solve. Under 5 lines. Plain text only.');},
+  'engineering basics'(){askAI('Give a 4-line terminal-style intro to engineering fundamentals. Plain text only.');},
+  'basic electronics'(){askAI('Give a 4-line terminal-style intro to basic electronics. Plain text only.');},
+  'play game'(){addLine('&gt; ── NUMBER GUESS GAME STARTED ──','sys');addLine('&gt; I picked a number between 1 and 100.','sys');addLine('&gt; Type your guess and press Enter!','sys');window._game={secret:Math.floor(Math.random()*100)+1,tries:0};window._gameMode=true;},
+  'courses'(){addLine('&gt; Launching Course Lab...','sys');setTimeout(()=>glitchNavigate('courses.html'),600);}
+};
+
+async function askAI(prompt){
+  const t=addLine('&gt; AI thinking...','hint');
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();t.remove();
+    const text=(data.content||[]).map(b=>b.text||'').join('');
+    if(!text){addLine('&gt; No response.','err');return;}
+    text.split('\n').forEach(line=>{if(line.trim())addLine('&gt; '+line.trim(),'ai');});
+  }catch(e){t.remove();addLine('&gt; AI Error: '+e.message,'err');}
+}
+
+function runCmd(raw){
+  const trimmed=raw.trim();if(!trimmed)return;
+  const lower=trimmed.toLowerCase();
+  addLine('&gt; '+trimmed,'usr');
+  if(window._gameMode&&window._game){
+    const guess=parseInt(lower);
+    if(isNaN(guess)){addLine('&gt; Enter a number 1-100.','err');return;}
+    window._game.tries++;
+    if(guess===window._game.secret){addLine('&gt; CORRECT! '+window._game.tries+' tries! 🎉','sys');addLine('&gt; Type "play game" to play again.','hint');window._gameMode=false;window._game=null;triggerAchievement('Number Cracker','🎯');}
+    else addLine(guess<window._game.secret?'&gt; Too LOW ↑':'&gt; Too HIGH ↓','sys');
+    return;
+  }
+  if(builtins[lower])builtins[lower]();
+  else askAI(trimmed+' — Answer in 4 lines max, plain text only, no markdown.');
+}
+function injectCmd(cmd){runCmd(cmd);cmdInput.focus();}
+cmdInput.addEventListener('keydown',e=>{if(e.key==='Enter'){const v=cmdInput.value;cmdInput.value='';runCmd(v);}});
+document.getElementById('backBtn').addEventListener('click',()=>glitchNavigate('index.html'));
+cmdInput.focus();
+fetch(`${API}/streak/record`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username})}).catch(()=>{});
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CORRUPTED MEMORY / GLITCH REASSEMBLY TRANSITION — learning.html
+     EXIT: Page shatters into pixel chunks → scrambles like
+           corrupted RAM → chunks fly into new-page positions.
+     ENTRY: Chunks assemble from all directions into the page.
+     ═══════════════════════════════════════════════════════════ -->
+<canvas id="glitchCanvas" style="position:fixed;inset:0;z-index:99990;pointer-events:none;opacity:0;background:#020d04;"></canvas>
+<style>
+  #glitchCanvas { image-rendering: pixelated; }
+</style>
+<script>
+(function(){
+  /* ─── ENTRY: chunks fly in and reassemble ─── */
+  if(sessionStorage.getItem('glitch_entry')==='1'){
+    sessionStorage.removeItem('glitch_entry');
+    const canvas=document.getElementById('glitchCanvas');
+    canvas.style.opacity='1';
+
+    window.addEventListener('load',function(){
+      const W=canvas.width=window.innerWidth, H=canvas.height=window.innerHeight;
+      const ctx=canvas.getContext('2d');
+      const COLS=16,ROWS=10;
+      const cw=Math.ceil(W/COLS), ch=Math.ceil(H/ROWS);
+
+      /* Chunks fly in from random off-screen positions */
+      const chunks=[];
+      for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        const tx=c*cw, ty=r*ch;
+        const angle=Math.random()*Math.PI*2;
+        const dist=Math.max(W,H)*1.2;
+        chunks.push({
+          tx,ty,
+          x:tx+Math.cos(angle)*dist,
+          y:ty+Math.sin(angle)*dist,
+          rot:(Math.random()-0.5)*Math.PI,
+          delay:Math.random()*400,
+          color:`hsl(${120+Math.random()*40},${50+Math.random()*50}%,${5+Math.random()*15}%)`
+        });
+      }
+
+      let start=null;
+      const DURATION=900;
+      function animate(ts){
+        if(!start)start=ts;
+        const elapsed=ts-start;
+        ctx.clearRect(0,0,W,H);
+        ctx.fillStyle='#020d04';ctx.fillRect(0,0,W,H);
+
+        let done=true;
+        chunks.forEach(ch=>{
+          const t=Math.max(0,(elapsed-ch.delay)/(DURATION-ch.delay));
+          if(t<1)done=false;
+          const ease=1-Math.pow(1-Math.min(1,t),3);
+          const x=ch.x+(ch.tx-ch.x)*ease;
+          const y=ch.y+(ch.ty-ch.y)*ease;
+          const rot=ch.rot*(1-ease);
+
+          ctx.save();
+          ctx.translate(x+cw/2,y+ch_h/2);
+          ctx.rotate(rot);
+          /* glitch color artifact */
+          ctx.fillStyle=ch.color;
+          ctx.shadowColor=`rgba(0,255,80,${0.4*(1-ease)})`;
+          ctx.shadowBlur=12*(1-ease);
+          ctx.fillRect(-cw/2,-ch_h/2,cw,ch_h);
+          /* scanline */
+          ctx.fillStyle=`rgba(0,255,100,${0.08*(1-ease)})`;
+          for(let i=0;i<ch_h;i+=4)ctx.fillRect(-cw/2,-ch_h/2+i,cw,1);
+          ctx.restore();
+        });
+
+        if(!done)requestAnimationFrame(animate);
+        else{
+          canvas.style.transition='opacity 0.5s';
+          canvas.style.opacity='0';
+        }
+      }
+      /* ch_h alias */
+      const ch_h=ch;
+      requestAnimationFrame(animate);
+    });
+  }
+
+  /* ─── EXIT: shatter → scramble → reassemble into destination ─── */
+  window.glitchNavigate=function(url){
+    const canvas=document.getElementById('glitchCanvas');
+    const W=canvas.width=window.innerWidth, H=canvas.height=window.innerHeight;
+    canvas.style.opacity='1';
+    const ctx=canvas.getContext('2d');
+
+    /* Snapshot the current page */
+    const snapshot=document.createElement('canvas');
+    snapshot.width=W;snapshot.height=H;
+    const sctx=snapshot.getContext('2d');
+    /* Draw a rough representation: gradient bg + scanlines to simulate */
+    sctx.fillStyle='#020d04';sctx.fillRect(0,0,W,H);
+    sctx.fillStyle='rgba(0,255,136,0.04)';
+    for(let y=0;y<H;y+=3){sctx.fillRect(0,y,W,1);}
+
+    const COLS=20,ROWS=14;
+    const cw=Math.ceil(W/COLS), ch=Math.ceil(H/ROWS);
+
+    /* Build chunks from snapshot */
+    const chunks=[];
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+      const sx=c*cw, sy=r*ch;
+      chunks.push({
+        sx,sy,       /* source pos */
+        x:sx,y:sy,   /* current pos */
+        rot:0,
+        vx:(Math.random()-0.5)*8,
+        vy:(Math.random()-0.5)*8,
+        phase:'shatter', /* shatter → scramble → reassemble */
+        tx:0,ty:0,   /* target pos for reassembly */
+        glitchX:0,
+        color:`hsl(${100+Math.random()*60},80%,${8+Math.random()*10}%)`
+      });
+    }
+
+    let start=null;
+    let phaseStart=null;
+    let currentPhase='shatter';
+    const SHATTER_DUR=400, SCRAMBLE_DUR=350, REASSEMBLE_DUR=600;
+
+    function animate(ts){
+      if(!start){start=ts;phaseStart=ts;}
+      const elapsed=ts-start;
+      const phaseElapsed=ts-phaseStart;
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle='rgba(2,13,4,0.95)';ctx.fillRect(0,0,W,H);
+
+      /* Phase transition logic */
+      if(currentPhase==='shatter'&&phaseElapsed>SHATTER_DUR){
+        currentPhase='scramble';phaseStart=ts;
+        /* assign scramble velocities */
+        chunks.forEach(c=>{
+          c.glitchX=(Math.random()-0.5)*W*0.6;
+          c.glitchY=(Math.random()-0.5)*H*0.5;
+        });
+      } else if(currentPhase==='scramble'&&phaseElapsed>SCRAMBLE_DUR){
+        currentPhase='reassemble';phaseStart=ts;
+        /* assign exit targets (fly to final destination positions) */
+        chunks.forEach((c,i)=>{
+          const angle=Math.random()*Math.PI*2;
+          const dist=Math.max(W,H)*1.4;
+          c.tx=c.sx+Math.cos(angle)*dist;
+          c.ty=c.sy+Math.sin(angle)*dist;
+        });
+      } else if(currentPhase==='reassemble'&&phaseElapsed>REASSEMBLE_DUR){
+        sessionStorage.setItem('glitch_entry','1');
+        window.location.href=url;
+        return;
+      }
+
+      chunks.forEach(c=>{
+        let dx=0,dy=0,rot=0,alpha=1,glitchOff=0;
+
+        if(currentPhase==='shatter'){
+          const p=phaseElapsed/SHATTER_DUR;
+          dx=c.vx*p*p*80;
+          dy=c.vy*p*p*80;
+          rot=(Math.random()-0.5)*0.12*p;
+          glitchOff=(Math.random()-0.5)*20*p;
+          alpha=1;
+        } else if(currentPhase==='scramble'){
+          const p=phaseElapsed/SCRAMBLE_DUR;
+          const ease=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+          dx=c.vx*80+(c.glitchX-c.sx)*ease;
+          dy=c.vy*80+(c.glitchY-c.sy)*ease;
+          rot=(Math.random()-0.5)*0.3;
+          glitchOff=(Math.random()-0.5)*40;
+          alpha=0.85+Math.random()*0.15;
+        } else {
+          const p=phaseElapsed/REASSEMBLE_DUR;
+          const ease=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+          dx=c.vx*80+(c.glitchX-c.sx)+(c.tx-c.sx-c.vx*80-(c.glitchX-c.sx))*ease;
+          dy=c.vy*80+(c.glitchY-c.sy)+(c.ty-c.sy-c.vy*80-(c.glitchY-c.sy))*ease;
+          rot=(Math.random()-0.5)*0.15*(1-ease);
+          alpha=Math.max(0,1-p);
+        }
+
+        ctx.save();
+        ctx.translate(c.sx+cw/2+dx,c.sy+ch/2+dy);
+        ctx.rotate(rot);
+        ctx.globalAlpha=alpha;
+        /* chunk fill */
+        ctx.fillStyle=c.color;
+        ctx.fillRect(-cw/2,-ch/2,cw,ch);
+        /* RGB split glitch */
+        ctx.fillStyle=`rgba(0,255,80,0.18)`;
+        ctx.fillRect(-cw/2+glitchOff,-ch/2,cw,ch/3);
+        ctx.fillStyle=`rgba(255,0,80,0.12)`;
+        ctx.fillRect(-cw/2-glitchOff,ch/6,cw,ch/3);
+        /* scanline */
+        ctx.fillStyle='rgba(0,255,80,0.06)';
+        for(let i=0;i<ch;i+=3)ctx.fillRect(-cw/2,-ch/2+i,cw,1);
+        ctx.restore();
+      });
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  };
+})();
+</script>
+<script src="ping.js"></script>
+</body>
+</html>

@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MATRIXON — Course Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════
+   MATRIXON COURSE LAB — Electronics × Purple Aesthetic
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --pu: #9d4edd;
+  --pu2: #c77dff;
+  --pu3: #e0aaff;
+  --pu-dim: rgba(157,78,221,0.18);
+  --pu-glow: rgba(157,78,221,0.45);
+  --neon: #bf5fff;
+  --cyan: #00f5ff;
+  --amber: #ffb703;
+  --green: #06ffa5;
+  --red: #ff4d6d;
+  --bg: #08010f;
+  --bg2: #0d0219;
+  --card: #110120;
+  --card2: #190130;
+  --border: rgba(157,78,221,0.28);
+  --text: #e0d0ff;
+  --text-dim: rgba(224,208,255,0.5);
+  --font-head: 'Orbitron', monospace;
+  --font-body: 'Rajdhani', sans-serif;
+  --font-code: 'Space Mono', monospace;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── CUSTOM CURSOR ── */
+#cursor {
+  width: 20px; height: 20px;
+  border: 2px solid var(--pu2);
+  border-radius: 50%;
+  position: fixed; pointer-events: none; z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: transform 0.1s, width 0.2s, height 0.2s, border-color 0.2s, background 0.2s;
+  mix-blend-mode: screen;
+}
+#cursor-dot {
+  width: 4px; height: 4px; background: var(--pu2);
+  border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999;
+  transform: translate(-50%,-50%);
+}
+body:hover #cursor { background: rgba(157,78,221,0.08); }
+.cursor-expand { width: 44px !important; height: 44px !important; border-color: var(--pu3) !important; }
+
+/* ── CIRCUIT BACKGROUND CANVAS ── */
+#circuitBg { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.35; }
+
+/* ── PARTICLE FIELD ── */
+#particleCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+/* ── SCANLINES OVERLAY ── */
+.scanlines {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(157,78,221,0.03) 2px, rgba(157,78,221,0.03) 3px);
+}
+
+/* ── VIGNETTE ── */
+.vignette {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(8,1,15,0.85) 100%);
+}
+
+/* ── LAYOUT ── */
+.app-shell {
+  display: flex; min-height: 100vh;
+  position: relative; z-index: 2;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 72px; background: rgba(13,2,25,0.95);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 20px 0; gap: 8px;
+  position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+  backdrop-filter: blur(20px);
+}
+.sidebar::after {
+  content: '';
+  position: absolute; top: 0; right: -1px; bottom: 0; width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--pu), transparent);
+  animation: sidebarGlow 3s ease-in-out infinite;
+}
+@keyframes sidebarGlow {
+  0%,100%{ opacity: 0.4; } 50% { opacity: 1; }
+}
+.logo-icon {
+  width: 44px; height: 44px; border: 2px solid var(--pu2);
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head); font-size: 13px; color: var(--pu2);
+  text-shadow: 0 0 10px var(--pu2);
+  box-shadow: 0 0 20px var(--pu-dim), inset 0 0 10px rgba(157,78,221,0.1);
+  margin-bottom: 16px;
+  animation: logoPulse 2s ease-in-out infinite;
+}
+@keyframes logoPulse {
+  0%,100%{ box-shadow: 0 0 20px var(--pu-dim); }
+  50% { box-shadow: 0 0 35px var(--pu-glow); }
+}
+.nav-item {
+  width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+  border-radius: 12px; cursor: pointer; transition: all 0.3s; position: relative;
+  color: rgba(157,78,221,0.45); font-size: 20px;
+  text-decoration: none;
+}
+.nav-item:hover { background: var(--pu-dim); color: var(--pu2); transform: scale(1.1); }
+.nav-item.active {
+  background: rgba(157,78,221,0.22); color: var(--pu2);
+  box-shadow: 0 0 20px var(--pu-dim);
+}
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 24px; background: var(--pu2); border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 10px var(--pu2);
+}
+.nav-tooltip {
+  position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+  background: var(--card2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 12px; font-family: var(--font-code); font-size: 11px; color: var(--pu3);
+  white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  z-index: 200; letter-spacing: 1px;
+}
+.nav-item:hover .nav-tooltip { opacity: 1; }
+
+/* ── MAIN CONTENT ── */
+.main {
+  margin-left: 72px; flex: 1; padding: 24px 28px;
+  min-height: 100vh;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px; padding-bottom: 18px;
+  border-bottom: 1px solid rgba(157,78,221,0.15);
+}
+.page-title {
+  font-family: var(--font-head); font-size: 22px; letter-spacing: 4px;
+  color: var(--pu2); text-shadow: 0 0 20px var(--pu-glow);
+  display: flex; align-items: center; gap: 12px;
+}
+.page-title span { font-size: 18px; }
+.title-badge {
+  font-size: 10px; letter-spacing: 2px; color: var(--pu3);
+  background: var(--pu-dim); border: 1px solid var(--border);
+  padding: 4px 10px; border-radius: 20px; font-family: var(--font-code);
+}
+.user-info {
+  display: flex; align-items: center; gap: 14px;
+}
+.xp-pill {
+  background: linear-gradient(135deg, rgba(157,78,221,0.2), rgba(199,125,255,0.1));
+  border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px;
+  font-family: var(--font-code); font-size: 12px; color: var(--pu3); letter-spacing: 1px;
+  display: flex; align-items: center; gap: 8px;
+}
+.xp-pill .xp-icon { color: var(--amber); font-size: 14px; }
+.streak-pill {
+  background: rgba(6,255,165,0.08); border: 1px solid rgba(6,255,165,0.25);
+  border-radius: 20px; padding: 6px 14px;
+  font-family: var(--font-code); font-size: 12px; color: var(--green);
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: linear-gradient(135deg, var(--card) 0%, var(--card2) 100%);
+  border: 1px solid var(--border); border-radius: 16px; padding: 16px 20px;
+  position: relative; overflow: hidden; cursor: pointer;
+  transition: all 0.3s;group: true;
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--pu2);
+  box-shadow: 0 8px 30px rgba(157,78,221,0.25);
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(to right, transparent, var(--pu2), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.stat-card:hover::before { opacity: 1; }
+.stat-label { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 6px; font-family: var(--font-code); }
+.stat-value { font-family: var(--font-head); font-size: 28px; color: var(--pu2); line-height: 1; }
+.stat-value.green { color: var(--green); }
+.stat-value.amber { color: var(--amber); }
+.stat-value.cyan { color: var(--cyan); }
+.stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+.stat-icon { position: absolute; right: 16px; top: 16px; font-size: 28px; opacity: 0.15; }
+.stat-bar { height: 3px; background: rgba(157,78,221,0.15); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.stat-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(to right, var(--pu), var(--pu2)); transition: width 1.5s cubic-bezier(.22,1,.36,1); }
+
+/* ── COURSE GRID HEADER ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
+}
+.section-title {
+  font-family: var(--font-head); font-size: 14px; letter-spacing: 3px;
+  color: var(--pu3); display: flex; align-items: center; gap: 10px;
+}
+.section-title::before {
+  content: ''; width: 3px; height: 18px; background: var(--pu2);
+  border-radius: 2px; box-shadow: 0 0 8px var(--pu2);
+}
+.filter-pills { display: flex; gap: 8px; }
+.pill {
+  padding: 6px 16px; border-radius: 20px; font-size: 11px; font-family: var(--font-code);
+  cursor: pointer; border: 1px solid var(--border); color: var(--text-dim);
+  background: transparent; transition: all 0.2s; letter-spacing: 1px;
+}
+.pill.active, .pill:hover {
+  background: var(--pu-dim); border-color: var(--pu2); color: var(--pu2);
+}
+
+/* ── COURSE GRID ── */
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+  margin-bottom: 36px;
+}
+
+/* ── COURSE CARD ── */
+.course-card {
+  background: linear-gradient(145deg, var(--card) 0%, rgba(25,1,48,0.9) 100%);
+  border: 1px solid var(--border);
+  border-radius: 20px; overflow: hidden;
+  position: relative; cursor: pointer;
+  transition: all 0.4s cubic-bezier(.22,1,.36,1);
+  transform-style: preserve-3d;
+}
+.course-card:hover {
+  border-color: var(--pu2);
+  box-shadow: 0 12px 40px rgba(157,78,221,0.3), 0 0 0 1px rgba(199,125,255,0.1);
+  transform: translateY(-6px) scale(1.01);
+}
+.course-card.completed {
+  border-color: rgba(6,255,165,0.35);
+  background: linear-gradient(145deg, rgba(6,255,165,0.04) 0%, var(--card) 100%);
+}
+.course-card.completed:hover { border-color: var(--green); box-shadow: 0 12px 40px rgba(6,255,165,0.2); }
+.course-card.locked { opacity: 0.55; cursor: not-allowed; }
+.course-card.locked:hover { transform: none; box-shadow: none; }
+
+/* Card circuit art */
+.card-circuit {
+  position: absolute; top: 0; right: 0; width: 120px; height: 120px;
+  opacity: 0.08; pointer-events: none;
+}
+
+/* Card header strip */
+.card-header {
+  padding: 16px 18px 12px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  position: relative;
+}
+.card-icon-wrap {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; position: relative;
+  transition: transform 0.3s;
+}
+.course-card:hover .card-icon-wrap { transform: rotate(-5deg) scale(1.1); }
+.card-icon-wrap.purple { background: rgba(157,78,221,0.2); border: 1px solid rgba(157,78,221,0.4); box-shadow: 0 0 20px rgba(157,78,221,0.2); }
+.card-icon-wrap.cyan { background: rgba(0,245,255,0.1); border: 1px solid rgba(0,245,255,0.3); }
+.card-icon-wrap.amber { background: rgba(255,183,3,0.1); border: 1px solid rgba(255,183,3,0.3); }
+.card-icon-wrap.green { background: rgba(6,255,165,0.1); border: 1px solid rgba(6,255,165,0.3); }
+.card-icon-wrap.red { background: rgba(255,77,109,0.1); border: 1px solid rgba(255,77,109,0.3); }
+
+.card-badges { display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+.level-badge {
+  font-size: 9px; letter-spacing: 1.5px; font-family: var(--font-code);
+  padding: 3px 9px; border-radius: 10px; font-weight: bold;
+}
+.level-badge.beginner { background: rgba(6,255,165,0.15); color: var(--green); border: 1px solid rgba(6,255,165,0.3); }
+.level-badge.intermediate { background: rgba(255,183,3,0.15); color: var(--amber); border: 1px solid rgba(255,183,3,0.3); }
+.level-badge.advanced { background: rgba(255,77,109,0.15); color: var(--red); border: 1px solid rgba(255,77,109,0.3); }
+.level-badge.expert { background: rgba(157,78,221,0.2); color: var(--pu2); border: 1px solid rgba(157,78,221,0.4); }
+
+.status-badge {
+  font-size: 9px; letter-spacing: 1px; font-family: var(--font-code);
+  padding: 3px 9px; border-radius: 10px; display: flex; align-items: center; gap: 4px;
+}
+.status-badge.done { background: rgba(6,255,165,0.15); color: var(--green); border: 1px solid rgba(6,255,165,0.3); }
+.status-badge.progress { background: rgba(157,78,221,0.15); color: var(--pu2); border: 1px solid rgba(157,78,221,0.3); }
+.status-badge.new { background: rgba(0,245,255,0.1); color: var(--cyan); border: 1px solid rgba(0,245,255,0.25); }
+.status-badge.locked { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.1); }
+.status-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: statusBlink 2s infinite; }
+@keyframes statusBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* Card body */
+.card-body { padding: 0 18px 16px; }
+.card-title { font-family: var(--font-head); font-size: 14px; letter-spacing: 1px; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
+.card-desc { font-size: 12px; color: var(--text-dim); line-height: 1.6; margin-bottom: 14px; font-family: var(--font-body); }
+
+/* Tech tags */
+.tech-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+.tech-tag {
+  font-size: 9px; letter-spacing: 1px; font-family: var(--font-code);
+  padding: 2px 8px; border-radius: 6px; color: var(--pu3);
+  background: rgba(157,78,221,0.1); border: 1px solid rgba(157,78,221,0.2);
+}
+
+/* Progress */
+.progress-wrap { margin-bottom: 12px; }
+.progress-labels { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 10px; font-family: var(--font-code); color: var(--text-dim); }
+.progress-track {
+  height: 6px; background: rgba(157,78,221,0.12); border-radius: 10px; overflow: hidden;
+  position: relative;
+}
+.progress-fill {
+  height: 100%; border-radius: 10px; position: relative;
+  background: linear-gradient(to right, var(--pu), var(--pu2), var(--pu3));
+  transition: width 1.8s cubic-bezier(.22,1,.36,1);
+  box-shadow: 0 0 10px var(--pu-glow);
+}
+.progress-fill.green { background: linear-gradient(to right, #06ffa5, #00d4aa); box-shadow: 0 0 10px rgba(6,255,165,0.4); }
+.progress-fill::after {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 20px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.4));
+  animation: shimmer 2s ease-in-out infinite;
+}
+@keyframes shimmer { 0%,100%{opacity:0} 50%{opacity:1} }
+
+/* Card footer */
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px; border-top: 1px solid rgba(157,78,221,0.1);
+  background: rgba(157,78,221,0.04);
+}
+.card-meta { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--text-dim); font-family: var(--font-code); }
+.card-meta span { display: flex; align-items: center; gap: 4px; }
+.card-action {
+  padding: 7px 18px; border-radius: 20px; font-size: 11px; font-family: var(--font-code);
+  letter-spacing: 1px; cursor: pointer; border: none; transition: all 0.3s;
+}
+.card-action.start { background: linear-gradient(135deg, var(--pu), var(--pu2)); color: #fff; }
+.card-action.start:hover { filter: brightness(1.2); transform: scale(1.05); box-shadow: 0 0 20px var(--pu-glow); }
+.card-action.resume { background: transparent; border: 1px solid var(--pu2); color: var(--pu2); }
+.card-action.resume:hover { background: var(--pu-dim); }
+.card-action.review { background: rgba(6,255,165,0.1); border: 1px solid rgba(6,255,165,0.3); color: var(--green); }
+.card-action.review:hover { background: rgba(6,255,165,0.2); }
+.card-action.locked { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); cursor: not-allowed; }
+
+/* Completed overlay checkmark */
+.complete-mark {
+  position: absolute; top: 12px; left: 12px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(6,255,165,0.2); border: 1.5px solid var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--green);
+  box-shadow: 0 0 12px rgba(6,255,165,0.3);
+  opacity: 0; transform: scale(0);
+  transition: all 0.3s 0.1s;
+}
+.course-card.completed .complete-mark { opacity: 1; transform: scale(1); }
+
+/* ── LEARNING PATH ── */
+.path-section { margin-bottom: 36px; }
+.path-track {
+  position: relative; padding: 20px 0;
+}
+.path-line {
+  position: absolute; left: 36px; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(to bottom, var(--pu), rgba(157,78,221,0.1));
+}
+.path-node {
+  display: flex; align-items: center; gap: 20px;
+  padding: 12px 0 12px 80px; position: relative; cursor: pointer;
+  transition: all 0.2s;
+}
+.path-node:hover { padding-left: 86px; }
+.path-dot {
+  position: absolute; left: 27px; width: 20px; height: 20px;
+  border-radius: 50%; border: 2px solid var(--pu2);
+  background: var(--bg); display: flex; align-items: center; justify-content: center;
+  font-size: 8px; color: var(--pu2);
+  box-shadow: 0 0 12px var(--pu-dim);
+  transition: all 0.3s;
+}
+.path-node:hover .path-dot { box-shadow: 0 0 20px var(--pu-glow); transform: scale(1.2); }
+.path-dot.done { background: var(--green); border-color: var(--green); color: var(--bg); box-shadow: 0 0 12px rgba(6,255,165,0.4); }
+.path-dot.current { background: var(--pu2); border-color: var(--pu3); color: var(--bg); animation: nodePulse 1.5s ease-in-out infinite; }
+@keyframes nodePulse { 0%,100%{box-shadow:0 0 12px var(--pu-glow)} 50%{box-shadow:0 0 25px var(--pu-glow), 0 0 40px rgba(157,78,221,0.3)} }
+.path-content { flex: 1; }
+.path-name { font-family: var(--font-code); font-size: 13px; color: var(--text); margin-bottom: 3px; }
+.path-meta { font-size: 11px; color: var(--text-dim); display: flex; gap: 12px; }
+.path-xp { color: var(--amber); }
+
+/* ── AI TUTOR PANEL ── */
+.ai-panel {
+  background: linear-gradient(135deg, rgba(157,78,221,0.08), rgba(0,245,255,0.05));
+  border: 1px solid rgba(157,78,221,0.3);
+  border-radius: 20px; padding: 20px; margin-bottom: 28px;
+  position: relative; overflow: hidden;
+}
+.ai-panel::before {
+  content: ''; position: absolute; top: -50%; right: -20%;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(157,78,221,0.12), transparent 70%);
+  pointer-events: none;
+}
+.ai-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.ai-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--pu), var(--cyan));
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  box-shadow: 0 0 20px rgba(157,78,221,0.4);
+  animation: avatarFloat 3s ease-in-out infinite;
+}
+@keyframes avatarFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+.ai-title { font-family: var(--font-head); font-size: 13px; color: var(--pu2); letter-spacing: 2px; }
+.ai-sub { font-size: 11px; color: var(--text-dim); font-family: var(--font-code); }
+.ai-live { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; color: var(--green); letter-spacing: 2px; font-family: var(--font-code); }
+.ai-live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: statusBlink 1s infinite; }
+.ai-suggestion-box {
+  background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+  font-size: 12px; color: var(--text); line-height: 1.7; font-family: var(--font-body);
+  min-height: 50px; position: relative;
+}
+.ai-cursor { display: inline-block; width: 2px; height: 14px; background: var(--pu2); animation: blinkCursor 0.8s infinite; vertical-align: middle; margin-left: 2px; }
+@keyframes blinkCursor { 0%,100%{opacity:1} 50%{opacity:0} }
+.ai-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.ai-chip {
+  padding: 6px 14px; border-radius: 20px; font-size: 11px; font-family: var(--font-code);
+  border: 1px solid rgba(157,78,221,0.3); background: rgba(157,78,221,0.1);
+  color: var(--pu3); cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;
+}
+.ai-chip:hover { background: rgba(157,78,221,0.25); border-color: var(--pu2); color: var(--pu2); transform: translateY(-1px); }
+
+/* ── SKILL RADAR ── */
+.skill-section {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 28px;
+}
+.skill-panel {
+  background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 20px;
+}
+.skill-panel-title { font-family: var(--font-head); font-size: 12px; letter-spacing: 2px; color: var(--pu3); margin-bottom: 16px; }
+
+/* Skill bars */
+.skill-bar-item { margin-bottom: 12px; }
+.skill-bar-label { display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-code); color: var(--text-dim); margin-bottom: 5px; }
+.skill-bar-label span:last-child { color: var(--pu2); }
+.skill-track { height: 8px; background: rgba(157,78,221,0.1); border-radius: 10px; overflow: hidden; }
+.skill-fill {
+  height: 100%; border-radius: 10px;
+  background: linear-gradient(to right, var(--pu), var(--pu2));
+  box-shadow: 0 0 8px var(--pu-dim);
+  transition: width 2s cubic-bezier(.22,1,.36,1);
+  position: relative;
+}
+.skill-fill::after {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0;
+  width: 3px; background: var(--pu3); border-radius: 50%;
+  box-shadow: 0 0 6px var(--pu2);
+}
+
+/* ── ACHIEVEMENT TOAST ── */
+.achievement-toast {
+  position: fixed; bottom: 28px; right: 28px; z-index: 500;
+  background: linear-gradient(135deg, rgba(13,2,25,0.98), rgba(25,1,48,0.98));
+  border: 1px solid var(--pu2); border-radius: 16px; padding: 16px 20px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 8px 40px rgba(157,78,221,0.35), 0 0 0 1px rgba(199,125,255,0.1);
+  transform: translateX(120%); transition: transform 0.5s cubic-bezier(.22,1,.36,1);
+  max-width: 320px; backdrop-filter: blur(20px);
+}
+.achievement-toast.show { transform: translateX(0); }
+.toast-icon { font-size: 32px; flex-shrink: 0; animation: iconBounce 0.6s cubic-bezier(.22,1,.36,1); }
+@keyframes iconBounce { 0%{transform:scale(0) rotate(-20deg)} 60%{transform:scale(1.2) rotate(5deg)} 100%{transform:scale(1)} }
+.toast-body .toast-label { font-size: 9px; letter-spacing: 2px; color: var(--amber); font-family: var(--font-code); margin-bottom: 2px; }
+.toast-body .toast-title { font-family: var(--font-head); font-size: 13px; color: var(--text); margin-bottom: 2px; }
+.toast-body .toast-desc { font-size: 11px; color: var(--text-dim); font-family: var(--font-body); }
+.toast-xp { text-align: right; font-family: var(--font-head); font-size: 18px; color: var(--amber); text-shadow: 0 0 10px rgba(255,183,3,0.5); white-space: nowrap; }
+
+/* ── COURSE DETAIL MODAL ── */
+#courseModal {
+  position: fixed; inset: 0; z-index: 800;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(8,1,15,0.85); backdrop-filter: blur(12px);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+#courseModal.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: linear-gradient(145deg, #0d0219, #190130);
+  border: 1px solid var(--pu2); border-radius: 24px;
+  width: min(95vw, 680px); max-height: 85vh; overflow-y: auto;
+  padding: 30px; position: relative;
+  box-shadow: 0 20px 80px rgba(157,78,221,0.4);
+  transform: scale(0.9) translateY(30px);
+  transition: transform 0.4s cubic-bezier(.22,1,.36,1);
+  scrollbar-width: thin; scrollbar-color: var(--pu) transparent;
+}
+#courseModal.open .modal-box { transform: none; }
+.modal-close {
+  position: absolute; top: 20px; right: 22px; font-size: 20px;
+  color: var(--pu3); cursor: pointer; transition: all 0.2s; z-index: 10;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; background: rgba(157,78,221,0.1); border: 1px solid var(--border);
+}
+.modal-close:hover { color: var(--red); transform: rotate(90deg); background: rgba(255,77,109,0.1); }
+
+.modal-hero { display: flex; align-items: center; gap: 18px; margin-bottom: 22px; }
+.modal-icon { font-size: 48px; }
+.modal-meta .modal-title { font-family: var(--font-head); font-size: 20px; color: var(--pu2); letter-spacing: 2px; margin-bottom: 8px; }
+.modal-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.modal-section { margin-bottom: 22px; }
+.modal-section-title { font-family: var(--font-head); font-size: 11px; letter-spacing: 2px; color: var(--pu3); margin-bottom: 12px; opacity: 0.8; }
+
+.module-list { display: flex; flex-direction: column; gap: 8px; }
+.module-item {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+  background: rgba(157,78,221,0.06); border: 1px solid rgba(157,78,221,0.15); border-radius: 12px;
+  cursor: pointer; transition: all 0.2s;
+}
+.module-item:hover { background: rgba(157,78,221,0.12); border-color: var(--pu2); }
+.module-num { font-family: var(--font-code); font-size: 11px; color: var(--pu3); width: 24px; text-align: center; flex-shrink: 0; }
+.module-name { flex: 1; font-size: 13px; color: var(--text); font-family: var(--font-body); }
+.module-dur { font-family: var(--font-code); font-size: 10px; color: var(--text-dim); }
+.module-status { font-size: 13px; }
+
+.enroll-btn {
+  width: 100%; padding: 14px; border: none; border-radius: 16px;
+  font-family: var(--font-head); font-size: 14px; letter-spacing: 3px;
+  cursor: pointer; transition: all 0.3s;
+  background: linear-gradient(135deg, var(--pu), var(--pu2));
+  color: #fff; box-shadow: 0 0 30px rgba(157,78,221,0.4);
+  position: relative; overflow: hidden;
+}
+.enroll-btn:hover { filter: brightness(1.15); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(157,78,221,0.5); }
+.enroll-btn::after {
+  content: ''; position: absolute; top: -50%; left: -60%; width: 60%; height: 200%;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent);
+  transform: skewX(-20deg); animation: btnShine 3s ease-in-out infinite;
+}
+@keyframes btnShine { 0%{left:-60%} 100%{left:120%} }
+
+/* ── STREAKS CALENDAR ── */
+.calendar-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 10px;
+}
+.cal-cell {
+  aspect-ratio: 1; border-radius: 4px; transition: transform 0.2s;
+  cursor: pointer;
+}
+.cal-cell:hover { transform: scale(1.3); z-index: 1; position: relative; }
+.cal-cell.empty { background: rgba(157,78,221,0.06); }
+.cal-cell.low { background: rgba(157,78,221,0.25); }
+.cal-cell.mid { background: rgba(157,78,221,0.5); }
+.cal-cell.high { background: rgba(157,78,221,0.8); box-shadow: 0 0 6px var(--pu-glow); }
+.cal-cell.today { background: var(--pu2); box-shadow: 0 0 10px var(--pu-glow); }
+
+/* ── LEADERBOARD MINI ── */
+.lb-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid rgba(157,78,221,0.1);
+}
+.lb-rank { font-family: var(--font-head); font-size: 16px; width: 28px; text-align: center; }
+.lb-rank.gold { color: var(--amber); text-shadow: 0 0 10px rgba(255,183,3,0.5); }
+.lb-rank.silver { color: #c0c0c0; }
+.lb-rank.bronze { color: #cd7f32; }
+.lb-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--pu-dim); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.lb-name { flex: 1; font-size: 13px; color: var(--text); font-family: var(--font-code); }
+.lb-name.you { color: var(--pu2); }
+.lb-xp { font-family: var(--font-code); font-size: 11px; color: var(--amber); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .skill-section { grid-template-columns: 1fr; }
+  .sidebar { width: 56px; }
+  .main { margin-left: 56px; padding: 16px; }
+}
+@media (max-width: 600px) {
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .course-grid { grid-template-columns: 1fr; }
+  body { cursor: auto; }
+  #cursor, #cursor-dot { display: none; }
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(157,78,221,0.4); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--pu2); }
+
+/* ── GLOW PULSE on load ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.5s ease forwards; }
+.fade-up-1 { animation-delay: 0.1s; opacity: 0; }
+.fade-up-2 { animation-delay: 0.2s; opacity: 0; }
+.fade-up-3 { animation-delay: 0.3s; opacity: 0; }
+.fade-up-4 { animation-delay: 0.4s; opacity: 0; }
+.fade-up-5 { animation-delay: 0.5s; opacity: 0; }
+
+/* Glowing text utility */
+.glow-pu { text-shadow: 0 0 12px var(--pu-glow); }
+
+/* Hot dot for new courses */
+.hot-badge {
+  position: absolute; top: 10px; right: 10px;
+  background: linear-gradient(135deg, #ff4d6d, #ff0a54);
+  border-radius: 20px; font-size: 8px; padding: 2px 7px;
+  color: #fff; font-family: var(--font-code); letter-spacing: 1px;
+  animation: hotPulse 1.5s ease-in-out infinite;
+}
+@keyframes hotPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,109,0.4)} 50%{box-shadow:0 0 0 6px rgba(255,77,109,0)} }
+
+/* EXP ring on hover */
+.xp-ring {
+  position: absolute; inset: -1px; border-radius: 20px;
+  background: transparent; pointer-events: none;
+  opacity: 0; transition: opacity 0.3s;
+  box-shadow: 0 0 20px var(--pu-glow), inset 0 0 20px rgba(157,78,221,0.05);
+}
+.course-card:hover .xp-ring { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div id="cursor"></div>
+<div id="cursor-dot"></div>
+
+<!-- Background layers -->
+<canvas id="circuitBg"></canvas>
+<canvas id="particleCanvas"></canvas>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<!-- Achievement Toast -->
+<div class="achievement-toast" id="achieveToast">
+  <div class="toast-icon" id="toastIcon">🏆</div>
+  <div class="toast-body">
+    <div class="toast-label">ACHIEVEMENT UNLOCKED</div>
+    <div class="toast-title" id="toastTitle">Circuit Breaker</div>
+    <div class="toast-desc" id="toastDesc">Completed your first electronics course</div>
+  </div>
+  <div class="toast-xp" id="toastXP">+150 XP</div>
+</div>
+
+<!-- Course Detail Modal -->
+<div id="courseModal">
+  <div class="modal-box">
+    <div class="modal-close" onclick="closeModal()">✕</div>
+    <div class="modal-hero">
+      <div class="modal-icon" id="modalIcon">⚡</div>
+      <div class="modal-meta">
+        <div class="modal-title" id="modalTitle">Course Title</div>
+        <div class="modal-tags" id="modalTags"></div>
+      </div>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- App Shell -->
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo-icon">MX</div>
+    <a href="learning.html" class="nav-item" title="">
+      <span>🏠</span>
+      <span class="nav-tooltip">HOME</span>
+    </a>
+    <a href="courses.html" class="nav-item active" title="">
+      <span>📡</span>
+      <span class="nav-tooltip">COURSES</span>
+    </a>
+    <a href="achievements.html" class="nav-item" title="">
+      <span>🏆</span>
+      <span class="nav-tooltip">ACHIEVEMENTS</span>
+    </a>
+    <a href="Leaderboard.html" class="nav-item" title="">
+      <span>📊</span>
+      <span class="nav-tooltip">LEADERBOARD</span>
+    </a>
+    <a href="profile.html" class="nav-item" title="">
+      <span>👤</span>
+      <span class="nav-tooltip">PROFILE</span>
+    </a>
+    <a href="Settings.html" class="nav-item" title="">
+      <span>⚙️</span>
+      <span class="nav-tooltip">SETTINGS</span>
+    </a>
+    <div style="flex:1"></div>
+    <div class="nav-item" onclick="MatrixAuth.logout()" title="">
+      <span>⏻</span>
+      <span class="nav-tooltip">LOGOUT</span>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar fade-up fade-up-1">
+      <div class="page-title">
+        <span>⚡</span> COURSE LAB
+        <div class="title-badge">ELECTRONICS TRACK</div>
+      </div>
+      <div class="user-info">
+        <div class="streak-pill">🔥 <span id="streakCount">12</span> DAY STREAK</div>
+        <div class="xp-pill"><span class="xp-icon">⚡</span> <span id="xpCount">4,280</span> XP</div>
+      </div>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="stats-row fade-up fade-up-2">
+      <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-label">COURSES ENROLLED</div>
+        <div class="stat-value">12</div>
+        <div class="stat-sub">+3 this month</div>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:75%" data-target="75"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-label">COMPLETED</div>
+        <div class="stat-value green">7</div>
+        <div class="stat-sub">58% completion rate</div>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:58%" data-target="58"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏱</div>
+        <div class="stat-label">HOURS STUDIED</div>
+        <div class="stat-value amber">84h</div>
+        <div class="stat-sub">Avg 7h/week</div>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:84%" data-target="84"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🧠</div>
+        <div class="stat-label">SKILL POINTS</div>
+        <div class="stat-value cyan">2,140</div>
+        <div class="stat-sub">Top 8% globally</div>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:92%" data-target="92"></div></div>
+      </div>
+    </div>
+
+    <!-- AI TUTOR PANEL -->
+    <div class="ai-panel fade-up fade-up-3">
+      <div class="ai-header">
+        <div class="ai-avatar">🤖</div>
+        <div>
+          <div class="ai-title">NEXUS AI TUTOR</div>
+          <div class="ai-sub">Powered by adaptive learning engine v2.4</div>
+        </div>
+        <div style="margin-left:auto">
+          <div class="ai-live"><span class="ai-live-dot"></span>LIVE</div>
+        </div>
+      </div>
+      <div class="ai-suggestion-box">
+        <span id="aiText"></span><span class="ai-cursor"></span>
+      </div>
+      <div class="ai-actions">
+        <div class="ai-chip" onclick="aiSuggest(0)">📊 Analyze my gaps</div>
+        <div class="ai-chip" onclick="aiSuggest(1)">🎯 Next challenge</div>
+        <div class="ai-chip" onclick="aiSuggest(2)">⚡ Quick quiz me</div>
+        <div class="ai-chip" onclick="aiSuggest(3)">📅 Plan this week</div>
+        <div class="ai-chip" onclick="aiSuggest(4)">🔧 Debug concept</div>
+      </div>
+    </div>
+
+    <!-- COURSE FILTER -->
+    <div class="section-header fade-up fade-up-3">
+      <div class="section-title">ALL COURSES</div>
+      <div class="filter-pills">
+        <div class="pill active" onclick="filterCourses('all', this)">ALL</div>
+        <div class="pill" onclick="filterCourses('inprogress', this)">IN PROGRESS</div>
+        <div class="pill" onclick="filterCourses('completed', this)">COMPLETED</div>
+        <div class="pill" onclick="filterCourses('new', this)">NEW</div>
+        <div class="pill" onclick="filterCourses('locked', this)">LOCKED</div>
+      </div>
+    </div>
+
+    <!-- COURSE GRID -->
+    <div class="course-grid fade-up fade-up-4" id="courseGrid"></div>
+
+    <!-- SKILLS + STREAK SECTION -->
+    <div class="skill-section fade-up fade-up-5">
+      <div class="skill-panel">
+        <div class="skill-panel-title">⚡ SKILL MASTERY</div>
+        <div id="skillBars"></div>
+      </div>
+      <div class="skill-panel">
+        <div class="skill-panel-title">📅 STUDY STREAK</div>
+        <div style="font-size:11px;color:var(--text-dim);font-family:var(--font-code);margin-bottom:8px;">Last 49 days of activity</div>
+        <div class="calendar-grid" id="calGrid"></div>
+        <div style="margin-top:14px;display:flex;gap:16px;font-size:10px;font-family:var(--font-code);color:var(--text-dim);align-items:center;">
+          <span>LESS</span>
+          <div style="width:10px;height:10px;border-radius:2px;background:rgba(157,78,221,0.06)"></div>
+          <div style="width:10px;height:10px;border-radius:2px;background:rgba(157,78,221,0.25)"></div>
+          <div style="width:10px;height:10px;border-radius:2px;background:rgba(157,78,221,0.5)"></div>
+          <div style="width:10px;height:10px;border-radius:2px;background:rgba(157,78,221,0.8)"></div>
+          <span>MORE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEARNING PATH -->
+    <div class="section-header fade-up fade-up-5" style="margin-top:8px;">
+      <div class="section-title">ELECTRONICS MASTERY PATH</div>
+    </div>
+    <div class="path-section fade-up fade-up-5">
+      <div class="path-track">
+        <div class="path-line"></div>
+        <div id="pathNodes"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   COURSE DATA
+   ═══════════════════════════════════════════════════════════ */
+const COURSES = [
+  {
+    id: 1, status: 'completed', hot: false,
+    icon: '⚡', iconColor: 'amber',
+    title: 'Fundamentals of Electronics',
+    desc: 'Voltage, current, resistance — the holy trinity. Build intuition for Ohm\'s Law and circuit analysis from the ground up.',
+    tags: ['OHM\'S LAW','DC CIRCUITS','RESISTORS'],
+    level: 'beginner', progress: 100,
+    modules: 8, duration: '12h', xp: 200,
+    syllabus: [
+      {name:'Voltage & Current',dur:'45m',done:true},{name:'Ohm\'s Law Deep Dive',dur:'1h',done:true},
+      {name:'Series & Parallel Circuits',dur:'1.5h',done:true},{name:'Kirchhoff\'s Laws',dur:'1h',done:true},
+      {name:'Power & Energy',dur:'45m',done:true},{name:'RC Circuits',dur:'1h',done:true},
+      {name:'RL Circuits',dur:'1h',done:true},{name:'Final Lab Project',dur:'2h',done:true}
+    ]
+  },
+  {
+    id: 2, status: 'completed', hot: false,
+    icon: '🔌', iconColor: 'green',
+    title: 'Digital Logic & Boolean Algebra',
+    desc: 'From AND gates to full adders. Master the building blocks of every digital system ever made.',
+    tags: ['LOGIC GATES','FLIP-FLOPS','COUNTERS'],
+    level: 'beginner', progress: 100,
+    modules: 10, duration: '15h', xp: 250,
+    syllabus: [
+      {name:'Boolean Basics',dur:'1h',done:true},{name:'Logic Gates',dur:'1.5h',done:true},
+      {name:'Truth Tables',dur:'45m',done:true},{name:'Karnaugh Maps',dur:'1.5h',done:true},
+      {name:'Combinational Circuits',dur:'2h',done:true},{name:'Flip-Flops',dur:'1.5h',done:true},
+      {name:'Registers',dur:'1h',done:true},{name:'Counters',dur:'1h',done:true},
+      {name:'State Machines',dur:'2h',done:true},{name:'Final Design',dur:'2h',done:true}
+    ]
+  },
+  {
+    id: 3, status: 'completed', hot: false,
+    icon: '🌊', iconColor: 'cyan',
+    title: 'Signal Processing 101',
+    desc: 'Understand signals in time and frequency domains. Fourier transforms, filters, and sampling theorem.',
+    tags: ['FOURIER','FILTERS','ADC/DAC'],
+    level: 'intermediate', progress: 100,
+    modules: 9, duration: '18h', xp: 320,
+    syllabus: [
+      {name:'Analog vs Digital Signals',dur:'1h',done:true},{name:'Fourier Series',dur:'2h',done:true},
+      {name:'Fourier Transform',dur:'2.5h',done:true},{name:'Laplace Transform',dur:'2h',done:true},
+      {name:'Low-Pass Filters',dur:'1.5h',done:true},{name:'High-Pass Filters',dur:'1.5h',done:true},
+      {name:'Band-Pass Filters',dur:'1.5h',done:true},{name:'Sampling Theorem',dur:'2h',done:true},
+      {name:'ADC & DAC Design',dur:'3h',done:true}
+    ]
+  },
+  {
+    id: 4, status: 'inprogress', hot: true,
+    icon: '🔬', iconColor: 'purple',
+    title: 'Semiconductor Physics',
+    desc: 'Dive into the quantum world of electrons, holes, and junctions. Understand why transistors work at the atomic level.',
+    tags: ['PN JUNCTION','BJT','MOSFET'],
+    level: 'intermediate', progress: 62,
+    modules: 11, duration: '22h', xp: 400,
+    syllabus: [
+      {name:'Band Theory of Solids',dur:'2h',done:true},{name:'Intrinsic Semiconductors',dur:'1.5h',done:true},
+      {name:'Doping & Extrinsics',dur:'1.5h',done:true},{name:'PN Junction',dur:'2h',done:true},
+      {name:'Diode Characteristics',dur:'2h',done:true},{name:'Zener & Special Diodes',dur:'1.5h',done:true},
+      {name:'BJT Fundamentals',dur:'2.5h',done:false},{name:'BJT Amplifiers',dur:'2h',done:false},
+      {name:'MOSFET Theory',dur:'2.5h',done:false},{name:'CMOS Technology',dur:'2h',done:false},
+      {name:'Advanced Devices Lab',dur:'2h',done:false}
+    ]
+  },
+  {
+    id: 5, status: 'inprogress', hot: false,
+    icon: '📡', iconColor: 'purple',
+    title: 'Microcontrollers & Embedded Systems',
+    desc: 'Program real hardware. From Arduino to ARM Cortex-M — build systems that interact with the physical world.',
+    tags: ['ARM','RTOS','PERIPHERALS'],
+    level: 'intermediate', progress: 38,
+    modules: 14, duration: '30h', xp: 520,
+    syllabus: [
+      {name:'Microcontroller Architecture',dur:'2h',done:true},{name:'GPIO & Interfacing',dur:'2h',done:true},
+      {name:'Timers & PWM',dur:'2h',done:true},{name:'UART Communication',dur:'2h',done:true},
+      {name:'SPI Protocol',dur:'2h',done:false},{name:'I2C Protocol',dur:'2h',done:false},
+      {name:'ADC & Sensor Interfacing',dur:'2h',done:false},{name:'Interrupts & DMA',dur:'2.5h',done:false},
+      {name:'RTOS Basics',dur:'3h',done:false},{name:'FreeRTOS Tasks',dur:'2.5h',done:false},
+      {name:'Memory Management',dur:'2h',done:false},{name:'Bootloaders',dur:'2h',done:false},
+      {name:'Power Management',dur:'2h',done:false},{name:'Capstone Project',dur:'4h',done:false}
+    ]
+  },
+  {
+    id: 6, status: 'inprogress', hot: false,
+    icon: '🔧', iconColor: 'amber',
+    title: 'PCB Design with KiCad',
+    desc: 'Design professional printed circuit boards. Schematic capture, layout routing, DRC, and gerber generation.',
+    tags: ['KICAD','ROUTING','GERBER'],
+    level: 'intermediate', progress: 25,
+    modules: 10, duration: 'h', xp: 380,
+    syllabus: [
+      {name:'KiCad Interface Tour',dur:'1h',done:true},{name:'Schematic Capture',dur:'2h',done:true},
+      {name:'Component Libraries',dur:'1.5h',done:false},{name:'Footprint Assignment',dur:'1.5h',done:false},
+      {name:'PCB Layout Basics',dur:'2h',done:false},{name:'Design Rules',dur:'1h',done:false},
+      {name:'High-Speed Routing',dur:'2h',done:false},{name:'Ground Planes',dur:'1h',done:false},
+      {name:'DRC & ERC',dur:'1h',done:false},{name:'Gerber Export',dur:'1h',done:false}
+    ]
+  },
+  {
+    id: 7, status: 'new', hot: true,
+    icon: '🧲', iconColor: 'red',
+    title: 'RF & Wireless Systems',
+    desc: 'From Maxwell\'s equations to 5G. Master antenna design, impedance matching, and wireless link budgets.',
+    tags: ['RF','ANTENNA','5G'],
+    level: 'advanced', progress: 0,
+    modules: 12, duration: '28h', xp: 600,
+    syllabus: [
+      {name:'EM Wave Fundamentals',dur:'2h',done:false},{name:'Transmission Lines',dur:'2.5h',done:false},
+      {name:'Smith Chart',dur:'2h',done:false},{name:'Antenna Theory',dur:'3h',done:false},
+      {name:'Antenna Types',dur:'2h',done:false},{name:'Link Budget Analysis',dur:'2h',done:false},
+      {name:'Modulation Schemes',dur:'2.5h',done:false},{name:'Receivers & Mixers',dur:'2h',done:false},
+      {name:'Noise Analysis',dur:'2h',done:false},{name:'Bluetooth & WiFi',dur:'2h',done:false},
+      {name:'LTE & 5G NR',dur:'2.5h',done:false},{name:'RF Design Project',dur:'3h',done:false}
+    ]
+  },
+  {
+    id: 8, status: 'new', hot: false,
+    icon: '🤖', iconColor: 'cyan',
+    title: 'AI Hardware Accelerators',
+    desc: 'Understand how neural networks run on silicon. GPUs, TPUs, FPGAs, and custom ASIC design for ML workloads.',
+    tags: ['FPGA','TPU','ASIC'],
+    level: 'expert', progress: 0,
+    modules: 10, duration: '25h', xp: 700,
+    syllabus: [
+      {name:'ML Hardware Landscape',dur:'2h',done:false},{name:'GPU Architecture',dur:'2.5h',done:false},
+      {name:'CUDA Programming',dur:'3h',done:false},{name:'TPU Design',dur:'2h',done:false},
+      {name:'FPGA for ML',dur:'3h',done:false},{name:'HLS Design Flow',dur:'2h',done:false},
+      {name:'Systolic Arrays',dur:'2h',done:false},{name:'Memory Hierarchies',dur:'2h',done:false},
+      {name:'Quantization & Pruning',dur:'2.5h',done:false},{name:'Capstone: ASIC Design',dur:'4h',done:false}
+    ]
+  },
+  {
+    id: 9, status: 'locked', hot: false,
+    icon: '🔐', iconColor: 'purple',
+    title: 'Power Electronics & Motor Drives',
+    desc: 'DC-DC converters, inverters, and electric motor control. The heart of EVs and renewable energy systems.',
+    tags: ['CONVERTERS','INVERTERS','EV'],
+    level: 'advanced', progress: 0,
+    modules: 11, duration: '26h', xp: 550,
+    syllabus: []
+  },
+  {
+    id: 10, status: 'locked', hot: false,
+    icon: '🔐', iconColor: 'purple',
+    title: 'VLSI Design & CMOS',
+    desc: 'Design chips from scratch. Standard cell design, timing analysis, and physical design closure.',
+    tags: ['VLSI','CMOS','TIMING'],
+    level: 'expert', progress: 0,
+    modules: 13, duration: '35h', xp: 800,
+    syllabus: []
+  },
+  {
+    id: 11, status: 'completed', hot: false,
+    icon: '🖥', iconColor: 'green',
+    title: 'Computer Architecture',
+    desc: 'From von Neumann to modern out-of-order superscalar. Pipeline stages, caches, and branch prediction.',
+    tags: ['CPU','PIPELINE','CACHE'],
+    level: 'intermediate', progress: 100,
+    modules: 12, duration: '20h', xp: 420,
+    syllabus: []
+  },
+  {
+    id: 12, status: 'completed', hot: false,
+    icon: '⚛️', iconColor: 'cyan',
+    title: 'Quantum Computing Foundations',
+    desc: 'Qubits, superposition, entanglement, and quantum gates. Implement Grover\'s algorithm from first principles.',
+    tags: ['QUBITS','GATES','ALGORITHMS'],
+    level: 'expert', progress: 100,
+    modules: 9, duration: '18h', xp: 450,
+    syllabus: []
+  }
+];
+
+const SKILLS = [
+  { name: 'Circuit Analysis', val: 85 },
+  { name: 'Digital Design', val: 92 },
+  { name: 'Embedded Systems', val: 54 },
+  { name: 'Signal Processing', val: 76 },
+  { name: 'PCB Design', val: 35 },
+  { name: 'RF Engineering', val: 12 },
+];
+
+const PATH_NODES = [
+  { name: 'Electronics Fundamentals', xp: 200, done: true },
+  { name: 'Digital Logic', xp: 250, done: true },
+  { name: 'Signal Processing', xp: 320, done: true },
+  { name: 'Semiconductor Physics', xp: 400, done: false, current: true },
+  { name: 'Microcontrollers', xp: 520, done: false },
+  { name: 'PCB Design', xp: 380, done: false },
+  { name: 'RF Systems', xp: 600, done: false },
+  { name: 'AI Hardware', xp: 700, done: false },
+];
+
+const AI_MESSAGES = [
+  "Based on your progress, I recommend tackling the MOSFET Theory module next. Your BJT score suggests you\'re ready — confidence interval: 87%.",
+  "🎯 Challenge detected! You haven\'t practiced Kirchhoff\'s Laws in 8 days. A 15-min review would spike your retention by ~40%.",
+  "⚡ Quick quiz: What\'s the voltage across a 470Ω resistor when 12mA flows through it? Type your answer below...",
+  "📅 Optimal plan: Mon/Wed/Fri — 90min sessions on Semiconductor Physics. Thu — PCB Lab. Weekend: light review. You\'ll finish by May 28.",
+  "🔧 It looks like you\'re stuck on BJT biasing. The key insight: treat the transistor as a current-controlled current source. Think β × IB = IC."
+];
+
+/* ═══════════════════════════════════════════════════════════
+   CIRCUIT BACKGROUND
+   ═══════════════════════════════════════════════════════════ */
+(function() {
+  const c = document.getElementById('circuitBg');
+  const ctx = c.getContext('2d');
+  function resize() { c.width = window.innerWidth; c.height = window.innerHeight; drawCircuit(); }
+
+  function drawCircuit() {
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.strokeStyle = '#9d4edd';
+    ctx.lineWidth = 1;
+    const grid = 60;
+    const cols = Math.ceil(c.width / grid) + 1;
+    const rows = Math.ceil(c.height / grid) + 1;
+
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
+        const x = i * grid; const y = j * grid;
+        if (Math.random() > 0.5) {
+          ctx.beginPath(); ctx.moveTo(x, y);
+          const dir = Math.random();
+          if (dir < 0.25) ctx.lineTo(x + grid, y);
+          else if (dir < 0.5) ctx.lineTo(x, y + grid);
+          else if (dir < 0.75) { ctx.moveTo(x, y); ctx.lineTo(x + grid/2, y); ctx.moveTo(x + grid/2, y); ctx.lineTo(x + grid/2, y + grid/2); }
+          else { ctx.moveTo(x, y + grid/2); ctx.lineTo(x + grid, y + grid/2); }
+          ctx.stroke();
+        }
+        if (Math.random() > 0.85) {
+          ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2);
+          ctx.fillStyle = '#9d4edd'; ctx.fill();
+        }
+      }
+    }
+  }
+  resize();
+  window.addEventListener('resize', resize);
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   PARTICLE FIELD
+   ═══════════════════════════════════════════════════════════ */
+(function() {
+  const c = document.getElementById('particleCanvas');
+  const ctx = c.getContext('2d');
+  c.width = window.innerWidth; c.height = window.innerHeight;
+  window.addEventListener('resize', () => { c.width = window.innerWidth; c.height = window.innerHeight; });
+
+  const particles = Array.from({length: 60}, () => ({
+    x: Math.random() * c.width, y: Math.random() * c.height,
+    r: Math.random() * 2 + 0.5, vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3,
+    opacity: Math.random() * 0.5 + 0.1,
+    color: Math.random() > 0.7 ? '#00f5ff' : '#9d4edd'
+  }));
+
+  function draw() {
+    ctx.clearRect(0,0,c.width,c.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = c.width; if (p.x > c.width) p.x = 0;
+      if (p.y < 0) p.y = c.height; if (p.y > c.height) p.y = 0;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = p.color; ctx.globalAlpha = p.opacity; ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    // Draw connections
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i+1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 120) {
+          ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = '#9d4edd';
+          ctx.globalAlpha = (1 - dist/120) * 0.15;
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   CUSTOM CURSOR
+   ═══════════════════════════════════════════════════════════ */
+const cursor = document.getElementById('cursor');
+const cursorDot = document.getElementById('cursor-dot');
+let mx = 0, my = 0, cx = 0, cy = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cursorDot.style.left = mx+'px'; cursorDot.style.top = my+'px'; });
+(function animCursor() {
+  cx += (mx - cx) * 0.12; cy += (my - cy) * 0.12;
+  cursor.style.left = cx+'px'; cursor.style.top = cy+'px';
+  requestAnimationFrame(animCursor);
+})();
+document.querySelectorAll('a,button,.pill,.ai-chip,.card-action,.nav-item,.course-card').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('cursor-expand'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('cursor-expand'));
+});
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER COURSES
+   ═══════════════════════════════════════════════════════════ */
+let currentFilter = 'all';
+
+function renderCourses(filter) {
+  currentFilter = filter;
+  const grid = document.getElementById('courseGrid');
+  const filtered = filter === 'all' ? COURSES : COURSES.filter(c => c.status === filter);
+
+  grid.innerHTML = '';
+  filtered.forEach((course, idx) => {
+    const el = document.createElement('div');
+    el.className = `course-card ${course.status === 'completed' ? 'completed' : ''} ${course.status === 'locked' ? 'locked' : ''}`;
+    el.style.animationDelay = (idx * 0.05) + 's';
+
+    const statusMap = {
+      completed: '<span class="status-dot"></span>DONE',
+      inprogress: '<span class="status-dot"></span>ACTIVE',
+      new: '<span class="status-dot"></span>NEW',
+      locked: '🔒 LOCKED'
+    };
+    const statusClass = { completed:'done', inprogress:'progress', new:'new', locked:'locked' };
+    const actionMap = {
+      completed: { cls:'review', txt:'REVIEW' },
+      inprogress: { cls:'resume', txt:'RESUME' },
+      new: { cls:'start', txt:'START' },
+      locked: { cls:'locked', txt:'LOCKED' }
+    };
+
+    el.innerHTML = `
+      <div class="xp-ring"></div>
+      ${course.status === 'completed' ? '<div class="complete-mark">✓</div>' : ''}
+      ${course.hot ? '<div class="hot-badge">🔥 HOT</div>' : ''}
+      <svg class="card-circuit" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 30 H40 V60 H80 V90" stroke="#9d4edd" stroke-width="1.5"/>
+        <circle cx="40" cy="60" r="4" fill="#9d4edd"/>
+        <path d="M80 30 H60 V70 H90" stroke="#9d4edd" stroke-width="1"/>
+        <circle cx="80" cy="90" r="3" fill="#c77dff"/>
+        <rect x="55" y="25" width="10" height="16" rx="1" stroke="#9d4edd" stroke-width="1"/>
+        <path d="M100 50 H110 M100 60 H110" stroke="#9d4edd" stroke-width="1"/>
+      </svg>
+      <div class="card-header">
+        <div class="card-icon-wrap ${course.iconColor}">${course.icon}</div>
+        <div class="card-badges">
+          <span class="level-badge ${course.level}">${course.level.toUpperCase()}</span>
+          <span class="status-badge ${statusClass[course.status]}">${statusMap[course.status]}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${course.title}</div>
+        <div class="card-desc">${course.desc}</div>
+        <div class="tech-tags">${course.tags.map(t=>`<span class="tech-tag">${t}</span>`).join('')}</div>
+        <div class="progress-wrap">
+          <div class="progress-labels">
+            <span>PROGRESS</span>
+            <span>${course.progress}%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill ${course.status==='completed'?'green':''}" style="width:${course.progress}%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="card-meta">
+          <span>📦 ${course.modules} modules</span>
+          <span>⏱ ${course.duration}</span>
+          <span>⚡ ${course.xp} XP</span>
+        </div>
+        <button class="card-action ${actionMap[course.status].cls}" onclick="event.stopPropagation(); ${course.status !== 'locked' ? 'openModal('+course.id+')' : ''}">${actionMap[course.status].txt}</button>
+      </div>
+    `;
+
+    if (course.status !== 'locked') {
+      el.addEventListener('click', () => openModal(course.id));
+    }
+    grid.appendChild(el);
+  });
+}
+
+function filterCourses(filter, el) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderCourses(filter);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL
+   ═══════════════════════════════════════════════════════════ */
+function openModal(id) {
+  const course = COURSES.find(c => c.id === id);
+  if (!course) return;
+
+  document.getElementById('modalIcon').textContent = course.icon;
+  document.getElementById('modalTitle').textContent = course.title;
+  document.getElementById('modalTags').innerHTML = course.tags.map(t => `<span class="tech-tag">${t}</span>`).join('');
+
+  const completedMods = course.syllabus.filter(m => m.done).length;
+  const bodyHTML = `
+    <div class="modal-section">
+      <div class="modal-section-title">OVERVIEW</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.8;font-family:var(--font-body)">${course.desc}</div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">STATS</div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap">
+        <div style="text-align:center"><div style="font-family:var(--font-head);font-size:22px;color:var(--pu2)">${course.modules}</div><div style="font-size:10px;color:var(--text-dim);font-family:var(--font-code)">MODULES</div></div>
+        <div style="text-align:center"><div style="font-family:var(--font-head);font-size:22px;color:var(--amber)">${course.xp}</div><div style="font-size:10px;color:var(--text-dim);font-family:var(--font-code)">XP REWARD</div></div>
+        <div style="text-align:center"><div style="font-family:var(--font-head);font-size:22px;color:var(--green)">${course.progress}%</div><div style="font-size:10px;color:var(--text-dim);font-family:var(--font-code)">COMPLETE</div></div>
+        <div style="text-align:center"><div style="font-family:var(--font-head);font-size:22px;color:var(--cyan)">${course.duration}</div><div style="font-size:10px;color:var(--text-dim);font-family:var(--font-code)">DURATION</div></div>
+      </div>
+    </div>
+    ${course.syllabus.length ? `
+    <div class="modal-section">
+      <div class="modal-section-title">SYLLABUS — ${completedMods}/${course.syllabus.length} DONE</div>
+      <div class="module-list">
+        ${course.syllabus.map((m,i) => `
+        <div class="module-item">
+          <div class="module-num">${String(i+1).padStart(2,'0')}</div>
+          <div class="module-name">${m.name}</div>
+          <div class="module-dur">${m.dur}</div>
+          <div class="module-status">${m.done ? '✅' : '⭕'}</div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+    <button class="enroll-btn" onclick="closeModal(); showAchievement()">
+      ${course.status === 'completed' ? '🔄 REVIEW COURSE' : course.status === 'inprogress' ? '⚡ CONTINUE COURSE' : '🚀 ENROLL NOW'}
+    </button>
+  `;
+
+  document.getElementById('modalBody').innerHTML = bodyHTML;
+  document.getElementById('courseModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('courseModal').classList.remove('open');
+}
+
+document.getElementById('courseModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('courseModal')) closeModal();
+});
+
+/* ═══════════════════════════════════════════════════════════
+   ACHIEVEMENT TOAST
+   ═══════════════════════════════════════════════════════════ */
+const achieves = [
+  { icon:'⚡', title:'Voltage Virtuoso', desc:'Mastered Ohm\'s Law in record time', xp:'+50 XP' },
+  { icon:'🧬', title:'Circuit Whisperer', desc:'Completed 7 courses in Electronics', xp:'+200 XP' },
+  { icon:'🎯', title:'Perfect Score', desc:'100% on Semiconductor Physics quiz', xp:'+100 XP' },
+  { icon:'🔥', title:'12-Day Streak', desc:'Studied every day for 2 weeks', xp:'+75 XP' },
+];
+
+function showAchievement() {
+  const a = achieves[Math.floor(Math.random()*achieves.length)];
+  document.getElementById('toastIcon').textContent = a.icon;
+  document.getElementById('toastTitle').textContent = a.title;
+  document.getElementById('toastDesc').textContent = a.desc;
+  document.getElementById('toastXP').textContent = a.xp;
+  const toast = document.getElementById('achieveToast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+// Trigger on load with delay
+setTimeout(showAchievement, 3000);
+
+/* ═══════════════════════════════════════════════════════════
+   AI TUTOR TYPEWRITER
+   ═══════════════════════════════════════════════════════════ */
+let aiMsgIndex = 0;
+let aiTyping = null;
+
+function aiSuggest(idx) {
+  const msg = AI_MESSAGES[idx];
+  const el = document.getElementById('aiText');
+  if (aiTyping) clearTimeout(aiTyping);
+  el.textContent = '';
+  let i = 0;
+  function type() {
+    if (i < msg.length) {
+      el.textContent += msg[i++];
+      aiTyping = setTimeout(type, 22);
+    }
+  }
+  type();
+}
+
+// Auto-start
+(function() {
+  const msg = AI_MESSAGES[0];
+  const el = document.getElementById('aiText');
+  let i = 0;
+  function type() {
+    if (i < msg.length) { el.textContent += msg[i++]; setTimeout(type, 25); }
+  }
+  setTimeout(type, 1200);
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   SKILL BARS
+   ═══════════════════════════════════════════════════════════ */
+function renderSkills() {
+  const container = document.getElementById('skillBars');
+  container.innerHTML = SKILLS.map(s => `
+    <div class="skill-bar-item">
+      <div class="skill-bar-label"><span>${s.name}</span><span>${s.val}%</span></div>
+      <div class="skill-track"><div class="skill-fill" style="width:0%" data-target="${s.val}"></div></div>
+    </div>
+  `).join('');
+
+  // Animate on load
+  setTimeout(() => {
+    document.querySelectorAll('.skill-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  }, 600);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STREAK CALENDAR
+   ═══════════════════════════════════════════════════════════ */
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  const data = Array.from({length:49}, () => {
+    const r = Math.random();
+    if (r < 0.2) return 'empty';
+    if (r < 0.45) return 'low';
+    if (r < 0.7) return 'mid';
+    return 'high';
+  });
+  data[48] = 'today'; // today
+  grid.innerHTML = data.map(d => `<div class="cal-cell ${d}" title="${d === 'today' ? 'Today' : d === 'empty' ? 'No activity' : 'Studied'}"></div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LEARNING PATH
+   ═══════════════════════════════════════════════════════════ */
+function renderPath() {
+  const container = document.getElementById('pathNodes');
+  container.innerHTML = PATH_NODES.map((node, i) => `
+    <div class="path-node" onclick="showAchievement()">
+      <div class="path-dot ${node.done ? 'done' : node.current ? 'current' : ''}">
+        ${node.done ? '✓' : i+1}
+      </div>
+      <div class="path-content">
+        <div class="path-name">${node.name}</div>
+        <div class="path-meta">
+          <span>MODULE ${i+1} OF ${PATH_NODES.length}</span>
+          <span class="path-xp">⚡ ${node.xp} XP</span>
+          <span>${node.done ? '✅ COMPLETE' : node.current ? '⚡ CURRENT' : '🔒 LOCKED'}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════ */
+renderCourses('all');
+renderSkills();
+renderCalendar();
+renderPath();
+
+// XP counter animation
+function animateCount(el, target) {
+  let start = 0; const step = target / 60;
+  const timer = setInterval(() => {
+    start += step;
+    if (start >= target) { el.textContent = target.toLocaleString(); clearInterval(timer); }
+    else el.textContent = Math.floor(start).toLocaleString();
+  }, 16);
+}
+setTimeout(() => {
+  animateCount(document.getElementById('xpCount'), 4280);
+}, 500);
+
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>

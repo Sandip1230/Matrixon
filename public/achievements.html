@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATRIXON — Achievements</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#020d02;--card:rgba(4,12,4,0.92);--green:#00ff00;--muted:#336633;
+  --bronze:#cd7f32;--silver:#c0c0c0;--gold:#ffd700;
+  --pro-a:#ff0055;--pro-b:#ff00aa;--legend-a:#cc00ff;--legend-b:#ff44aa;
+}
+body{font-family:'Share Tech Mono',monospace;background:var(--bg);color:var(--green);min-height:100vh;overflow-x:hidden;}
+canvas#rain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;}
+
+/* ── PARTICLE EXPLOSION ── */
+.explode-particle{
+  position:fixed;border-radius:50%;pointer-events:none;z-index:9999;
+  animation:explode .9s ease-out forwards;
+}
+/* ── CARD-LEVEL EXPLODE GLOW ── */
+@keyframes explode{
+  0%  {opacity:1;transform:translate(0,0) scale(1);}
+  100%{opacity:0;transform:translate(var(--ex),var(--ey)) scale(0);}
+}
+@keyframes cardExplode{
+  0%  {transform:scale(1);box-shadow:0 0 0 rgba(255,255,255,0);}
+  20% {transform:scale(1.4);box-shadow:0 0 40px 30px rgba(255,230,0,.7);}
+  40% {transform:scale(.9);box-shadow:0 0 70px 50px rgba(255,180,0,.3);}
+  60% {transform:scale(1.2);box-shadow:0 0 25px 15px rgba(0,255,0,.5);}
+  80% {transform:scale(1);box-shadow:0 0 12px 6px rgba(0,255,0,.25);}
+  100%{transform:scale(1);box-shadow:none;}
+}
+
+/* ── UNLOCK POPUP ── */
+#unlockPopup{
+  position:fixed;top:24px;right:24px;z-index:9998;
+  min-width:300px;padding:18px 22px;
+  background:rgba(0,0,0,.97);border-radius:16px;
+  display:flex;align-items:center;gap:14px;
+  transform:translateX(140%);transition:transform .5s cubic-bezier(.22,1,.36,1);
+  pointer-events:none;border:2px solid var(--green);
+}
+#unlockPopup.show{transform:translateX(0);}
+#popIcon{font-size:38px;}
+#popTitle{font-size:10px;letter-spacing:2px;margin-bottom:3px;}
+#popName{font-size:16px;font-weight:bold;color:var(--green);}
+#popTier{font-size:12px;margin-top:4px;}
+
+/* ── WRAPPER ── */
+.aw{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 16px 60px;}
+
+/* ── TOP BAR ── */
+.top-bar{display:flex;align-items:center;gap:14px;margin-bottom:24px;flex-wrap:wrap;}
+#backBtn{padding:9px 18px;background:#000;border:1px solid var(--green);color:var(--green);border-radius:10px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:13px;transition:.2s;}
+#backBtn:hover{background:var(--green);color:#000;}
+.page-title{font-family:'Orbitron',monospace;font-weight:900;font-size:20px;letter-spacing:4px;text-shadow:0 0 12px var(--green);flex:1;}
+.stats-pills{display:flex;gap:8px;flex-wrap:wrap;}
+.stat-pill{padding:6px 14px;border-radius:20px;font-size:12px;border:1px solid;letter-spacing:1px;}
+.sp-total{border-color:rgba(0,255,0,.3);color:var(--muted);}
+.sp-done{border-color:rgba(0,255,136,.4);color:#00ff88;}
+.sp-legend{border-color:var(--legend-a);color:var(--legend-a);}
+
+/* ── FILTERS ── */
+.filter-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.filter-btn{padding:7px 16px;border-radius:20px;border:1px solid rgba(0,255,0,.2);background:rgba(0,0,0,.5);color:var(--muted);cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:12px;transition:.2s;letter-spacing:1px;}
+.filter-btn:hover{border-color:var(--green);color:var(--green);}
+.filter-btn.active{background:rgba(0,255,0,.12);border-color:var(--green);color:var(--green);}
+
+/* ── SEARCH ── */
+#searchInput{padding:9px 16px;background:rgba(0,0,0,.6);border:1px solid rgba(0,255,0,.2);border-radius:20px;color:var(--green);font-family:'Share Tech Mono',monospace;font-size:13px;outline:none;width:220px;transition:.2s;}
+#searchInput:focus{border-color:var(--green);}
+#searchInput::placeholder{color:#336633;}
+
+/* ── GRID ── */
+#achieveGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:14px;}
+
+/* ── ACHIEVEMENT CARD ── */
+.ac{
+  border-radius:14px;padding:16px 14px;
+  background:var(--card);border:1px solid #1a2a1a;
+  cursor:default;transition:transform .2s,box-shadow .2s;
+  position:relative;overflow:hidden;
+}
+.ac:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.ac.locked{opacity:.42;filter:grayscale(.7);}
+.ac.unlocked{border-color:rgba(0,255,0,.2);}
+.ac.just-unlocked{animation:cardExplode .7s ease forwards;}
+
+/* Tier border glow */
+.ac.tier-bronze{border-color:rgba(205,127,50,.55);box-shadow:0 0 12px rgba(205,127,50,.15);}
+.ac.tier-silver{border-color:rgba(192,192,192,.5);box-shadow:0 0 12px rgba(192,192,192,.15);}
+.ac.tier-gold{border-color:rgba(255,215,0,.6);box-shadow:0 0 16px rgba(255,215,0,.2);}
+.ac.tier-pro{border-color:var(--pro-a);box-shadow:0 0 16px rgba(255,0,85,.25);}
+.ac.tier-legend{border-color:var(--legend-a);box-shadow:0 0 20px rgba(204,0,255,.3);animation:legendCardPulse 2.5s infinite;}
+@keyframes legendCardPulse{0%,100%{box-shadow:0 0 20px rgba(204,0,255,.3)}50%{box-shadow:0 0 35px rgba(255,68,170,.5)}}
+
+/* Card top */
+.ac-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.ac-icon{font-size:32px;line-height:1;}
+
+/* Tier badge */
+.ac-badge{font-size:9px;font-weight:bold;padding:3px 9px;border-radius:10px;letter-spacing:1px;white-space:nowrap;}
+.badge-Bronze{background:#2d1500;color:var(--bronze);border:1px solid var(--bronze);}
+.badge-Silver{background:#151515;color:var(--silver);border:1px solid var(--silver);}
+.badge-Gold{background:#2a1c00;color:var(--gold);border:1px solid var(--gold);}
+.badge-Pro{
+  background:linear-gradient(135deg,#2a0015,#1a0020);
+  color:#ff66bb;
+  border:1px solid var(--pro-a);
+  animation:proBorder 2s linear infinite;
+}
+@keyframes proBorder{0%{border-color:var(--pro-a)}50%{border-color:var(--pro-b)}100%{border-color:var(--pro-a)}}
+.badge-Legend{
+  background:linear-gradient(135deg,#1a0030,#250018);
+  color:#ff88dd;
+  border:1px solid var(--legend-a);
+  animation:legendBorder 2s linear infinite;
+}
+@keyframes legendBorder{0%{border-color:var(--legend-a)}50%{border-color:var(--legend-b)}100%{border-color:var(--legend-a)}}
+.badge-Locked{background:#111;color:#333;border:1px solid #2a2a2a;}
+
+/* ── TAG CHIP (50% of achievements with hasBadge) ── */
+.ac-tag{
+  font-size:8px;padding:2px 8px;border-radius:7px;margin:0 0 6px 0;
+  display:inline-block;letter-spacing:1px;border:1px solid;font-weight:bold;
+}
+.tag-Bronze{color:var(--bronze);border-color:rgba(205,127,50,.5);background:rgba(205,127,50,.08);}
+.tag-Silver{color:var(--silver);border-color:rgba(192,192,192,.45);background:rgba(192,192,192,.07);}
+.tag-Gold{color:var(--gold);border-color:rgba(255,215,0,.5);background:rgba(255,215,0,.07);}
+.tag-Pro{
+  color:#ff66bb;
+  border-color:rgba(255,0,85,.5);
+  background:linear-gradient(135deg,rgba(255,0,85,.06),rgba(255,0,170,.06));
+  animation:proBorder 2s linear infinite;
+}
+.tag-Legend{
+  color:#ff88dd;
+  border-color:rgba(204,0,255,.5);
+  background:linear-gradient(135deg,rgba(204,0,255,.06),rgba(255,68,170,.06));
+  animation:legendBorder 2s linear infinite;
+}
+.tag-Locked{color:#333;border-color:#2a2a2a;background:transparent;}
+
+/* Card name & desc */
+.ac-name{font-size:13px;color:#dfffdf;font-weight:bold;margin-bottom:4px;line-height:1.3;}
+.ac-desc{font-size:10px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+
+/* 5-segment tier bar */
+.tier-dots{display:flex;gap:4px;margin-bottom:8px;}
+.td{width:22px;height:6px;border-radius:3px;background:#1a2a1a;transition:background .3s;}
+.td.t-bronze{background:var(--bronze);box-shadow:0 0 4px var(--bronze);}
+.td.t-silver{background:var(--silver);box-shadow:0 0 4px var(--silver);}
+.td.t-gold{background:var(--gold);box-shadow:0 0 6px var(--gold);}
+.td.t-pro{background:linear-gradient(to right,var(--pro-a),var(--pro-b));box-shadow:0 0 6px var(--pro-a);}
+.td.t-legend{background:linear-gradient(to right,var(--legend-a),var(--legend-b));box-shadow:0 0 8px var(--legend-a);}
+
+/* Next tier info */
+.ac-next{font-size:9px;color:#446644;letter-spacing:.5px;}
+.ac-next.complete{color:#00ff88;}
+
+/* Category label */
+.ac-cat{font-size:8px;color:#224422;letter-spacing:1.5px;position:absolute;bottom:8px;right:10px;}
+
+/* ── EMPTY STATE ── */
+#emptyState{text-align:center;padding:60px;color:var(--muted);font-size:14px;letter-spacing:2px;grid-column:1/-1;}
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+
+<div id="unlockPopup">
+  <div id="popIcon">🎖️</div>
+  <div>
+    <div id="popTitle" style="color:var(--muted);">🏆 TIER UPGRADED!</div>
+    <div id="popName"></div>
+    <div id="popTier"></div>
+  </div>
+</div>
+
+<div class="aw">
+  <div class="top-bar">
+    <button id="backBtn" onclick="window.location.href='learning.html'">&#8592; Learning</button>
+    <div class="page-title">🎖️ ACHIEVEMENTS</div>
+    <div class="stats-pills">
+      <div class="stat-pill sp-total">Total: <span id="statTotal">55</span></div>
+      <div class="stat-pill sp-done">Unlocked: <span id="statDone">0</span></div>
+      <div class="stat-pill sp-legend">Legend: <span id="statLegend">0</span></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+    <div class="filter-row" style="margin:0;">
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('unlocked',this)">Unlocked</button>
+      <button class="filter-btn" onclick="setFilter('locked',this)">Locked</button>
+      <button class="filter-btn" onclick="setFilter('Streak',this)">Streak</button>
+      <button class="filter-btn" onclick="setFilter('Learning',this)">Learning</button>
+      <button class="filter-btn" onclick="setFilter('Puzzle',this)">Puzzles</button>
+      <button class="filter-btn" onclick="setFilter('Social',this)">Social</button>
+      <button class="filter-btn" onclick="setFilter('Level',this)">Level</button>
+      <button class="filter-btn" onclick="setFilter('Special',this)">Special</button>
+      <button class="filter-btn" onclick="setFilter('badge',this)">Has Badge</button>
+    </div>
+    <input id="searchInput" type="text" placeholder="🔍 Search..." oninput="renderGrid()">
+  </div>
+
+  <div id="achieveGrid"><div id="emptyState">Loading achievements...</div></div>
+</div>
+
+<script src="config.js"></script>
+<script>
+/* ── MATRIX RAIN ── */
+(function(){
+  const c=document.getElementById('rain'),ctx=c.getContext('2d');
+  function r(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  r();window.addEventListener('resize',()=>{r();init();});
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&アイウエオカキク';
+  const fs=14;let cols,drops;
+  function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(0).map(()=>Math.floor(Math.random()*-40));}
+  init();
+  setInterval(()=>{
+    ctx.fillStyle='rgba(0,0,0,0.06)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px monospace';
+    drops.forEach((d,i)=>{
+      ctx.fillStyle=d*fs<80?'#ccffcc':'#00ff00';
+      ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*fs,d*fs);
+      if(d*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;
+    });
+  },45);
+})();
+
+const API = window.MATRIXON_API;
+const username=localStorage.getItem('matrixon_user')||'player';
+if (!username || username === 'player') { window.location.href = 'index.html'; }
+if (!username || username === 'player') { window.location.href = 'index.html'; }
+localStorage.removeItem('matrixon_new_achievements');
+
+/* ── 55 ACHIEVEMENTS ── */
+const ACHIEVEMENTS=[
+  /* STREAK (10) */
+  {id:1,name:'Daily Check-in',icon:'📅',cat:'Streak',tag:'STREAK MASTER',hasBadge:true,
+   desc:'Log in consistently to power up your streak',
+   tiers:[{l:'Bronze',req:'Log in 1 day'},{l:'Silver',req:'7-day streak'},{l:'Gold',req:'30-day streak'},{l:'Pro',req:'100-day streak'},{l:'Legend',req:'365-day streak'}]},
+  {id:2,name:'Night Owl',icon:'🦉',cat:'Streak',tag:'NIGHT CODER',hasBadge:true,
+   desc:'Code late into the night — the real hackers never sleep',
+   tiers:[{l:'Bronze',req:'1 late login'},{l:'Silver',req:'5 late logins'},{l:'Gold',req:'20 late logins'},{l:'Pro',req:'50 late logins'},{l:'Legend',req:'100 late logins'}]},
+  {id:3,name:'Early Bird',icon:'🌅',cat:'Streak',tag:'DAWN CODER',hasBadge:true,
+   desc:'Rise early, code first — the morning belongs to legends',
+   tiers:[{l:'Bronze',req:'1 morning login'},{l:'Silver',req:'5 morning logins'},{l:'Gold',req:'20 morning logins'},{l:'Pro',req:'50 morning logins'},{l:'Legend',req:'100 morning logins'}]},
+  {id:4,name:'Weekend Warrior',icon:'⚔️',cat:'Streak',tag:'WEEKEND GRIND',hasBadge:true,
+   desc:'Even weekends belong to the grind',
+   tiers:[{l:'Bronze',req:'1 weekend login'},{l:'Silver',req:'4 weekends'},{l:'Gold',req:'12 weekends'},{l:'Pro',req:'26 weekends'},{l:'Legend',req:'52 weekends'}]},
+  {id:5,name:'Perfect Month',icon:'🗓️',cat:'Streak',tag:'PERFECT RECORD',hasBadge:true,
+   desc:'Not a single day missed — flawless discipline',
+   tiers:[{l:'Bronze',req:'7-day no-break'},{l:'Silver',req:'14-day no-break'},{l:'Gold',req:'30-day no-break'},{l:'Pro',req:'60-day no-break'},{l:'Legend',req:'90-day no-break'}]},
+  {id:6,name:'Comeback Kid',icon:'🔄',cat:'Streak',tag:'PHOENIX RISER',hasBadge:true,
+   desc:'You fell, you rose — stronger each time',
+   tiers:[{l:'Bronze',req:'1 comeback'},{l:'Silver',req:'5 comebacks'},{l:'Gold',req:'10 comebacks'},{l:'Pro',req:'20 comebacks'},{l:'Legend',req:'50 comebacks'}]},
+  {id:7,name:'Eternal Flame',icon:'🌈',cat:'Streak',tag:'UNDYING',hasBadge:false,
+   desc:'Your fire never dies — 365 days of unstoppable commitment',
+   tiers:[{l:'Bronze',req:'30-day streak'},{l:'Silver',req:'60-day streak'},{l:'Gold',req:'100-day streak'},{l:'Pro',req:'200-day streak'},{l:'Legend',req:'365-day streak'}]},
+  {id:8,name:'Dedication',icon:'💎',cat:'Streak',tag:null,hasBadge:false,
+   desc:'Sheer dedication separates the good from the legendary',
+   tiers:[{l:'Bronze',req:'Login 7 days'},{l:'Silver',req:'Login 30 days'},{l:'Gold',req:'Login 60 days'},{l:'Pro',req:'Login 100 days'},{l:'Legend',req:'Login 200 days'}]},
+  {id:9,name:'Day One',icon:'🔓',cat:'Streak',tag:'OG MEMBER',hasBadge:true,
+   desc:'Every legend has a first step',
+   tiers:[{l:'Bronze',req:'First login'},{l:'Silver',req:'Login 3 days total'},{l:'Gold',req:'Login 10 days total'},{l:'Pro',req:'Login 30 days total'},{l:'Legend',req:'Login 100 days total'}]},
+  {id:10,name:'Grind Mode',icon:'⚡',cat:'Streak',tag:'NON-STOP',hasBadge:true,
+   desc:'No days off. No excuses. Only progress.',
+   tiers:[{l:'Bronze',req:'3 consecutive days'},{l:'Silver',req:'10 consecutive days'},{l:'Gold',req:'21 consecutive days'},{l:'Pro',req:'50 consecutive days'},{l:'Legend',req:'100 consecutive days'}]},
+
+  /* LEARNING (12) */
+  {id:11,name:'Python Master',icon:'🐍',cat:'Learning',tag:'SNAKE CHARMER',hasBadge:true,
+   desc:'Tame the serpent — Python bends to your will',
+   tiers:[{l:'Bronze',req:'Start Python'},{l:'Silver',req:'10 Python commands'},{l:'Gold',req:'Complete Python course'},{l:'Pro',req:'100 Python programs'},{l:'Legend',req:'500 Python programs'}]},
+  {id:12,name:'Web Architect',icon:'🌐',cat:'Learning',tag:'WEB WIZARD',hasBadge:true,
+   desc:'From HTML to JavaScript — you built the web',
+   tiers:[{l:'Bronze',req:'Learn HTML'},{l:'Silver',req:'Learn CSS'},{l:'Gold',req:'Learn JavaScript'},{l:'Pro',req:'Complete all web courses'},{l:'Legend',req:'Build 10 projects'}]},
+  {id:13,name:'Language Collector',icon:'🎓',cat:'Learning',tag:'POLYGLOT',hasBadge:true,
+   desc:'One language is a tool. Six is a superpower.',
+   tiers:[{l:'Bronze',req:'Complete 1 course'},{l:'Silver',req:'Complete 2 courses'},{l:'Gold',req:'Complete 3 courses'},{l:'Pro',req:'Complete 5 courses'},{l:'Legend',req:'Complete all 6 courses'}]},
+  {id:14,name:'C Programmer',icon:'🔵',cat:'Learning',tag:'SYSTEM HACKER',hasBadge:true,
+   desc:'The foundation of all. C is where the real ones start.',
+   tiers:[{l:'Bronze',req:'Start C course'},{l:'Silver',req:'10 C commands'},{l:'Gold',req:'Complete C'},{l:'Pro',req:'100 C programs'},{l:'Legend',req:'500 C programs'}]},
+  {id:15,name:'Java Champion',icon:'☕',cat:'Learning',tag:'JAVA KNIGHT',hasBadge:true,
+   desc:'Write once, run anywhere — the Java way',
+   tiers:[{l:'Bronze',req:'Start Java'},{l:'Silver',req:'10 Java programs'},{l:'Gold',req:'Complete Java'},{l:'Pro',req:'50 Java programs'},{l:'Legend',req:'200 Java programs'}]},
+  {id:16,name:'Code Writer',icon:'✍️',cat:'Learning',tag:'AUTHOR OF CODE',hasBadge:true,
+   desc:'Every great app began with a single line',
+   tiers:[{l:'Bronze',req:'Write 1 program'},{l:'Silver',req:'Write 10 programs'},{l:'Gold',req:'Write 50 programs'},{l:'Pro',req:'Write 100 programs'},{l:'Legend',req:'Write 500 programs'}]},
+  {id:17,name:'Knowledge Base',icon:'📖',cat:'Learning',tag:'LIBRARIAN',hasBadge:false,
+   desc:'Commands memorized. Concepts mastered.',
+   tiers:[{l:'Bronze',req:'10 commands used'},{l:'Silver',req:'50 commands used'},{l:'Gold',req:'100 commands used'},{l:'Pro',req:'500 commands'},{l:'Legend',req:'1000 commands'}]},
+  {id:18,name:'Speed Learner',icon:'🚀',cat:'Learning',tag:'FAST TRACK',hasBadge:true,
+   desc:'Others take months. You take days.',
+   tiers:[{l:'Bronze',req:'1 lesson per day'},{l:'Silver',req:'3 lessons in a day'},{l:'Gold',req:'Complete course in 7 days'},{l:'Pro',req:'3 courses in a month'},{l:'Legend',req:'All courses in 3 months'}]},
+  {id:19,name:'Algorithm Ace',icon:'🧮',cat:'Learning',tag:'ALGO GURU',hasBadge:true,
+   desc:'Sorting, searching, solving — algorithms are your art',
+   tiers:[{l:'Bronze',req:'1 algorithm'},{l:'Silver',req:'5 algorithms'},{l:'Gold',req:'20 algorithms'},{l:'Pro',req:'50 algorithms'},{l:'Legend',req:'100 algorithms'}]},
+  {id:20,name:'Debug Master',icon:'🐛',cat:'Learning',tag:'BUG SLAYER',hasBadge:true,
+   desc:'Errors fear you. Bugs bow before your logic.',
+   tiers:[{l:'Bronze',req:'Fix 1 bug'},{l:'Silver',req:'Fix 10 bugs'},{l:'Gold',req:'Fix 50 bugs'},{l:'Pro',req:'Fix 100 bugs'},{l:'Legend',req:'Fix 500 bugs'}]},
+  {id:21,name:'Full Stack Dev',icon:'🏗️',cat:'Learning',tag:'STACK MASTER',hasBadge:true,
+   desc:'Front to back — you own the entire stack',
+   tiers:[{l:'Bronze',req:'Learn 1 stack layer'},{l:'Silver',req:'Learn 2 layers'},{l:'Gold',req:'Learn 3 layers'},{l:'Pro',req:'Learn 4 layers'},{l:'Legend',req:'Full stack complete'}]},
+  {id:22,name:'Course Champion',icon:'🏅',cat:'Learning',tag:null,hasBadge:false,
+   desc:'Completing courses is your superpower',
+   tiers:[{l:'Bronze',req:'Complete 1 course'},{l:'Silver',req:'Complete 2 courses'},{l:'Gold',req:'Complete 4 courses'},{l:'Pro',req:'Complete 5 courses'},{l:'Legend',req:'Complete all courses'}]},
+
+  /* PUZZLE (8) */
+  {id:23,name:'Puzzle Hunter',icon:'🧩',cat:'Puzzle',tag:'ENIGMA SOLVER',hasBadge:true,
+   desc:'Every puzzle is a door. You have all the keys.',
+   tiers:[{l:'Bronze',req:'Solve 1 puzzle'},{l:'Silver',req:'Solve 10 puzzles'},{l:'Gold',req:'Solve 50 puzzles'},{l:'Pro',req:'Solve 200 puzzles'},{l:'Legend',req:'Solve 500 puzzles'}]},
+  {id:24,name:'Speed Solver',icon:'⏱️',cat:'Puzzle',tag:'FLASH MIND',hasBadge:true,
+   desc:'Your brain processes faster than most computers',
+   tiers:[{l:'Bronze',req:'Solve in <30 sec'},{l:'Silver',req:'5 fast solves'},{l:'Gold',req:'20 fast solves'},{l:'Pro',req:'50 fast solves'},{l:'Legend',req:'100 fast solves'}]},
+  {id:25,name:'Flawless Mind',icon:'🌟',cat:'Puzzle',tag:'PERFECT SOLVE',hasBadge:true,
+   desc:'No mistakes. No hints. Just pure cognitive power.',
+   tiers:[{l:'Bronze',req:'1 perfect solve'},{l:'Silver',req:'5 perfect solves'},{l:'Gold',req:'20 perfect solves'},{l:'Pro',req:'50 perfect solves'},{l:'Legend',req:'100 perfect solves'}]},
+  {id:26,name:'Logic King',icon:'👑',cat:'Puzzle',tag:'LOGIC LORD',hasBadge:true,
+   desc:'Logic is your native language',
+   tiers:[{l:'Bronze',req:'5 puzzles'},{l:'Silver',req:'25 puzzles'},{l:'Gold',req:'100 puzzles'},{l:'Pro',req:'250 puzzles'},{l:'Legend',req:'500 puzzles'}]},
+  {id:27,name:'Brain Flexer',icon:'🧠',cat:'Puzzle',tag:'GENIUS FLEX',hasBadge:true,
+   desc:'Hard puzzles? Just warm-ups.',
+   tiers:[{l:'Bronze',req:'1 hard puzzle'},{l:'Silver',req:'5 hard puzzles'},{l:'Gold',req:'20 hard puzzles'},{l:'Pro',req:'50 hard puzzles'},{l:'Legend',req:'100 hard puzzles'}]},
+  {id:28,name:'Puzzle Streak',icon:'🔢',cat:'Puzzle',tag:null,hasBadge:false,
+   desc:'Solving every day keeps the mind sharp',
+   tiers:[{l:'Bronze',req:'Solve 3 days row'},{l:'Silver',req:'Solve 7 days row'},{l:'Gold',req:'Solve 30 days row'},{l:'Pro',req:'Solve 60 days row'},{l:'Legend',req:'Solve 100 days row'}]},
+  {id:29,name:'Perfect Score',icon:'💯',cat:'Puzzle',tag:'100% CERTIFIED',hasBadge:true,
+   desc:'100%. Not 99. Not 98. One hundred.',
+   tiers:[{l:'Bronze',req:'1 perfect score'},{l:'Silver',req:'5 perfect scores'},{l:'Gold',req:'20 perfect scores'},{l:'Pro',req:'50 perfect scores'},{l:'Legend',req:'100 perfect scores'}]},
+  {id:30,name:'Puzzle Master',icon:'🏆',cat:'Puzzle',tag:'GRAND SOLVER',hasBadge:true,
+   desc:'They call you when no one else can solve it',
+   tiers:[{l:'Bronze',req:'10 total puzzles'},{l:'Silver',req:'30 total puzzles'},{l:'Gold',req:'75 total puzzles'},{l:'Pro',req:'150 total puzzles'},{l:'Legend',req:'300 total puzzles'}]},
+
+  /* SOCIAL (8) */
+  {id:31,name:'Connector',icon:'🤝',cat:'Social',tag:'NETWORK KING',hasBadge:true,
+   desc:'Your network is your net worth',
+   tiers:[{l:'Bronze',req:'Add 1 friend'},{l:'Silver',req:'Add 5 friends'},{l:'Gold',req:'Add 10 friends'},{l:'Pro',req:'Add 25 friends'},{l:'Legend',req:'Add 50 friends'}]},
+  {id:32,name:'Social Butterfly',icon:'🦋',cat:'Social',tag:'PEOPLE MAGNET',hasBadge:true,
+   desc:'Everyone knows you. Everyone follows you.',
+   tiers:[{l:'Bronze',req:'2 friends'},{l:'Silver',req:'10 friends'},{l:'Gold',req:'25 friends'},{l:'Pro',req:'50 friends'},{l:'Legend',req:'100 friends'}]},
+  {id:33,name:'Community Star',icon:'⭐',cat:'Social',tag:'CROWD FAVORITE',hasBadge:true,
+   desc:'Rising in the leaderboard — the community watches',
+   tiers:[{l:'Bronze',req:'Join leaderboard'},{l:'Silver',req:'Top 50'},{l:'Gold',req:'Top 20'},{l:'Pro',req:'Top 10'},{l:'Legend',req:'Top 3'}]},
+  {id:34,name:'Influencer',icon:'📢',cat:'Social',tag:'TREND SETTER',hasBadge:false,
+   desc:'Your presence shapes the community',
+   tiers:[{l:'Bronze',req:'1 interaction'},{l:'Silver',req:'10 interactions'},{l:'Gold',req:'50 interactions'},{l:'Pro',req:'100 interactions'},{l:'Legend',req:'500 interactions'}]},
+  {id:35,name:'Recruiter',icon:'📩',cat:'Social',tag:'HEADHUNTER',hasBadge:true,
+   desc:'You bring new talent to MATRIXON',
+   tiers:[{l:'Bronze',req:'Invite 1 user'},{l:'Silver',req:'Invite 5 users'},{l:'Gold',req:'Invite 10 users'},{l:'Pro',req:'Invite 25 users'},{l:'Legend',req:'Invite 50 users'}]},
+  {id:36,name:'Team Player',icon:'🫂',cat:'Social',tag:'SQUAD LEADER',hasBadge:true,
+   desc:'Alone you go fast. Together you go far.',
+   tiers:[{l:'Bronze',req:'1 collaboration'},{l:'Silver',req:'5 collaborations'},{l:'Gold',req:'20 collaborations'},{l:'Pro',req:'50 collaborations'},{l:'Legend',req:'100 collaborations'}]},
+  {id:37,name:'Global Citizen',icon:'🌍',cat:'Social',tag:'WORLD TRAVELER',hasBadge:true,
+   desc:'Your reach spans the entire globe',
+   tiers:[{l:'Bronze',req:'Set your country'},{l:'Silver',req:'Top 3 in country'},{l:'Gold',req:'Stay top 3 a week'},{l:'Pro',req:'Top 3 one month'},{l:'Legend',req:'#1 globally'}]},
+  {id:38,name:'Veteran',icon:'🎖️',cat:'Social',tag:'OLD GUARD',hasBadge:true,
+   desc:'Time tested. Community trusted.',
+   tiers:[{l:'Bronze',req:'1 week member'},{l:'Silver',req:'1 month member'},{l:'Gold',req:'3 months member'},{l:'Pro',req:'6 months member'},{l:'Legend',req:'1 year member'}]},
+
+  /* LEVEL / XP (8) */
+  {id:39,name:'Rising Star',icon:'🌠',cat:'Level',tag:'ON THE RISE',hasBadge:true,
+   desc:'Your trajectory is straight up',
+   tiers:[{l:'Bronze',req:'Reach Level 5'},{l:'Silver',req:'Reach Level 15'},{l:'Gold',req:'Reach Level 30'},{l:'Pro',req:'Reach Level 60'},{l:'Legend',req:'Reach Level 100'}]},
+  {id:40,name:'XP Hunter',icon:'💰',cat:'Level',tag:'XP FARMER',hasBadge:true,
+   desc:'Where there is XP, you find it',
+   tiers:[{l:'Bronze',req:'Earn 100 XP'},{l:'Silver',req:'Earn 1,000 XP'},{l:'Gold',req:'Earn 10,000 XP'},{l:'Pro',req:'Earn 50,000 XP'},{l:'Legend',req:'Earn 100,000 XP'}]},
+  {id:41,name:'Elite Status',icon:'💫',cat:'Level',tag:'ELITE TIER',hasBadge:true,
+   desc:'The highest levels are your neighborhood',
+   tiers:[{l:'Bronze',req:'Level 10'},{l:'Silver',req:'Level 25'},{l:'Gold',req:'Level 50'},{l:'Pro',req:'Level 75'},{l:'Legend',req:'Level 100'}]},
+  {id:42,name:'Power Leveler',icon:'🔝',cat:'Level',tag:'HYPER GROWER',hasBadge:true,
+   desc:'Other players level once a month. You level daily.',
+   tiers:[{l:'Bronze',req:'1 level/week'},{l:'Silver',req:'2 levels/week'},{l:'Gold',req:'5 levels/week'},{l:'Pro',req:'10 levels/week'},{l:'Legend',req:'20 levels/week'}]},
+  {id:43,name:'Completionist',icon:'✅',cat:'Level',tag:'100% DONE',hasBadge:true,
+   desc:'Half measures are not in your vocabulary',
+   tiers:[{l:'Bronze',req:'10% achievements'},{l:'Silver',req:'25% achievements'},{l:'Gold',req:'50% achievements'},{l:'Pro',req:'75% achievements'},{l:'Legend',req:'100% achievements'}]},
+  {id:44,name:'MATRIXON God',icon:'🌩️',cat:'Level',tag:'DIVINE LEVEL',hasBadge:false,
+   desc:'Level 100. The absolute pinnacle.',
+   tiers:[{l:'Bronze',req:'Level 20'},{l:'Silver',req:'Level 40'},{l:'Gold',req:'Level 60'},{l:'Pro',req:'Level 80'},{l:'Legend',req:'Level 100'}]},
+  {id:45,name:'XP Overflow',icon:'🌊',cat:'Level',tag:'OVERFLOW',hasBadge:true,
+   desc:'Your XP bar just keeps overflowing',
+   tiers:[{l:'Bronze',req:'500 XP'},{l:'Silver',req:'5,000 XP'},{l:'Gold',req:'25,000 XP'},{l:'Pro',req:'75,000 XP'},{l:'Legend',req:'200,000 XP'}]},
+  {id:46,name:'League Champion',icon:'🏆',cat:'Level',tag:'CHAMPION',hasBadge:true,
+   desc:'Every league conquered. Every tier dominated.',
+   tiers:[{l:'Bronze',req:'Reach Developer'},{l:'Silver',req:'Reach Senior Dev'},{l:'Gold',req:'Reach Hacker'},{l:'Pro',req:'Reach Master Hacker'},{l:'Legend',req:'Reach Ace Developer'}]},
+
+  /* SPECIAL / SECRET (9) */
+  {id:47,name:'Hacker Spirit',icon:'💀',cat:'Special',tag:'TRUE HACKER',hasBadge:true,
+   desc:'The terminal is your weapon. Commands are your bullets.',
+   tiers:[{l:'Bronze',req:'1 terminal command'},{l:'Silver',req:'50 commands'},{l:'Gold',req:'200 commands'},{l:'Pro',req:'500 commands'},{l:'Legend',req:'1,000 commands'}]},
+  {id:48,name:'Marathon Runner',icon:'🏃',cat:'Special',tag:'ENDURANCE',hasBadge:true,
+   desc:'Hours fly by when you are in the zone',
+   tiers:[{l:'Bronze',req:'1hr session'},{l:'Silver',req:'3hr session'},{l:'Gold',req:'6hr session'},{l:'Pro',req:'12hr session'},{l:'Legend',req:'24hr session'}]},
+  {id:49,name:'Overachiever',icon:'🎯',cat:'Special',tag:'OVERDRIVEN',hasBadge:true,
+   desc:'Expectations? You shattered them on day one.',
+   tiers:[{l:'Bronze',req:'5 achievements/day'},{l:'Silver',req:'10 achievements/day'},{l:'Gold',req:'20 achievements/day'},{l:'Pro',req:'30 achievements/day'},{l:'Legend',req:'All in one week'}]},
+  {id:50,name:'Speedrunner',icon:'⚡',cat:'Special',tag:'LIGHTNING FAST',hasBadge:true,
+   desc:'Finish line? You crossed it before others started.',
+   tiers:[{l:'Bronze',req:'1 fast task'},{l:'Silver',req:'5 fast tasks'},{l:'Gold',req:'20 fast tasks'},{l:'Pro',req:'50 fast tasks'},{l:'Legend',req:'100 fast tasks'}]},
+  {id:51,name:'Self Expression',icon:'🎨',cat:'Special',tag:'IDENTITY',hasBadge:true,
+   desc:'Your profile is a canvas. Paint your legacy.',
+   tiers:[{l:'Bronze',req:'Set photo'},{l:'Silver',req:'Set nickname'},{l:'Gold',req:'Set country'},{l:'Pro',req:'Fill all profile'},{l:'Legend',req:'Equip both badge slots'}]},
+  {id:52,name:'Badge Collector',icon:'🏷️',cat:'Special',tag:'BADGE HOARDER',hasBadge:true,
+   desc:'Every badge tells a story. Collect them all.',
+   tiers:[{l:'Bronze',req:'Earn 1 badge'},{l:'Silver',req:'Earn 10 badges'},{l:'Gold',req:'Earn 20 badges'},{l:'Pro',req:'Earn 35 badges'},{l:'Legend',req:'Earn all badges'}]},
+  {id:53,name:'Night Scholar',icon:'🌙',cat:'Special',tag:'MIDNIGHT OIL',hasBadge:false,
+   desc:'While the world sleeps, you build empires',
+   tiers:[{l:'Bronze',req:'1 midnight session'},{l:'Silver',req:'5 midnight sessions'},{l:'Gold',req:'15 midnight sessions'},{l:'Pro',req:'30 midnight sessions'},{l:'Legend',req:'60 midnight sessions'}]},
+  {id:54,name:'Challenge Master',icon:'🎮',cat:'Special',tag:'CHALLENGER',hasBadge:true,
+   desc:'Every challenge accepted. Every challenge conquered.',
+   tiers:[{l:'Bronze',req:'1 challenge'},{l:'Silver',req:'5 challenges'},{l:'Gold',req:'20 challenges'},{l:'Pro',req:'50 challenges'},{l:'Legend',req:'100 challenges'}]},
+  {id:55,name:'Legend Maker',icon:'🎆',cat:'Special',tag:'LEGENDARY',hasBadge:true,
+   desc:'You do not just reach Legend. You define it.',
+   tiers:[{l:'Bronze',req:'1 Legend tier'},{l:'Silver',req:'3 Legend tiers'},{l:'Gold',req:'7 Legend tiers'},{l:'Pro',req:'12 Legend tiers'},{l:'Legend',req:'All Legend tiers'}]},
+];
+
+const TIER_ORDER=['Bronze','Silver','Gold','Pro','Legend'];
+const PARTICLE_COLORS={
+  Bronze:['#cd7f32','#a0522d','#daa520','#8b4513'],
+  Silver:['#c0c0c0','#e0e0e0','#ffffff','#a8a8a8'],
+  Gold:['#ffd700','#ffaa00','#fffaaa','#ff8c00'],
+  Pro:['#ff0055','#ff44aa','#ff00aa','#ffffff'],
+  Legend:['#cc00ff','#ff44aa','#ff88ff','#dd00cc'],
+};
+
+let userAchievements={};
+let currentFilter='all';let currentSearch='';
+
+async function loadAchievements(){
+  try{
+    const r=await fetch(`${API}/achievements/tiers/${username}`);
+    const data=await r.json();
+    if(Array.isArray(data))data.forEach(row=>{userAchievements[row.achievement_id]=row.tier??0;});
+  }catch(e){}
+  updateStats();renderGrid();
+}
+
+function updateStats(){
+  const done=Object.keys(userAchievements).length;
+  const legends=Object.values(userAchievements).filter(t=>t===4).length;
+  document.getElementById('statDone').textContent=done;
+  document.getElementById('statLegend').textContent=legends;
+}
+
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+function renderGrid(){
+  currentSearch=(document.getElementById('searchInput').value||'').toLowerCase();
+  const grid=document.getElementById('achieveGrid');
+  grid.innerHTML='';
+  const list=ACHIEVEMENTS.filter(a=>{
+    if(currentSearch&&!a.name.toLowerCase().includes(currentSearch)&&!a.cat.toLowerCase().includes(currentSearch)&&!(a.tag||'').toLowerCase().includes(currentSearch))return false;
+    if(currentFilter==='unlocked')return userAchievements[a.id]!==undefined;
+    if(currentFilter==='locked')return userAchievements[a.id]===undefined;
+    if(currentFilter==='badge')return a.hasBadge;
+    if(['Streak','Learning','Puzzle','Social','Level','Special'].includes(currentFilter))return a.cat===currentFilter;
+    return true;
+  });
+  if(!list.length){
+    const e=document.createElement('div');e.id='emptyState';e.textContent='No achievements match this filter.';grid.appendChild(e);return;
+  }
+  list.forEach(a=>{
+    const tier=userAchievements[a.id]??-1;
+    const tierName=tier>=0?TIER_ORDER[tier]:null;
+    const card=document.createElement('div');
+    card.className='ac'+(tier<0?' locked':' unlocked')+(tierName?' tier-'+tierName.toLowerCase():'');
+    card.dataset.id=a.id;
+
+    let dotsHTML='<div class="tier-dots">';
+    for(let i=0;i<5;i++){
+      const filled=i<=tier;
+      dotsHTML+=`<div class="td${filled?' t-'+TIER_ORDER[i].toLowerCase():''}"></div>`;
+    }
+    dotsHTML+='</div>';
+
+    const next=tier<4?a.tiers[tier+1]:null;
+    const nextHTML=tier>=4
+      ?'<div class="ac-next complete">✓ MAX TIER REACHED</div>'
+      :next?`<div class="ac-next">Next: ${next.req}</div>`
+      :`<div class="ac-next">Start: ${a.tiers[0].req}</div>`;
+
+    // Tag chip — only for hasBadge achievements, styled per current tier
+    const tagCls=tierName?'tag-'+tierName:'tag-Locked';
+    const tagHTML=a.hasBadge&&a.tag
+      ?`<span class="ac-tag ${tagCls}">${a.tag}</span>`:'';
+
+    card.innerHTML=`
+      <div class="ac-top">
+        <div class="ac-icon">${a.icon}</div>
+        <span class="ac-badge badge-${tierName||'Locked'}">${tierName||'LOCKED'}</span>
+      </div>
+      <div class="ac-name">${a.name}</div>
+      ${tagHTML}
+      <div class="ac-desc">${a.desc}</div>
+      ${dotsHTML}
+      ${nextHTML}
+      <div class="ac-cat">${a.cat.toUpperCase()}${a.hasBadge?' • 🏅':''}</div>
+    `;
+    card.title=a.tiers.map(t=>`${t.l}: ${t.req}`).join(' | ');
+    grid.appendChild(card);
+  });
+}
+
+/* ── PARTICLE EXPLOSION ── */
+function explodeAt(x,y,tierName){
+  const cols=(PARTICLE_COLORS[tierName]||['#00ff00','#aaffaa']);
+  for(let i=0;i<60;i++){
+    const p=document.createElement('div');p.className='explode-particle';
+    const angle=Math.random()*Math.PI*2,dist=60+Math.random()*200;
+    const ex=Math.cos(angle)*dist,ey=Math.sin(angle)*dist;
+    const sz=4+Math.random()*8,color=cols[Math.floor(Math.random()*cols.length)];
+    p.style.cssText=`left:${x}px;top:${y}px;width:${sz}px;height:${sz}px;background:${color};box-shadow:0 0 6px ${color};--ex:${ex}px;--ey:${ey}px;`;
+    document.body.appendChild(p);setTimeout(()=>p.remove(),900);
+  }
+}
+
+/* ── SHOW UNLOCK POPUP ── */
+function showUnlockPopup(achievement,tierName){
+  const tierColors={Bronze:'#cd7f32',Silver:'#c0c0c0',Gold:'#ffd700',Pro:'#ff55aa',Legend:'#ff88dd'};
+  const popup=document.getElementById('unlockPopup');
+  const border=tierColors[tierName]||'#00ff00';
+  popup.style.border=`2px solid ${border}`;
+  popup.style.boxShadow=`0 0 30px ${border}55`;
+  document.getElementById('popIcon').textContent=achievement.icon;
+  document.getElementById('popName').textContent=achievement.name;document.getElementById('popName').style.color=border;
+  document.getElementById('popTitle').textContent='🏆 TIER UPGRADED!';document.getElementById('popTitle').style.color=border;
+  document.getElementById('popTier').innerHTML=`<span style="color:${border};font-weight:bold">${tierName} Tier Unlocked!</span>`;
+  popup.classList.add('show');
+  setTimeout(()=>popup.classList.remove('show'),4500);
+  localStorage.setItem('matrixon_new_achievements','true');
+}
+
+/* ── POLL FOR NEW ACHIEVEMENTS ── */
+let knownTiers={...userAchievements};
+setInterval(async()=>{
+  try{
+    const r=await fetch(`${API}/achievements/tiers/${username}`);
+    const data=await r.json();if(!Array.isArray(data))return;
+    data.forEach(row=>{
+      const prev=knownTiers[row.achievement_id]??-1;const curr=row.tier??0;
+      if(curr>prev){
+        const a=ACHIEVEMENTS.find(x=>x.id===row.achievement_id);
+        if(a){
+          const tierName=TIER_ORDER[curr];
+          // Card burst + card glow
+          const cards=document.querySelectorAll(`[data-id="${row.achievement_id}"]`);
+          if(cards[0]){
+            cards[0].classList.add('just-unlocked');
+            setTimeout(()=>cards[0].classList.remove('just-unlocked'),700);
+            const rect=cards[0].getBoundingClientRect();
+            explodeAt(rect.left+rect.width/2,rect.top+rect.height/2,tierName);
+          }else{
+            explodeAt(window.innerWidth/2,window.innerHeight/2,tierName);
+          }
+          showUnlockPopup(a,tierName);
+          userAchievements[row.achievement_id]=curr;
+          knownTiers[row.achievement_id]=curr;
+          renderGrid();updateStats();
+        }
+      }
+    });
+  }catch(e){}
+},30000);
+
+loadAchievements();
+</script>
+</body>
+</html>

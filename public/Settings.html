@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATRIXON — Settings</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --green:#00ff00;--g2:#00cc44;--g3:#00ff88;--dark:#020d02;
+  --card:rgba(4,16,4,0.92);--border:rgba(0,255,0,0.18);
+  --glow:rgba(0,255,0,0.35);--muted:#336633;--text:#c8ffc8;
+}
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+body{font-family:'Rajdhani',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;overflow-x:hidden;}
+canvas#rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.55;}
+
+/* ── SAVED TOAST ── */
+#savedToast{
+  position:fixed;bottom:28px;right:28px;z-index:9999;
+  background:rgba(0,10,0,0.96);border:1px solid var(--green);
+  border-radius:10px;padding:10px 20px;font-family:'Share Tech Mono',monospace;
+  font-size:13px;color:var(--green);
+  box-shadow:0 0 16px rgba(0,255,0,0.4);
+  opacity:0;transform:translateY(10px);
+  transition:opacity .3s,transform .3s;pointer-events:none;
+}
+#savedToast.show{opacity:1;transform:translateY(0);}
+
+/* ── WRAP ── */
+.sw{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:24px 16px 80px;}
+
+/* ── TOP BAR ── */
+.top-bar{display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
+#backBtn{
+  padding:9px 18px;background:#000;border:1px solid var(--border);color:var(--green);
+  border-radius:10px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:13px;transition:.2s;
+}
+#backBtn:hover{background:var(--green);color:#000;}
+
+/* ── DEFAULT SETTINGS BUTTON ── */
+#defaultBtn {
+  position: relative;
+  padding: 9px 18px;
+  background: transparent;
+  border: 1px solid rgba(255, 160, 0, 0.45);
+  color: #ffaa00;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  transition: all 0.25s;
+  overflow: hidden;
+  white-space: nowrap;
+}
+#defaultBtn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,160,0,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+#defaultBtn:hover {
+  background: rgba(255, 160, 0, 0.12);
+  border-color: #ffaa00;
+  color: #ffcc44;
+  box-shadow: 0 0 18px rgba(255,160,0,0.25), inset 0 0 12px rgba(255,160,0,0.05);
+}
+#defaultBtn:active { transform: scale(0.96); }
+#defaultBtn .def-icon { font-size: 13px; margin-right: 5px; display: inline-block; transition: transform 0.4s; }
+#defaultBtn:hover .def-icon { transform: rotate(-180deg); }
+.page-title{
+  font-family:'Share Tech Mono',monospace;font-size:20px;letter-spacing:4px;
+  text-shadow:0 0 12px var(--green);flex:1;
+}
+.user-pill{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,255,0,0.06);border:1px solid var(--border);
+  border-radius:20px;padding:6px 14px;font-size:13px;color:var(--muted);
+  font-family:'Share Tech Mono',monospace;
+}
+.user-pill span{color:var(--green);}
+
+/* ── TABS ── */
+.tabs{
+  display:flex;border-radius:14px 14px 0 0;overflow:hidden;
+  border:1px solid var(--border);border-bottom:none;margin-bottom:0;
+}
+.tab{
+  flex:1;padding:14px 8px;text-align:center;cursor:pointer;
+  font-family:'Rajdhani',sans-serif;font-weight:600;font-size:15px;
+  letter-spacing:1.5px;transition:.25s;background:rgba(0,0,0,0.6);
+  border-right:1px solid var(--border);color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.tab:last-child{border-right:none;}
+.tab-icon{font-size:20px;}
+.tab:hover{background:rgba(0,255,0,0.06);color:var(--text);}
+.tab.active{background:rgba(0,255,0,0.1);color:var(--green);box-shadow:inset 0 -3px 0 var(--green);}
+
+/* ── TAB PANELS ── */
+.panels{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:0 0 16px 16px;padding:28px 24px;
+  box-shadow:0 0 40px rgba(0,255,0,0.05);
+}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── SECTION ── */
+.section{margin-bottom:32px;}
+.section-head{
+  display:flex;align-items:center;gap:10px;
+  font-family:'Share Tech Mono',monospace;font-size:13px;
+  color:var(--green);letter-spacing:2px;
+  margin-bottom:16px;padding-bottom:10px;
+  border-bottom:1px solid rgba(0,255,0,0.12);
+}
+.section-head .sh-icon{font-size:18px;}
+
+/* ── SETTING ROW ── */
+.srow{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 0;border-bottom:1px solid rgba(0,255,0,0.06);
+  gap:16px;
+}
+.srow:last-child{border-bottom:none;}
+.srow-left{flex:1;}
+.srow-label{font-size:16px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.srow-desc{font-size:12px;color:var(--muted);line-height:1.4;font-family:'Share Tech Mono',monospace;}
+
+/* ── TOGGLE ── */
+.toggle-wrap{flex-shrink:0;}
+.tog{
+  width:48px;height:26px;border-radius:13px;
+  background:#0a140a;border:1px solid #1a3a1a;
+  position:relative;cursor:pointer;transition:.3s;
+}
+.tog.on{background:rgba(0,255,0,0.2);border-color:var(--green);box-shadow:0 0 8px rgba(0,255,0,0.3);}
+.tog::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:18px;height:18px;border-radius:50%;
+  background:#224422;transition:.3s;
+}
+.tog.on::after{left:25px;background:var(--green);box-shadow:0 0 6px var(--green);}
+
+/* ── SELECT ── */
+.s-select{
+  background:#050f05;border:1px solid var(--border);
+  color:var(--text);padding:9px 14px;border-radius:8px;
+  font-family:'Rajdhani',sans-serif;font-size:15px;
+  outline:none;cursor:pointer;min-width:160px;transition:.2s;
+}
+.s-select:focus{border-color:var(--green);box-shadow:0 0 8px rgba(0,255,0,0.2);}
+.s-select option{background:#050f05;}
+
+/* ── SLIDER ── */
+.slider-wrap{display:flex;align-items:center;gap:12px;min-width:200px;}
+.s-slider{
+  -webkit-appearance:none;appearance:none;
+  width:140px;height:4px;border-radius:2px;
+  background:linear-gradient(to right, var(--green) var(--pct,50%), #1a2a1a var(--pct,50%));
+  outline:none;cursor:pointer;
+}
+.s-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;
+  border-radius:50%;background:var(--green);
+  box-shadow:0 0 6px var(--green);cursor:pointer;transition:.2s;
+}
+.s-slider::-webkit-slider-thumb:hover{transform:scale(1.2);}
+.slider-val{
+  font-family:'Share Tech Mono',monospace;font-size:13px;
+  color:var(--green);min-width:36px;text-align:right;
+}
+
+/* ── PERSONA CARDS ── */
+.persona-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px;}
+.persona-card{
+  background:#050f05;border:1px solid var(--border);
+  border-radius:10px;padding:14px 10px;text-align:center;
+  cursor:pointer;transition:.25s;
+}
+.persona-card:hover{border-color:rgba(0,255,0,0.4);background:rgba(0,255,0,0.04);}
+.persona-card.sel{border-color:var(--green);background:rgba(0,255,0,0.1);box-shadow:0 0 14px rgba(0,255,0,0.2);}
+.persona-icon{font-size:28px;margin-bottom:6px;}
+.persona-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.persona-desc{font-size:11px;color:var(--muted);font-family:'Share Tech Mono',monospace;line-height:1.3;}
+
+/* ── DUAL SLIDER (content weighting) ── */
+.weight-wrap{width:100%;margin-top:8px;}
+.weight-bar{
+  height:20px;border-radius:6px;overflow:hidden;
+  display:flex;margin-bottom:8px;border:1px solid var(--border);
+}
+.w-quiz{background:linear-gradient(to right,#00aa44,#00ff44);transition:width .3s;}
+.w-read{background:linear-gradient(to right,#006699,#00bbff);transition:width .3s;}
+.weight-labels{display:flex;justify-content:space-between;font-size:12px;font-family:'Share Tech Mono',monospace;}
+.wl-quiz{color:#00ff44;}.wl-read{color:#00bbff;}
+.weight-slider-row{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.weight-slider-row label{font-size:13px;color:var(--muted);min-width:80px;font-family:'Share Tech Mono',monospace;}
+
+/* ── NUMBER INPUT ── */
+.s-num{
+  background:#050f05;border:1px solid var(--border);color:var(--green);
+  padding:8px 12px;border-radius:8px;font-family:'Share Tech Mono',monospace;
+  font-size:15px;width:70px;outline:none;text-align:center;transition:.2s;
+}
+.s-num:focus{border-color:var(--green);box-shadow:0 0 8px rgba(0,255,0,0.2);}
+
+/* ── DANGER BUTTONS ── */
+.danger-btn{
+  padding:10px 20px;border-radius:8px;font-family:'Rajdhani',sans-serif;
+  font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:.25s;
+}
+.btn-dl{background:rgba(0,100,200,0.15);border:1px solid #0088ff;color:#66ccff;}
+.btn-dl:hover{background:rgba(0,100,200,0.3);}
+.btn-del{background:rgba(200,0,0,0.12);border:1px solid #ff3333;color:#ff8888;}
+.btn-del:hover{background:rgba(200,0,0,0.25);}
+.btn-cache{background:rgba(255,150,0,0.1);border:1px solid #ff9900;color:#ffcc66;}
+.btn-cache:hover{background:rgba(255,150,0,0.25);}
+
+/* ── FONT PREVIEW ── */
+#dyslexiaPreview{
+  margin-top:12px;padding:14px;background:#050f05;
+  border:1px solid var(--border);border-radius:8px;
+  font-size:15px;line-height:1.8;color:var(--text);
+  transition:font-family .3s,line-height .3s;
+}
+#dyslexiaPreview.dyslexic{
+  font-family:'OpenDyslexic',Arial,sans-serif;
+  line-height:2.2;letter-spacing:0.05em;
+  text-align:left !important;
+}
+
+/* ── TTS CONTROLS ── */
+.tts-controls{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;}
+.tts-ctrl{display:flex;flex-direction:column;gap:5px;}
+.tts-label{font-size:11px;color:var(--muted);font-family:'Share Tech Mono',monospace;letter-spacing:1px;}
+
+/* ── COMMUTE BADGE ── */
+.commute-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,255,150,0.1);border:1px solid rgba(0,255,150,0.3);
+  border-radius:20px;padding:4px 12px;font-size:12px;
+  color:#00ffaa;font-family:'Share Tech Mono',monospace;margin-top:6px;
+}
+
+/* ── GRACE DAYS DISPLAY ── */
+.grace-info{
+  margin-top:8px;font-size:12px;color:var(--muted);
+  font-family:'Share Tech Mono',monospace;
+}
+.grace-remaining{color:#00ffcc;}
+
+/* ── CONFIRM MODAL ── */
+#confirmModal{
+  display:none;position:fixed;inset:0;z-index:9998;
+  background:rgba(0,0,0,0.85);justify-content:center;align-items:center;
+}
+#confirmModal.show{display:flex;}
+.modal-box{
+  background:#050f05;border:2px solid #ff3333;border-radius:16px;
+  padding:30px 28px;max-width:360px;text-align:center;
+  box-shadow:0 0 40px rgba(255,0,0,0.3);
+}
+.modal-box h3{color:#ff5555;font-size:20px;margin-bottom:10px;}
+.modal-box p{color:var(--muted);font-size:14px;margin-bottom:20px;font-family:'Share Tech Mono',monospace;line-height:1.6;}
+.modal-btns{display:flex;gap:10px;justify-content:center;}
+</style>
+</head>
+<body>
+<script src="config.js"></script>
+<script src="settings-apply.js"></script>
+<canvas id="rain"></canvas>
+<div id="savedToast">✓ &nbsp;Saved</div>
+<div id="confirmModal">
+  <div class="modal-box">
+    <h3 id="modalTitle">⚠ Confirm</h3>
+    <p id="modalMsg">Are you sure?</p>
+    <div class="modal-btns">
+      <button class="danger-btn btn-del" id="modalConfirmBtn">Yes, proceed</button>
+      <button class="danger-btn" style="background:#111;border-color:#333;color:#888;" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="sw">
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <button id="backBtn" onclick="window.location.href='learning.html'">&#8592; Learning</button>
+    <div class="page-title">⚙ SETTINGS</div>
+    <button id="defaultBtn" onclick="resetToDefaults()" title="Reset all settings to factory defaults">
+      <span class="def-icon">↺</span>DEFAULTS
+    </button>
+    <div class="user-pill">👤 <span id="userLabel">—</span></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" id="tab-classic" onclick="switchTab('classic')">
+      <span class="tab-icon">⚡</span>CLASSIC
+    </div>
+    <div class="tab" id="tab-innov" onclick="switchTab('innov')">
+      <span class="tab-icon">🧠</span>INNOVATORS
+    </div>
+    <div class="tab" id="tab-access" onclick="switchTab('access')">
+      <span class="tab-icon">♿</span>ACCESSIBILITY
+    </div>
+  </div>
+
+  <!-- PANELS -->
+  <div class="panels">
+
+    <!-- ══════════════ CLASSIC ══════════════ -->
+    <div class="panel active" id="panel-classic">
+
+      <!-- Notifications -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">🔔</span>NOTIFICATIONS & REMINDERS</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Push Notifications</div>
+            <div class="srow-desc">Receive in-browser notifications for updates and messages</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-pushNotif" onclick="toggler('pushNotif')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Email Summaries</div>
+            <div class="srow-desc">Weekly progress report sent to your registered email</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-emailSummary" onclick="toggler('emailSummary')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Daily Learning Reminder</div>
+            <div class="srow-desc">Get reminded every day to keep your streak alive</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog on" id="tog-dailyReminder" onclick="toggler('dailyReminder')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Streak Warning Alert</div>
+            <div class="srow-desc">Notify when your streak is about to break (6 hours before midnight)</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog on" id="tog-streakWarn" onclick="toggler('streakWarn')"></div></div>
+        </div>
+      </div>
+
+      <!-- Language -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">🌐</span>LANGUAGE & REGION</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Interface Language</div>
+            <div class="srow-desc">Language used throughout the MATRIXON interface</div>
+          </div>
+          <select class="s-select" id="sel-language" onchange="saveSetting('language',this.value)">
+            <option value="en">🇬🇧 English</option>
+            <option value="hi">🇮🇳 Hindi</option>
+            <option value="es">🇪🇸 Spanish</option>
+            <option value="fr">🇫🇷 French</option>
+            <option value="de">🇩🇪 German</option>
+            <option value="ja">🇯🇵 Japanese</option>
+            <option value="zh">🇨🇳 Chinese</option>
+            <option value="ar">🇸🇦 Arabic</option>
+            <option value="pt">🇧🇷 Portuguese</option>
+          </select>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Time Zone</div>
+            <div class="srow-desc">Used for streak resets and daily reminder timing</div>
+          </div>
+          <select class="s-select" id="sel-timezone" onchange="saveSetting('timezone',this.value)">
+            <option value="Asia/Kolkata">IST (UTC+5:30)</option>
+            <option value="America/New_York">EST (UTC-5)</option>
+            <option value="America/Los_Angeles">PST (UTC-8)</option>
+            <option value="Europe/London">GMT (UTC+0)</option>
+            <option value="Europe/Paris">CET (UTC+1)</option>
+            <option value="Asia/Tokyo">JST (UTC+9)</option>
+            <option value="Australia/Sydney">AEST (UTC+10)</option>
+            <option value="UTC">UTC</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Audio & Video -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">🎵</span>AUDIO & VIDEO</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Sound Effects</div>
+            <div class="srow-desc">UI click sounds, achievement chimes, and feedback tones</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog on" id="tog-soundFX" onclick="toggler('soundFX')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Background Music</div>
+            <div class="srow-desc">Ambient lo-fi music while learning (focus mode)</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-bgMusic" onclick="toggler('bgMusic')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Master Volume</div>
+            <div class="srow-desc">Overall audio level for the app</div>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" class="s-slider" id="sl-volume" min="0" max="100" value="70"
+              oninput="sliderUpdate('volume',this.value)">
+            <div class="slider-val" id="sv-volume">70%</div>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Video Autoplay</div>
+            <div class="srow-desc">Automatically play video lessons when you open a module</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog on" id="tog-videoAutoplay" onclick="toggler('videoAutoplay')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Closed Captions</div>
+            <div class="srow-desc">Show captions on all video content by default</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-captions" onclick="toggler('captions')"></div></div>
+        </div>
+      </div>
+
+      <!-- Privacy -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">🔒</span>PRIVACY & DATA</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Public Profile</div>
+            <div class="srow-desc">Others can find you on leaderboards and search by UID</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog on" id="tog-publicProfile" onclick="toggler('publicProfile')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Show on Leaderboard</div>
+            <div class="srow-desc">Appear in global and national leaderboard rankings</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog on" id="tog-showLeaderboard" onclick="toggler('showLeaderboard')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Anonymous Analytics</div>
+            <div class="srow-desc">Help improve MATRIXON by sharing anonymised usage data</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog on" id="tog-analytics" onclick="toggler('analytics')"></div></div>
+        </div>
+        <div class="srow" style="flex-wrap:wrap;gap:10px;">
+          <div class="srow-left">
+            <div class="srow-label">Account Data</div>
+            <div class="srow-desc">Download a copy of all your data, or permanently delete your account</div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="danger-btn btn-dl" onclick="downloadData()">⬇ Download My Data</button>
+            <button class="danger-btn btn-del" onclick="askDeleteAccount()">🗑 Delete Account</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Offline -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">📶</span>OFFLINE & DATA USAGE</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Download over Wi-Fi Only</div>
+            <div class="srow-desc">Only sync and download lessons when connected to Wi-Fi</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog on" id="tog-wifiOnly" onclick="toggler('wifiOnly')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Offline Mode</div>
+            <div class="srow-desc">Cache lessons for use without an internet connection</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-offlineMode" onclick="toggler('offlineMode')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Clear Cache</div>
+            <div class="srow-desc">Remove all downloaded lessons and temporary files</div>
+          </div>
+          <button class="danger-btn btn-cache" onclick="askClearCache()">🗑 Clear Cache</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ INNOVATORS ══════════════ -->
+    <div class="panel" id="panel-innov">
+
+      <!-- AI Tutor Persona -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">🤖</span>AI TUTOR PERSONA</div>
+        <div class="srow-desc" style="margin-bottom:14px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);">
+          Choose how your AI assistant teaches and communicates with you
+        </div>
+        <div class="persona-grid" id="personaGrid">
+          <div class="persona-card sel" data-persona="socratic" onclick="setPersona('socratic')">
+            <div class="persona-icon">🔍</div>
+            <div class="persona-name">Socratic</div>
+            <div class="persona-desc">Guides you with questions rather than answers</div>
+          </div>
+          <div class="persona-card" data-persona="cheerleader" onclick="setPersona('cheerleader')">
+            <div class="persona-icon">🎉</div>
+            <div class="persona-name">Cheerleader</div>
+            <div class="persona-desc">Encouraging, positive, celebrates every win</div>
+          </div>
+          <div class="persona-card" data-persona="direct" onclick="setPersona('direct')">
+            <div class="persona-icon">⚡</div>
+            <div class="persona-name">Direct</div>
+            <div class="persona-desc">No fluff. Just facts and the answer</div>
+          </div>
+          <div class="persona-card" data-persona="mentor" onclick="setPersona('mentor')">
+            <div class="persona-icon">🧙</div>
+            <div class="persona-name">Mentor</div>
+            <div class="persona-desc">Patient, detailed explanations with analogies</div>
+          </div>
+          <div class="persona-card" data-persona="hacker" onclick="setPersona('hacker')">
+            <div class="persona-icon">💀</div>
+            <div class="persona-name">Hacker</div>
+            <div class="persona-desc">Raw, technical, no sugarcoating — elite mode</div>
+          </div>
+          <div class="persona-card" data-persona="friendly" onclick="setPersona('friendly')">
+            <div class="persona-icon">😊</div>
+            <div class="persona-name">Friendly</div>
+            <div class="persona-desc">Casual, conversational, like a study buddy</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spaced Repetition -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">🔁</span>SPACED REPETITION INTENSITY</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Knowledge Decay Rate</div>
+            <div class="srow-desc">
+              <span style="color:#00ffcc;">Sprint</span> — reviews concepts frequently &nbsp;|&nbsp;
+              <span style="color:#ff9900;">Marathon</span> — spaces them far apart for casual learners
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" class="s-slider" id="sl-spaced" min="1" max="10" value="5"
+              oninput="sliderUpdate('spaced',this.value)">
+            <div class="slider-val" id="sv-spaced">5</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-family:'Share Tech Mono',monospace;color:var(--muted);margin-top:4px;padding:0 2px;">
+          <span style="color:#00ffcc;">◀ SPRINT</span><span style="color:#ff9900;">MARATHON ▶</span>
+        </div>
+      </div>
+
+      <!-- Content Weighting -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">⚖️</span>CONTENT PREFERENCE WEIGHTING</div>
+        <div class="srow-desc" style="margin-bottom:14px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);">
+          Adjust how the curriculum is balanced between interactive quizzes and reading/video
+        </div>
+        <div class="weight-wrap">
+          <div class="weight-bar">
+            <div class="w-quiz" id="wBar-quiz" style="width:70%"></div>
+            <div class="w-read" id="wBar-read" style="width:30%"></div>
+          </div>
+          <div class="weight-labels">
+            <span class="wl-quiz">🧩 Quizzes: <strong id="wv-quiz">70%</strong></span>
+            <span class="wl-read">📖 Reading/Video: <strong id="wv-read">30%</strong></span>
+          </div>
+          <div class="weight-slider-row">
+            <label>Quiz weight</label>
+            <input type="range" class="s-slider" id="sl-weight" min="0" max="100" value="70"
+              oninput="weightUpdate(this.value)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Focus -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">🎯</span>FOCUS & COGNITIVE LOAD</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Zen Mode</div>
+            <div class="srow-desc">Hides sidebars, progress bars and menus during lessons for deep focus</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-zenMode" onclick="toggler('zenMode')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Hide Gamification</div>
+            <div class="srow-desc">Hides streaks, leaderboards, XP and badges — learn without pressure</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-hideGamify" onclick="toggler('hideGamify')"></div></div>
+        </div>
+      </div>
+
+      <!-- Grace Days -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">💚</span>MENTAL HEALTH PAUSE (GRACE DAYS)</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Grace Days Per Month</div>
+            <div class="srow-desc">Days you can miss without breaking your streak. Pre-scheduled rest days.</div>
+          </div>
+          <input type="number" class="s-num" id="num-graceDays" min="0" max="10" value="3"
+            oninput="saveSetting('graceDays',this.value)">
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Activate Grace Day Today</div>
+            <div class="srow-desc">Use one of your grace days for today — streak won't break</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-graceToday" onclick="toggler('graceToday')"></div></div>
+        </div>
+        <div class="grace-info" id="graceInfo">
+          Grace days remaining this month: <span class="grace-remaining" id="graceDaysLeft">3</span>
+        </div>
+      </div>
+
+      <!-- Commute Mode -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">🚌</span>COMMUTE MODE</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Commute Mode</div>
+            <div class="srow-desc">When enabled, switches to audio-only lessons and disables typing exercises while you're on the move</div>
+            <div class="commute-badge" id="commuteBadge" style="display:none;">🟢 ACTIVE — Audio-only mode</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-commuteMode" onclick="toggler('commuteMode')"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ ACCESSIBILITY ══════════════ -->
+    <div class="panel" id="panel-access">
+
+      <!-- Dyslexia -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">📖</span>DYSLEXIA-FRIENDLY MODE</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Enable Dyslexia Mode</div>
+            <div class="srow-desc">Switches to OpenDyslexic font, increases line spacing, and disables justified text</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-dyslexia" onclick="toggler('dyslexia')"></div></div>
+        </div>
+        <div id="dyslexiaPreview">
+          The quick brown fox jumps over the lazy dog. Learning to code is a superpower anyone can develop — it takes patience, practice, and persistence.
+        </div>
+      </div>
+
+      <!-- Sensory -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">🛡️</span>SENSORY REDUCTION</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Disable Screen Flashes</div>
+            <div class="srow-desc">Removes all flash effects and sudden bright transitions</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-noFlash" onclick="toggler('noFlash')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Disable Confetti & Animations</div>
+            <div class="srow-desc">Turns off celebration animations, particle effects, and bouncing elements</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-noConfetti" onclick="toggler('noConfetti')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Reduce Matrix Rain Intensity</div>
+            <div class="srow-desc">Makes the background rain effect subtler and slower</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-reduceRain" onclick="toggler('reduceRain')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Disable Sudden Sound Effects</div>
+            <div class="srow-desc">No unexpected audio jumps or loud notification sounds</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-noSuddenSound" onclick="toggler('noSuddenSound')"></div></div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">High Contrast Mode</div>
+            <div class="srow-desc">Boosts contrast for text and UI elements — easier to read</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-highContrast" onclick="toggler('highContrast')"></div></div>
+        </div>
+      </div>
+
+      <!-- TTS -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">🗣️</span>TEXT-TO-SPEECH</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Enable Text-to-Speech</div>
+            <div class="srow-desc">Read out lesson content, questions, and feedback aloud</div>
+          </div>
+          <div class="toggle-wrap"><div class="tog" id="tog-tts" onclick="toggler('tts')"></div></div>
+        </div>
+        <div class="tts-controls" id="ttsControls" style="opacity:.4;pointer-events:none;">
+          <div class="tts-ctrl">
+            <div class="tts-label">SPEED</div>
+            <div class="slider-wrap">
+              <input type="range" class="s-slider" id="sl-ttsSpeed" min="50" max="200" value="100"
+                oninput="sliderUpdate('ttsSpeed',this.value)">
+              <div class="slider-val" id="sv-ttsSpeed">1.0x</div>
+            </div>
+          </div>
+          <div class="tts-ctrl">
+            <div class="tts-label">VOICE TYPE</div>
+            <select class="s-select" id="sel-ttsVoice" onchange="saveSetting('ttsVoice',this.value)">
+              <option value="female-young">Female — Young</option>
+              <option value="female-mature">Female — Mature</option>
+              <option value="male-young">Male — Young</option>
+              <option value="male-mature">Male — Mature</option>
+              <option value="neutral">Neutral</option>
+            </select>
+          </div>
+          <div class="tts-ctrl">
+            <div class="tts-label">ACCENT</div>
+            <select class="s-select" id="sel-ttsAccent" onchange="saveSetting('ttsAccent',this.value)">
+              <option value="en-IN">Indian English</option>
+              <option value="en-US">American English</option>
+              <option value="en-GB">British English</option>
+              <option value="en-AU">Australian English</option>
+            </select>
+          </div>
+          <div class="tts-ctrl" style="align-self:flex-end;">
+            <button class="danger-btn btn-dl" onclick="testTTS()" style="white-space:nowrap;">▶ Test Voice</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Font Size -->
+      <div class="section">
+        <div class="section-head"><span class="sh-icon">🔠</span>DISPLAY</div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Font Size</div>
+            <div class="srow-desc">Adjust text size throughout the app</div>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" class="s-slider" id="sl-fontSize" min="12" max="24" value="16"
+              oninput="sliderUpdate('fontSize',this.value)">
+            <div class="slider-val" id="sv-fontSize">16px</div>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="srow-left">
+            <div class="srow-label">Cursor Blink Rate</div>
+            <div class="srow-desc">Speed of the blinking cursor in the terminal</div>
+          </div>
+          <select class="s-select" id="sel-cursorBlink" onchange="saveSetting('cursorBlink',this.value)">
+            <option value="fast">Fast</option>
+            <option value="normal" selected>Normal</option>
+            <option value="slow">Slow</option>
+            <option value="off">Off</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /panels -->
+</div><!-- /sw -->
+
+<script>
+/* ══ MATRIX RAIN ══ */
+(function(){
+  const c=document.getElementById('rain'),ctx=c.getContext('2d');
+  let ri = (window._matrixRainIntensity !== undefined ? window._matrixRainIntensity : 1);
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  resize();window.addEventListener('resize',()=>{resize();init();});
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%アイウエオカキクケコ';
+  const fs=14;let cols,drops;
+  function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(0).map(()=>Math.floor(Math.random()*-40));}
+  init();
+  window._setRainIntensity=v=>{ri=v;};
+  setInterval(()=>{
+    ctx.fillStyle=`rgba(0,0,0,${0.06/ri})`; ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px monospace';
+    if(Math.random()<ri*0.5||ri===1){
+      drops.forEach((d,i)=>{
+        ctx.fillStyle=d*fs<80?'#ccffcc':'#00ff00';
+        ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*fs,d*fs);
+        if(d*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;
+      });
+    }
+  },45);
+})();
+
+/* ══ CONSTANTS ══ */
+const API = window.MATRIXON_API;
+const username=localStorage.getItem('matrixon_user')||'player';
+if (!username || username === 'player') { window.location.href = 'index.html'; }
+document.getElementById('userLabel').textContent=username;
+
+/* ══ SETTINGS STATE ══ */
+let settings={
+  pushNotif:false, emailSummary:false, dailyReminder:true, streakWarn:true,
+  language:'en', timezone:'Asia/Kolkata',
+  soundFX:true, bgMusic:false, volume:70, videoAutoplay:true, captions:false,
+  publicProfile:true, showLeaderboard:true, analytics:true,
+  wifiOnly:true, offlineMode:false,
+  aiPersona:'socratic', spaced:5, contentWeight:70,
+  zenMode:false, hideGamify:false, graceDays:3, graceToday:false, commuteMode:false,
+  dyslexia:false, noFlash:false, noConfetti:false, reduceRain:false,
+  noSuddenSound:false, highContrast:false,
+  tts:false, ttsSpeed:100, ttsVoice:'female-young', ttsAccent:'en-IN',
+  fontSize:16, cursorBlink:'normal',
+};
+
+/* ══ LOAD SETTINGS ══ */
+async function loadSettings(){
+  try{
+    const r=await fetch(`${API}/settings/${username}`);
+    const data=await r.json();
+    if(data&&data.settings) Object.assign(settings,data.settings);
+  }catch(e){}
+  applyAll();
+}
+
+/* ══ APPLY ALL ══ */
+function applyAll(){
+  // Toggles
+  Object.keys(settings).forEach(k=>{
+    const el=document.getElementById('tog-'+k);
+    if(el) el.classList.toggle('on',!!settings[k]);
+  });
+  // Selects
+  setSel('language'); setSel('timezone'); setSel('ttsVoice'); setSel('ttsAccent'); setSel('cursorBlink');
+  // Sliders
+  setSlider('volume', settings.volume, '%');
+  setSlider('spaced', settings.spaced, '');
+  setSlider('ttsSpeed', settings.ttsSpeed, '', v=>(v/100).toFixed(1)+'x');
+  setSlider('fontSize', settings.fontSize, 'px');
+  document.getElementById('sl-weight').value=settings.contentWeight;
+  weightUpdate(settings.contentWeight, false);
+  // Persona
+  setPersonaDisplay(settings.aiPersona);
+  // Grace days
+  document.getElementById('num-graceDays').value=settings.graceDays;
+  document.getElementById('graceDaysLeft').textContent=settings.graceDays;
+  // Dyslexia preview
+  applyDyslexia(settings.dyslexia);
+  // TTS controls
+  applyTTSVisible(settings.tts);
+  // Commute badge
+  document.getElementById('commuteBadge').style.display=settings.commuteMode?'inline-flex':'none';
+  // Rain intensity
+  if(settings.reduceRain) window._setRainIntensity(0.3);
+  // High contrast
+  if(settings.highContrast) document.body.style.filter='contrast(1.3) brightness(1.1)';
+}
+
+function setSel(key){
+  const el=document.getElementById('sel-'+key);
+  if(el&&settings[key]!==undefined) el.value=settings[key];
+}
+function setSlider(key, val, suffix, fmt){
+  const sl=document.getElementById('sl-'+key);
+  const sv=document.getElementById('sv-'+key);
+  if(sl) sl.value=val;
+  if(sv) sv.textContent=fmt?fmt(val):(val+suffix);
+  if(sl){
+    const pct=((val-sl.min)/(sl.max-sl.min)*100);
+    sl.style.setProperty('--pct',pct+'%');
+  }
+}
+
+/* ══ SAVE SETTING ══ */
+let saveTimer=null;
+function saveSetting(key, val){
+  settings[key]=val;
+  // Side effects
+  if(key==='dyslexia') applyDyslexia(val);
+  if(key==='tts') applyTTSVisible(val);
+  if(key==='commuteMode') document.getElementById('commuteBadge').style.display=val?'inline-flex':'none';
+  if(key==='reduceRain') window._setRainIntensity(val?0.3:1);
+  if(key==='highContrast') document.body.style.filter=val?'contrast(1.3) brightness(1.1)':'';
+  if(key==='graceDays') document.getElementById('graceDaysLeft').textContent=val;
+  // Debounced server save
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(pushSettings, 600);
+}
+
+async function pushSettings(){
+  try{
+    await fetch(`${API}/settings/save`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,settings})
+    });
+    showSaved();
+  }catch(e){ showSaved('⚠ Offline — saved locally'); }
+  localStorage.setItem('matrixon_settings',JSON.stringify(settings));
+}
+
+/* ══ TOGGLE ══ */
+function toggler(key){
+  const el=document.getElementById('tog-'+key);
+  const newVal=!el.classList.contains('on');
+  el.classList.toggle('on',newVal);
+  saveSetting(key,newVal);
+}
+
+/* ══ SLIDER ══ */
+function sliderUpdate(key, val, save=true){
+  const fmts={
+    volume: v=>v+'%',
+    spaced: v=>v,
+    ttsSpeed: v=>(v/100).toFixed(1)+'x',
+    fontSize: v=>v+'px',
+  };
+  const sv=document.getElementById('sv-'+key);
+  if(sv) sv.textContent=fmts[key]?fmts[key](val):val;
+  const sl=document.getElementById('sl-'+key);
+  if(sl){const pct=((val-sl.min)/(sl.max-sl.min)*100);sl.style.setProperty('--pct',pct+'%');}
+  if(save) saveSetting(key, parseFloat(val));
+}
+
+/* ══ CONTENT WEIGHT ══ */
+function weightUpdate(val, save=true){
+  const q=parseInt(val), r=100-q;
+  document.getElementById('wBar-quiz').style.width=q+'%';
+  document.getElementById('wBar-read').style.width=r+'%';
+  document.getElementById('wv-quiz').textContent=q+'%';
+  document.getElementById('wv-read').textContent=r+'%';
+  const sl=document.getElementById('sl-weight');
+  if(sl){const pct=((val-sl.min)/(sl.max-sl.min)*100);sl.style.setProperty('--pct',pct+'%');}
+  if(save) saveSetting('contentWeight', q);
+}
+
+/* ══ PERSONA ══ */
+function setPersona(p){
+  setPersonaDisplay(p);
+  saveSetting('aiPersona',p);
+}
+function setPersonaDisplay(p){
+  document.querySelectorAll('.persona-card').forEach(c=>{
+    c.classList.toggle('sel',c.dataset.persona===p);
+  });
+}
+
+/* ══ DYSLEXIA ══ */
+function applyDyslexia(on){
+  const el=document.getElementById('dyslexiaPreview');
+  el.classList.toggle('dyslexic',on);
+}
+
+/* ══ TTS ══ */
+function applyTTSVisible(on){
+  const c=document.getElementById('ttsControls');
+  c.style.opacity=on?'1':'0.4';
+  c.style.pointerEvents=on?'auto':'none';
+}
+function testTTS(){
+  const text='Hello! This is your MATRIXON AI Tutor speaking.';
+  const utt=new SpeechSynthesisUtterance(text);
+  utt.rate=(settings.ttsSpeed||100)/100;
+  window.speechSynthesis.speak(utt);
+}
+
+/* ══ TABS ══ */
+function switchTab(t){
+  ['classic','innov','access'].forEach(id=>{
+    document.getElementById('tab-'+id).classList.toggle('active',id===t);
+    document.getElementById('panel-'+id).classList.toggle('active',id===t);
+  });
+}
+
+/* ══ SAVED TOAST ══ */
+let toastTimer=null;
+function showSaved(msg){
+  const t=document.getElementById('savedToast');
+  t.textContent=msg||'✓  Saved';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ══ CONFIRM MODAL ══ */
+let pendingAction=null;
+function showModal(title,msg,action){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalMsg').textContent=msg;
+  document.getElementById('confirmModal').classList.add('show');
+  pendingAction=action;
+  document.getElementById('modalConfirmBtn').onclick=()=>{action();closeModal();};
+}
+function closeModal(){document.getElementById('confirmModal').classList.remove('show');}
+document.getElementById('confirmModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+/* ══ RESET TO DEFAULTS ══ */
+const DEFAULT_SETTINGS = {
+  pushNotif:false, emailSummary:false, dailyReminder:true, streakWarn:true,
+  language:'en', timezone:'Asia/Kolkata',
+  soundFX:true, bgMusic:false, volume:70, videoAutoplay:true, captions:false,
+  publicProfile:true, showLeaderboard:true, analytics:true,
+  wifiOnly:true, offlineMode:false,
+  aiPersona:'socratic', spaced:5, contentWeight:70,
+  zenMode:false, hideGamify:false, graceDays:3, graceToday:false, commuteMode:false,
+  dyslexia:false, noFlash:false, noConfetti:false, reduceRain:false,
+  noSuddenSound:false, highContrast:false,
+  tts:false, ttsSpeed:100, ttsVoice:'female-young', ttsAccent:'en-IN',
+  fontSize:16, cursorBlink:'normal',
+};
+function resetToDefaults(){
+  showModal('↺ Reset to Defaults', 'This will restore all settings to their original factory defaults. Your account data will not be affected.', async ()=>{
+    Object.assign(settings, JSON.parse(JSON.stringify(DEFAULT_SETTINGS)));
+    applyAll();
+    // Fix high-contrast and rain that applyAll doesn't un-apply
+    document.body.style.filter = '';
+    if(window._setRainIntensity) window._setRainIntensity(1);
+    await pushSettings();
+    // Flash the button green as confirmation
+    const btn = document.getElementById('defaultBtn');
+    btn.style.cssText += 'border-color:#00ff88;color:#00ff88;box-shadow:0 0 22px rgba(0,255,136,0.4)';
+    btn.textContent = '✓ RESTORED';
+    setTimeout(()=>{ btn.innerHTML='<span class="def-icon">↺</span>DEFAULTS'; btn.style.cssText=''; }, 1800);
+  });
+}
+
+/* ══ ACTIONS ══ */
+function downloadData(){
+  // Open the rich PDF-ready data report in a new tab
+  window.open('matrixon-data-report.html', '_blank');
+  showSaved('📄 Report opened');
+}
+function askDeleteAccount(){
+  showModal('⚠ Delete Account',
+    'This will permanently delete your account, all progress, achievements and data. This cannot be undone.',
+    async()=>{
+      try{
+        await fetch(`${API}/account/delete`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username})});
+      }catch(e){}
+      localStorage.clear();
+      window.location.href='index.html';
+    }
+  );
+}
+function askClearCache(){
+  showModal('🗑 Clear Cache',
+    'This will remove all downloaded lessons and temporary files from this device.',
+    ()=>{ localStorage.removeItem('matrixon_cache'); showSaved('Cache cleared'); }
+  );
+}
+
+/* ══ INIT ══ */
+loadSettings();
+</script>
+</body>
+</html>

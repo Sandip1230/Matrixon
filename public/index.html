@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MATRIXON — Secure Access</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+/* ── MOBILE RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .hud-tag { display: none; }
+  .hud-corner { width: 40px; height: 40px; }
+  .hud-corner.hc-tl, .hud-corner.hc-tr { top: 12px; }
+  .hud-corner.hc-tl { left: 12px; }
+  .hud-corner.hc-tr { right: 12px; }
+  .hud-corner.hc-bl { bottom: 12px; left: 12px; }
+  .hud-corner.hc-br { bottom: 12px; right: 12px; }
+  #cvRadar { display: none; }
+  #glitchTitle { font-size: clamp(22px, 8vw, 40px) !important; letter-spacing: 6px !important; }
+  #uiTitle { font-size: clamp(20px, 6vw, 36px) !important; letter-spacing: 8px !important; }
+  .morph { width: 130px; height: 130px; }
+  .morph.active { width: min(94vw, 400px); height: auto; min-height: 400px; border-radius: 20px; }
+  .power-icon { font-size: 52px; }
+  .form { width: 85%; }
+  #bootText { min-width: unset; width: 90vw; font-size: 10px; }
+  .status-bar { font-size: 10px; }
+}
+
+/* ── PASSWORD STRENGTH BAR ──────────────────────────────────────── */
+#pwStrengthWrap {
+  height: 3px; background: rgba(0,255,136,0.1); border-radius: 4px;
+  margin-top: 6px; overflow: hidden; transition: opacity .3s; opacity: 0;
+}
+#pwStrengthBar { height: 100%; width: 0%; border-radius: 4px; transition: width .3s, background .3s; }
+#pwStrengthLabel {
+  font-size: 10px; letter-spacing: 1px; margin-top: 4px; height: 14px;
+  text-align: right; transition: opacity .3s; opacity: 0;
+}
+
+/* ── USERNAME HINT ──────────────────────────────────────────────── */
+#usernameHint { font-size: 10px; color: rgba(0,212,255,0.45); margin-top: 4px; letter-spacing: .5px; display: none; }
+
+/* ── BUTTON LOADING SPINNER ─────────────────────────────────────── */
+.btn-loading { position: relative; pointer-events: none !important; opacity: 0.7; }
+.btn-loading::after {
+  content: ''; position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  width: 12px; height: 12px; border: 2px solid transparent;
+  border-top-color: currentColor; border-radius: 50%; animation: btnSpin .7s linear infinite;
+}
+@keyframes btnSpin { to { transform: translateY(-50%) rotate(360deg); } }
+
+/* ── FORGOT PASSWORD LINK ────────────────────────────────────────── */
+#forgotLink {
+  display: block; text-align: right; font-size: 10px;
+  color: rgba(0,212,255,0.5); cursor: pointer;
+  margin-top: -12px; margin-bottom: 4px; letter-spacing: .5px; transition: color .2s;
+}
+#forgotLink:hover { color: var(--b); }
+
+/* ── FORGOT PASSWORD MODAL ───────────────────────────────────────── */
+#forgotModal {
+  display: none; position: fixed; inset: 0; z-index: 9000;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,8,0.85); backdrop-filter: blur(6px);
+}
+#forgotModal.open { display: flex; }
+#forgotCard {
+  background: #040f04; border: 1px solid rgba(0,255,136,0.35);
+  border-radius: 18px; padding: 32px 30px 28px;
+  width: min(92vw, 400px); position: relative;
+  box-shadow: 0 0 40px rgba(0,255,136,0.18), 0 0 80px rgba(0,0,8,0.8);
+  font-family: 'Share Tech Mono', monospace;
+  animation: fmIn .35s cubic-bezier(.22,1,.36,1);
+}
+@keyframes fmIn { from { opacity:0; transform:scale(.92) translateY(20px); } to { opacity:1; transform:none; } }
+#forgotCard h3 {
+  font-family: 'Orbitron', monospace; font-size: 15px; color: var(--g);
+  letter-spacing: 3px; margin-bottom: 6px; text-shadow: 0 0 10px var(--g);
+}
+#forgotCard .fm-sub { font-size: 11px; color: rgba(0,212,255,0.5); letter-spacing: 1px; margin-bottom: 22px; }
+.fm-step { display: none; }
+.fm-step.active { display: block; }
+.fm-input {
+  width: 100%; padding: 11px 14px; background: rgba(0,0,8,0.85);
+  border: 1px solid rgba(0,255,136,0.3); border-radius: 8px;
+  color: var(--g); font-family: 'Share Tech Mono', monospace; font-size: 13px;
+  outline: none; transition: .3s; margin-bottom: 12px; letter-spacing: 1px;
+}
+.fm-input:focus { border-color: var(--g); box-shadow: 0 0 10px rgba(0,255,136,0.3); }
+.fm-input::placeholder { color: rgba(0,255,136,0.25); }
+.fm-btn {
+  width: 100%; padding: 11px; border: none; border-radius: 30px;
+  font-family: 'Orbitron', monospace; font-weight: bold; font-size: 13px;
+  cursor: pointer; letter-spacing: 2px; transition: .3s; margin-top: 4px;
+}
+.fm-btn-primary {
+  background: linear-gradient(135deg,#00cc66,#00ff88); color: #001208;
+}
+.fm-btn-primary:hover { filter: brightness(1.15); transform: scale(1.03); }
+.fm-btn-primary:disabled { opacity: .5; pointer-events: none; }
+.fm-msg {
+  font-size: 11px; letter-spacing: .5px; min-height: 16px;
+  margin-bottom: 10px; text-align: center;
+}
+.fm-msg.ok { color: #00ff88; }
+.fm-msg.err { color: #ff6644; }
+.fm-msg.info { color: rgba(0,212,255,0.7); }
+
+/* Token display box */
+#tokenDisplay {
+  background: rgba(0,255,136,0.07); border: 1px solid rgba(0,255,136,0.3);
+  border-radius: 10px; padding: 14px; text-align: center; margin: 12px 0;
+  display: none;
+}
+#tokenDisplay .td-label { font-size: 10px; color: rgba(0,212,255,0.5); letter-spacing: 2px; margin-bottom: 6px; }
+#tokenDisplay .td-code {
+  font-size: 28px; letter-spacing: 8px; color: #00ff88;
+  text-shadow: 0 0 16px rgba(0,255,136,0.7); font-family: 'Orbitron', monospace;
+  font-weight: 700;
+}
+#tokenDisplay .td-exp { font-size: 10px; color: rgba(0,212,255,0.45); margin-top: 6px; }
+
+#forgotClose {
+  position: absolute; top: 14px; right: 18px; font-size: 18px;
+  color: rgba(0,212,255,0.5); cursor: pointer; transition: color .2s;
+}
+#forgotClose:hover { color: #ff4444; }
+
+/* Step back link */
+.fm-back {
+  display: inline-block; font-size: 10px; color: rgba(0,212,255,0.4);
+  cursor: pointer; letter-spacing: 1px; margin-top: 10px; transition: color .2s;
+}
+.fm-back:hover { color: var(--b); }
+</style>
+</head>
+<body>
+<canvas id="cvStars"></canvas>
+<canvas id="cvHUD"></canvas>
+<div id="scanlines"></div>
+<div id="scanLine"></div>
+<div class="hud-corner hc-tl"></div>
+<div class="hud-corner hc-tr"></div>
+<div class="hud-corner hc-bl"></div>
+<div class="hud-corner hc-br"></div>
+<div class="hud-tag ht-tl">SYS: MATRIXON v1.7.56<br>NODE: 192.168.0.1<br>LAT: <span id="hudLat">22.5726° N</span></div>
+<div class="hud-tag ht-tr">STATUS: CLASSIFIED<br>UPTIME: <span id="hudUptime">00:00:00</span><br>LON: <span id="hudLon">88.3639° E</span></div>
+<div class="hud-tag ht-bl">THREAT LEVEL: <span id="hudThreat" style="color:#00ff88">0</span><br>FIREWALL: <span id="hudFirewall" style="color:#00ff88">ACTIVE</span><br>ENCRYPT: AES-256</div>
+<div class="hud-tag ht-br">USERS: <span id="hudUsers">1,247</span><br>PING: <span id="hudPing" style="color:#00ff88">…</span><br>TZ: <span id="hudTZ">IST+05:30</span> <span id="hudClock" style="color:#00d4ff">--:--:--</span></div>
+<canvas id="cvRadar"></canvas>
+<div id="reticle">
+  <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="60" cy="60" r="55" stroke="#00d4ff" stroke-width="1" stroke-dasharray="8 4" opacity="0.6"><animateTransform attributeName="transform" type="rotate" from="0 60 60" to="360 60 60" dur="6s" repeatCount="indefinite"/></circle>
+    <circle cx="60" cy="60" r="38" stroke="#00ff88" stroke-width="1.5" stroke-dasharray="5 6" opacity="0.8"><animateTransform attributeName="transform" type="rotate" from="360 60 60" to="0 60 60" dur="4s" repeatCount="indefinite"/></circle>
+    <line x1="60" y1="4" x2="60" y2="26" stroke="#00d4ff" stroke-width="1.5" opacity="0.9"/>
+    <line x1="60" y1="94" x2="60" y2="116" stroke="#00d4ff" stroke-width="1.5" opacity="0.9"/>
+    <line x1="4" y1="60" x2="26" y2="60" stroke="#00d4ff" stroke-width="1.5" opacity="0.9"/>
+    <line x1="94" y1="60" x2="116" y2="60" stroke="#00d4ff" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="60" cy="60" r="4" fill="#00ff88" opacity="0.9"><animate attributeName="opacity" values="0.9;0.2;0.9" dur="1s" repeatCount="indefinite"/></circle>
+    <line x1="60" y1="22" x2="60" y2="30" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+    <line x1="60" y1="90" x2="60" y2="98" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+    <line x1="22" y1="60" x2="30" y2="60" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+    <line x1="90" y1="60" x2="98" y2="60" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+  </svg>
+</div>
+<div id="bootText"><span id="bootLine">&nbsp;<span class="bl-cursor">▋</span></span></div>
+
+<!--
+  FIX: #glitchTitle now has its text content in the HTML.
+  Previously the div was empty so the glitch CSS animation played on nothing.
+-->
+<div id="glitchTitle">/\</div>
+<div id="implodeRing"></div>
+<div id="skipHint" onclick="skipIntro()">[ SKIP INTRO ]</div>
+
+<div id="mainUI">
+  <div id="uiTitle">MATRIXON</div>
+  <div id="uiSub">▶ &nbsp; SECURE LEARNING TERMINAL &nbsp; ◀</div>
+  <div class="morph" id="morph">
+    <div class="power-icon" role="button" aria-label="Activate login terminal" tabindex="0">⏻</div>
+    <div class="close" onclick="closeForm(event)" role="button" aria-label="Close form" tabindex="0">✕</div>
+    <div class="form" role="main" aria-label="Login form">
+      <h2>M A T R I X O N</h2>
+      <p class="subtitle">▶ SECURE ACCESS TERMINAL</p>
+
+      <div class="input-box">
+        <input type="text" id="username" required autocomplete="off"
+               data-lpignore="true" data-form-type="other"
+               minlength="3" maxlength="20"
+               aria-label="Username"
+               aria-describedby="usernameHint"
+               oninput="onUsernameInput(this)">
+        <label for="username">Username</label>
+        <div id="usernameHint">3–20 chars · letters, numbers, underscore only</div>
+      </div>
+
+      <div class="input-box">
+        <input type="password" id="password" required autocomplete="new-password"
+               data-lpignore="true" data-form-type="other"
+               minlength="6" maxlength="128"
+               aria-label="Password"
+               oninput="onPasswordInput(this)">
+        <label for="password">Password</label>
+        <span class="toggle" onclick="togglePassword()" tabindex="0" role="button" aria-label="Toggle password visibility">Show</span>
+        <div id="pwStrengthWrap"><div id="pwStrengthBar"></div></div>
+        <div id="pwStrengthLabel"></div>
+      </div>
+
+      <span id="forgotLink" onclick="showForgotPassword()" tabindex="0" role="button">Forgot password?</span>
+
+      <div class="btn-row">
+        <button class="submit" id="accessBtn" aria-label="Login">LOGIN</button>
+        <button class="register-btn" id="registerBtn" aria-label="Register">REGISTER</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="status-bar" id="statusBar" style="opacity:0;transition:opacity .6s ease;">
+  <span class="status-dot" id="statusDot"></span>
+  <span id="statusText">SYSTEM OFFLINE — PRESS POWER</span>
+</div>
+
+<!-- ── FORGOT PASSWORD MODAL ────────────────────────────────────────────── -->
+<div id="forgotModal" role="dialog" aria-label="Password reset" aria-modal="true">
+  <div id="forgotCard">
+    <span id="forgotClose" onclick="closeForgotModal()" title="Close">✕</span>
+    <h3>PASSWORD RESET</h3>
+    <p class="fm-sub">IDENTITY VERIFICATION PROTOCOL</p>
+
+    <!-- STEP 1: enter username, request token -->
+    <div class="fm-step active" id="fmStep1">
+      <p class="fm-msg info" id="fmMsg1">Enter your username to generate a reset code.</p>
+      <input class="fm-input" id="fmUsername" type="text" placeholder="Username" autocomplete="off" maxlength="20">
+      <button class="fm-btn fm-btn-primary" id="fmRequestBtn" onclick="requestResetToken()">GENERATE RESET CODE</button>
+    </div>
+
+    <!-- STEP 2: show generated token, ask for new password -->
+    <div class="fm-step" id="fmStep2">
+      <p class="fm-msg info" id="fmMsg2">Your reset code is shown below. Save it, then set your new password.</p>
+      <div id="tokenDisplay">
+        <div class="td-label">ONE-TIME RESET CODE</div>
+        <div class="td-code" id="tokenValue">——</div>
+        <div class="td-exp" id="tokenExp">Expires in 15 minutes</div>
+      </div>
+      <input class="fm-input" id="fmToken"    type="text"     placeholder="Paste reset code" autocomplete="off" maxlength="10" style="letter-spacing:3px;text-transform:uppercase;">
+      <input class="fm-input" id="fmNewPwd"   type="password" placeholder="New password (min 6 chars)" autocomplete="new-password" maxlength="128">
+      <input class="fm-input" id="fmNewPwd2"  type="password" placeholder="Confirm new password" autocomplete="new-password" maxlength="128">
+      <p class="fm-msg" id="fmMsg2b"></p>
+      <button class="fm-btn fm-btn-primary" id="fmConfirmBtn" onclick="confirmReset()">RESET PASSWORD</button>
+      <span class="fm-back" onclick="fmGoStep(1)">← Back</span>
+    </div>
+
+    <!-- STEP 3: success -->
+    <div class="fm-step" id="fmStep3">
+      <p class="fm-msg ok" style="font-size:13px;margin:16px 0 24px;">✅ Password updated successfully.<br>You can now log in with your new password.</p>
+      <button class="fm-btn fm-btn-primary" onclick="closeForgotModal()">GO TO LOGIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- config.js MUST load first -->
+<script src="config.js"></script>
+<script>
+// ── STARFIELD ────────────────────────────────────────────────────────────────
+const cvS = document.getElementById('cvStars'), ctxS = cvS.getContext('2d');
+cvS.width = window.innerWidth; cvS.height = window.innerHeight;
+window.addEventListener('resize', () => { cvS.width = window.innerWidth; cvS.height = window.innerHeight; });
+const STARS = Array.from({ length: 220 }, () => ({
+  x: (Math.random() - .5) * cvS.width * 2, y: (Math.random() - .5) * cvS.height * 2,
+  z: Math.random() * cvS.width, pz: 0
+}));
+let warpSpeed = 14;
+function drawStars() {
+  ctxS.fillStyle = 'rgba(0,5,8,0.18)'; ctxS.fillRect(0, 0, cvS.width, cvS.height);
+  const CX = cvS.width / 2, CY = cvS.height / 2;
+  STARS.forEach(s => {
+    s.pz = s.z; s.z -= warpSpeed;
+    if (s.z <= 0) { s.x = (Math.random() - .5) * cvS.width * 2; s.y = (Math.random() - .5) * cvS.height * 2; s.z = cvS.width; s.pz = s.z; }
+    const sx = (s.x / s.z) * cvS.width + CX, sy = (s.y / s.z) * cvS.height + CY;
+    const px = (s.x / s.pz) * cvS.width + CX, py = (s.y / s.pz) * cvS.height + CY;
+    const size = Math.max(0.4, (1 - s.z / cvS.width) * 3.5), bright = 1 - s.z / cvS.width;
+    const hue = bright > .7 ? '#00d4ff' : bright > .4 ? '#00ff88' : 'rgba(180,240,255,0.6)';
+    ctxS.beginPath(); ctxS.moveTo(px, py); ctxS.lineTo(sx, sy);
+    ctxS.strokeStyle = hue; ctxS.lineWidth = size; ctxS.globalAlpha = bright * .9; ctxS.stroke();
+    ctxS.globalAlpha = 1;
+  });
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+setTimeout(() => {
+  const t = setInterval(() => { warpSpeed = Math.max(1.5, warpSpeed - .4); if (warpSpeed <= 1.5) clearInterval(t); }, 50);
+}, 4000);
+
+// ── RADAR ────────────────────────────────────────────────────────────────────
+const cvR = document.getElementById('cvRadar'), ctxR = cvR.getContext('2d');
+const RR = 80;
+cvR.width = RR * 2 + 30; cvR.height = RR * 2 + 30;
+let radarAngle = 0;
+const radarBlips = Array.from({ length: 6 }, () => ({ r: 20 + Math.random() * 55, a: Math.random() * Math.PI * 2, life: 0 }));
+function drawRadar() {
+  ctxR.clearRect(0, 0, cvR.width, cvR.height);
+  const rx = cvR.width / 2, ry = cvR.height / 2;
+  [RR, RR / 2, RR / 4].forEach((r) => {
+    ctxR.beginPath(); ctxR.arc(rx, ry, r, 0, Math.PI * 2);
+    ctxR.strokeStyle = 'rgba(0,212,255,0.18)'; ctxR.lineWidth = 1; ctxR.stroke();
+  });
+  ctxR.strokeStyle = 'rgba(0,212,255,0.1)'; ctxR.lineWidth = 1;
+  ctxR.beginPath(); ctxR.moveTo(rx - RR, ry); ctxR.lineTo(rx + RR, ry); ctxR.stroke();
+  ctxR.beginPath(); ctxR.moveTo(rx, ry - RR); ctxR.lineTo(rx, ry + RR); ctxR.stroke();
+  ctxR.save(); ctxR.beginPath(); ctxR.arc(rx, ry, RR, 0, Math.PI * 2); ctxR.clip();
+  for (let i = 0; i < 55; i++) {
+    const a = radarAngle - (i / 55) * Math.PI * .6;
+    ctxR.beginPath(); ctxR.moveTo(rx, ry); ctxR.arc(rx, ry, RR, a, a + 0.09); ctxR.closePath();
+    ctxR.fillStyle = `rgba(0,255,136,${(1 - i / 55) * .18})`; ctxR.fill();
+  }
+  ctxR.beginPath(); ctxR.moveTo(rx, ry); ctxR.lineTo(rx + Math.cos(radarAngle) * RR, ry + Math.sin(radarAngle) * RR);
+  ctxR.strokeStyle = 'rgba(0,255,136,0.85)'; ctxR.lineWidth = 2; ctxR.stroke();
+  ctxR.restore();
+  radarBlips.forEach(b => {
+    const diff = ((b.a - radarAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+    if (diff < 0.25 || diff > Math.PI * 2 - 0.05) b.life = 1;
+    if (b.life > 0) {
+      const bx = rx + Math.cos(b.a) * b.r, by = ry + Math.sin(b.a) * b.r;
+      ctxR.beginPath(); ctxR.arc(bx, by, 3, 0, Math.PI * 2); ctxR.fillStyle = `rgba(0,255,136,${b.life})`; ctxR.fill();
+      ctxR.beginPath(); ctxR.arc(bx, by, 7, 0, Math.PI * 2); ctxR.strokeStyle = `rgba(0,255,136,${b.life * .4})`; ctxR.lineWidth = 1; ctxR.stroke();
+      b.life = Math.max(0, b.life - .008);
+    }
+  });
+  ctxR.fillStyle = 'rgba(0,212,255,0.45)'; ctxR.font = '8px Share Tech Mono'; ctxR.textAlign = 'center';
+  ctxR.fillText('RADAR SCAN', rx, ry + RR + 14);
+  radarAngle += 0.04;
+  requestAnimationFrame(drawRadar);
+}
+setTimeout(drawRadar, 900);
+
+// ── HUD WIDGETS ──────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const el = document.getElementById('hudClock');
+  if (el) el.textContent = [now.getHours(), now.getMinutes(), now.getSeconds()].map(n => String(n).padStart(2,'0')).join(':');
+  const off = now.getTimezoneOffset(), sign = off <= 0 ? '+' : '-';
+  const hrs = Math.floor(Math.abs(off) / 60), mins = Math.abs(off) % 60;
+  const tzLabel = Intl.DateTimeFormat().resolvedOptions().timeZone || 'LOCAL';
+  const tzShort = tzLabel.split('/').pop().replace('_', ' ');
+  const tzEl = document.getElementById('hudTZ');
+  if (tzEl) tzEl.textContent = tzShort + ' ' + sign + hrs + (mins ? ':' + String(mins).padStart(2, '0') : '');
+}
+setInterval(updateClock, 1000); updateClock();
+
+const _uptimeStart = Date.now();
+setInterval(() => {
+  const s = Math.floor((Date.now() - _uptimeStart) / 1000);
+  const el = document.getElementById('hudUptime');
+  if (el) el.textContent = [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(n=>String(n).padStart(2,'0')).join(':');
+}, 1000);
+
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lon } = pos.coords;
+    const latEl = document.getElementById('hudLat'), lonEl = document.getElementById('hudLon');
+    if (latEl) latEl.textContent = Math.abs(lat).toFixed(4) + '° ' + (lat >= 0 ? 'N' : 'S');
+    if (lonEl) lonEl.textContent = Math.abs(lon).toFixed(4) + '° ' + (lon >= 0 ? 'E' : 'W');
+  }, () => {}, { timeout: 5000, maximumAge: 60000 });
+}
+
+let _baseUsers = 1200 + Math.floor(Math.random() * 200);
+setInterval(() => {
+  _baseUsers += Math.round((Math.random() - .48) * 3);
+  _baseUsers = Math.max(900, Math.min(1600, _baseUsers));
+  const el = document.getElementById('hudUsers'); if (el) el.textContent = _baseUsers.toLocaleString();
+}, 7000);
+
+function updateThreat() {
+  const ping = window._matrixPingMs, el = document.getElementById('hudThreat'), fw = document.getElementById('hudFirewall');
+  if (!el) return;
+  let level = 0, color = '#00ff88';
+  if (ping === null) { level = 3; color = '#ff4444'; if (fw) fw.style.color = '#ffcc00'; }
+  else if (ping > 300) { level = 2; color = '#ffcc00'; }
+  else if (ping > 150) { level = 1; color = '#ffcc00'; }
+  if (fw && level < 3) fw.style.color = '#00ff88';
+  if (Math.random() < 0.06) { level = Math.min(level + 1, 4); color = '#ff6644'; }
+  el.textContent = level; el.style.color = color;
+}
+setInterval(updateThreat, 3000);
+
+// ── BOOT SEQUENCE ─────────────────────────────────────────────────────────────
+// FIX: bootRunning flag properly stops the typewriter interval when skipIntro() fires
+const bootLines = [
+  '> INITIALIZING MATRIXON CORE...',
+  '> LOADING NEURAL PATHWAYS.......OK',
+  '> FIREWALL INTEGRITY CHECK.......OK',
+  '> SATELLITE UPLINK ESTABLISHED..OK',
+  '> THREAT ASSESSMENT: CLEAR',
+  '> ACCESS TERMINAL: READY',
+];
+let bli = 0, bootRunning = true;
+function typeBootLine(text, cb) {
+  const el = document.getElementById('bootLine'); let i = 0; el.innerHTML = '';
+  const iv = setInterval(() => {
+    if (!bootRunning) { clearInterval(iv); return; } // ← properly exits on skip
+    el.innerHTML = text.slice(0, ++i) + '<span class="bl-cursor">▋</span>';
+    if (i >= text.length) { clearInterval(iv); setTimeout(cb, 160); }
+  }, 20);
+}
+function runBoot() { if (bli < bootLines.length && !introComplete) typeBootLine(bootLines[bli++], runBoot); }
+setTimeout(runBoot, 2500);
+
+// ── INTRO ─────────────────────────────────────────────────────────────────────
+let introComplete = false;
+function skipIntro() { if (!introComplete) finishIntro(); }
+function finishIntro() {
+  if (introComplete) return;
+  introComplete = true;
+  bootRunning = false; // stops any in-progress typeBootLine interval
+  ['reticle', 'glitchTitle', 'bootText', 'scanLine', 'skipHint'].forEach(id => {
+    const e = document.getElementById(id);
+    if (e) { e.style.transition = 'opacity .5s ease'; e.style.opacity = '0'; }
+  });
+  document.querySelectorAll('.hud-corner,.hud-tag').forEach(e => {
+    e.style.transition = 'opacity .5s ease'; e.style.opacity = '0';
+  });
+  document.getElementById('implodeRing').classList.add('burst');
+  setTimeout(() => {
+    document.getElementById('mainUI').classList.add('visible');
+    document.getElementById('statusBar').style.opacity = '1';
+  }, 500);
+}
+setTimeout(finishIntro, 7500);
+
+// FIX: set text on glitchTitle before the animation fires
+// (The div already has "MATRIXON" in HTML, but this also ensures the glitch class is added correctly)
+setTimeout(() => {
+  if (!introComplete) {
+    const gt = document.getElementById('glitchTitle');
+    // text already in HTML; just trigger the CSS glitch animation
+    gt.classList.add('glitch');
+  }
+}, 3200);
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(message, type) {
+  let box = document.getElementById('matrixToastBox');
+  if (!box) {
+    box = document.createElement('div'); box.id = 'matrixToastBox';
+    box.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none;';
+    document.body.appendChild(box);
+  }
+  const colors = {
+    success: { border: '#00ff88', bg: 'rgba(0,20,8,0.97)',  icon: '✅', text: '#aaffcc' },
+    error:   { border: '#ff4444', bg: 'rgba(20,0,0,0.97)',  icon: '❌', text: '#ffaaaa' },
+    warn:    { border: '#ffcc00', bg: 'rgba(20,15,0,0.97)', icon: '⚠️', text: '#ffeeaa' },
+  };
+  const c = colors[type] || colors.warn;
+  const toast = document.createElement('div');
+  toast.style.cssText = `background:${c.bg};border:1px solid ${c.border};border-radius:12px;padding:14px 24px;font-family:'Share Tech Mono',monospace;font-size:14px;color:${c.text};box-shadow:0 0 20px ${c.border}55;display:flex;align-items:center;gap:10px;min-width:260px;text-align:center;justify-content:center;letter-spacing:0.5px;animation:toastIn .4s cubic-bezier(.22,1,.36,1);`;
+  toast.innerHTML = `<span>${c.icon}</span><span>${message}</span>`;
+  if (!document.getElementById('toastKF')) {
+    const s = document.createElement('style'); s.id = 'toastKF';
+    s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}';
+    document.head.appendChild(s);
+  }
+  box.appendChild(toast);
+  setTimeout(() => {
+    toast.style.transition = 'opacity .4s,transform .4s'; toast.style.opacity = '0'; toast.style.transform = 'translateY(-10px)';
+    setTimeout(() => toast.remove(), 400);
+  }, 3000);
+}
+
+// ── MORPH ─────────────────────────────────────────────────────────────────────
+const morph = document.getElementById('morph');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+
+morph.addEventListener('click', function (e) {
+  if (!morph.classList.contains('active')) {
+    createParticles(e);
+    setTimeout(() => { morph.classList.add('active'); statusDot.classList.add('on'); statusText.textContent = 'SYSTEM ONLINE — ENTER CREDENTIALS'; }, 220);
+  }
+});
+document.querySelector('.power-icon').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') morph.click();
+});
+
+function closeForm(e) {
+  e.stopPropagation(); morph.classList.remove('active');
+  statusDot.classList.remove('on'); statusText.textContent = 'SYSTEM OFFLINE — PRESS POWER';
+}
+
+function togglePassword() {
+  const pwd = document.getElementById('password'), tgl = document.querySelector('.toggle');
+  if (pwd.type === 'password') { pwd.type = 'text'; tgl.textContent = 'Hide'; }
+  else { pwd.type = 'password'; tgl.textContent = 'Show'; }
+}
+
+function createParticles(e) {
+  const rect = morph.getBoundingClientRect(), cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+  const colors = ['#00ff88', '#00d4ff', '#00ff00', '#33ffcc', '#aaffff', '#ffffff'];
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement('div'); p.className = 'particle';
+    const angle = Math.random() * 360, radius = 60 + Math.random() * 200;
+    const xMove = Math.cos(angle * Math.PI / 180) * radius, yMove = Math.sin(angle * Math.PI / 180) * radius;
+    const size = 3 + Math.random() * 7, color = colors[Math.floor(Math.random() * colors.length)];
+    p.style.cssText = `left:${cx}px;top:${cy}px;width:${size}px;height:${size}px;background:${color};box-shadow:0 0 8px ${color};--x:${xMove}px;--y:${yMove}px;`;
+    document.body.appendChild(p); setTimeout(() => p.remove(), 1000);
+  }
+}
+
+// ── INPUT LIVE FEEDBACK ───────────────────────────────────────────────────────
+function onUsernameInput(el) {
+  const hint = document.getElementById('usernameHint');
+  const valid = /^[a-zA-Z0-9_]{3,20}$/.test(el.value);
+  hint.style.display = el.value.length > 0 ? 'block' : 'none';
+  hint.style.color = valid ? 'rgba(0,255,136,0.55)' : 'rgba(255,100,100,0.7)';
+  hint.textContent = valid ? '✓ Username looks good' : '3–20 chars · letters, numbers, underscore only';
+}
+
+function onPasswordInput(el) {
+  const pw = el.value;
+  const wrap = document.getElementById('pwStrengthWrap');
+  const bar  = document.getElementById('pwStrengthBar');
+  const lbl  = document.getElementById('pwStrengthLabel');
+  if (!pw.length) { wrap.style.opacity = '0'; lbl.style.opacity = '0'; return; }
+  wrap.style.opacity = '1'; lbl.style.opacity = '1';
+  let score = 0;
+  if (pw.length >= 6)  score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+  const levels = [
+    { pct: '20%', color: '#ff4444', label: 'VERY WEAK' },
+    { pct: '40%', color: '#ff8844', label: 'WEAK' },
+    { pct: '60%', color: '#ffcc00', label: 'FAIR' },
+    { pct: '80%', color: '#88ff44', label: 'STRONG' },
+    { pct: '100%', color: '#00ff88', label: 'VERY STRONG' },
+  ];
+  const lvl = levels[Math.min(score, 4)];
+  bar.style.width = lvl.pct; bar.style.background = lvl.color;
+  lbl.textContent = lvl.label; lbl.style.color = lvl.color;
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && morph.classList.contains('active')) {
+    e.preventDefault(); document.getElementById('accessBtn').click();
+  }
+  if (e.key === 'Escape') {
+    if (document.getElementById('forgotModal').classList.contains('open')) { closeForgotModal(); return; }
+    if (morph.classList.contains('active')) closeForm(e);
+  }
+});
+
+// ── AUTH HELPERS ──────────────────────────────────────────────────────────────
+function setButtonLoading(btn, loading) {
+  if (loading) { btn.dataset.origText = btn.textContent; btn.classList.add('btn-loading'); btn.textContent = btn.dataset.origText; }
+  else         { btn.classList.remove('btn-loading'); btn.textContent = btn.dataset.origText || btn.textContent; }
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+document.getElementById('accessBtn').addEventListener('click', function () {
+  const btn = this;
+  if (btn.classList.contains('btn-loading')) return;
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  if (!username || !password) { showToast('Enter Username and Password', 'warn'); return; }
+
+  setButtonLoading(btn, true);
+  fetch(window.MATRIXON_API + '/login', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      localStorage.setItem('matrixon_user', username);
+      return fetch(window.MATRIXON_API + '/profile/setup', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      }).finally(() => {
+        window.location.href = localStorage.getItem('matrixon_country_set') ? 'learning.html' : 'country-select.html';
+      });
+    } else {
+      showToast('Invalid Username or Password', 'error');
+      setButtonLoading(btn, false);
+    }
+  })
+  .catch(() => { showToast('Server not reachable — check your connection', 'error'); setButtonLoading(btn, false); });
+});
+
+// ── REGISTER ──────────────────────────────────────────────────────────────────
+document.getElementById('registerBtn').addEventListener('click', function () {
+  const btn = this;
+  if (btn.classList.contains('btn-loading')) return;
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  if (!username || !password) { showToast('Enter Username and Password', 'warn'); return; }
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) { showToast('Username: 3–20 chars, letters/numbers/underscore', 'warn'); return; }
+  if (password.length < 6) { showToast('Password must be at least 6 characters', 'warn'); return; }
+
+  setButtonLoading(btn, true);
+  fetch(window.MATRIXON_API + '/register', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) showToast('Registered! You can now login.', 'success');
+    else showToast(data.message || 'Registration Failed — username may already exist.', 'error');
+  })
+  .catch(() => showToast('Server not reachable — check your connection', 'error'))
+  .finally(() => setButtonLoading(btn, false));
+});
+
+// ── FORGOT PASSWORD MODAL ──────────────────────────────────────────────────────
+function showForgotPassword() {
+  fmGoStep(1);
+  document.getElementById('fmMsg1').className    = 'fm-msg info';
+  document.getElementById('fmMsg1').textContent  = 'Enter your username to generate a reset code.';
+  document.getElementById('fmUsername').value    = document.getElementById('username').value.trim();
+  document.getElementById('fmToken').value       = '';
+  document.getElementById('fmNewPwd').value      = '';
+  document.getElementById('fmNewPwd2').value     = '';
+  document.getElementById('tokenDisplay').style.display = 'none';
+  document.getElementById('forgotModal').classList.add('open');
+}
+
+function closeForgotModal() {
+  document.getElementById('forgotModal').classList.remove('open');
+}
+
+function fmGoStep(n) {
+  document.querySelectorAll('.fm-step').forEach((el, i) => {
+    el.classList.toggle('active', i + 1 === n);
+  });
+}
+
+function fmSetMsg(id, msg, type) {
+  const el = document.getElementById(id);
+  el.className = 'fm-msg ' + (type || '');
+  el.textContent = msg;
+}
+
+async function requestResetToken() {
+  const username = document.getElementById('fmUsername').value.trim();
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+    fmSetMsg('fmMsg1', 'Enter a valid username (3–20 chars).', 'err'); return;
+  }
+  const btn = document.getElementById('fmRequestBtn');
+  btn.disabled = true; btn.textContent = 'GENERATING…';
+
+  try {
+    const r    = await fetch(window.MATRIXON_API + '/auth/reset-request', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    const data = await r.json();
+    if (!data.success) {
+      fmSetMsg('fmMsg1', data.message || 'Request failed. Try again.', 'err');
+      btn.disabled = false; btn.textContent = 'GENERATE RESET CODE'; return;
+    }
+    // Move to step 2
+    fmGoStep(2);
+    if (data.token) {
+      // Server returned the token directly (local-app mode)
+      document.getElementById('tokenValue').textContent  = data.token;
+      document.getElementById('tokenDisplay').style.display = 'block';
+      document.getElementById('fmToken').value = data.token; // pre-fill for convenience
+      fmSetMsg('fmMsg2', 'Your code is shown below. Enter a new password to complete the reset.', 'info');
+    } else {
+      // Admin-relay mode (MATRIXON_HIDE_TOKEN=1 on server)
+      document.getElementById('tokenDisplay').style.display = 'none';
+      fmSetMsg('fmMsg2', 'A reset code has been generated. Contact your administrator with your username to receive it.', 'info');
+    }
+  } catch {
+    fmSetMsg('fmMsg1', 'Server not reachable. Check your connection.', 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'GENERATE RESET CODE';
+  }
+}
+
+async function confirmReset() {
+  const username = document.getElementById('fmUsername').value.trim();
+  const token    = document.getElementById('fmToken').value.trim();
+  const newPwd   = document.getElementById('fmNewPwd').value;
+  const newPwd2  = document.getElementById('fmNewPwd2').value;
+
+  if (!token)           { fmSetMsg('fmMsg2b', 'Enter the reset code.', 'err'); return; }
+  if (newPwd.length < 6){ fmSetMsg('fmMsg2b', 'Password must be at least 6 characters.', 'err'); return; }
+  if (newPwd !== newPwd2){ fmSetMsg('fmMsg2b', 'Passwords do not match.', 'err'); return; }
+
+  const btn = document.getElementById('fmConfirmBtn');
+  btn.disabled = true; btn.textContent = 'VERIFYING…';
+
+  try {
+    const r    = await fetch(window.MATRIXON_API + '/auth/reset-confirm', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, token, newPassword: newPwd })
+    });
+    const data = await r.json();
+    if (data.success) {
+      fmGoStep(3);
+    } else {
+      fmSetMsg('fmMsg2b', data.message || 'Reset failed. Check your code and try again.', 'err');
+    }
+  } catch {
+    fmSetMsg('fmMsg2b', 'Server not reachable. Try again.', 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'RESET PASSWORD';
+  }
+}
+
+// Close modal on backdrop click
+document.getElementById('forgotModal').addEventListener('click', function (e) {
+  if (e.target === this) closeForgotModal();
+});
+</script>
+
+<!--
+  FIX: script.js is intentionally NOT loaded here.
+  All login/register logic lives in the inline <script> above.
+  Loading script.js would duplicate event listeners and break the login form.
+  script.js is kept in the project as a legacy reference only.
+-->
+<script src="ping.js"></script>
+</body>
+</html>

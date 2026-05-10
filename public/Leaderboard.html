@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MATRIXON — Leaderboard</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --green:#00ff00;--dark:#020d02;--card:#08120a;
+      --border:rgba(0,255,0,0.2);--glow:rgba(0,255,0,0.4);
+      --gold:#FFD700;--silver:#C0C0C0;--bronze:#CD7F32;
+    }
+    body{font-family:'Courier New',monospace;background:var(--dark);color:var(--green);min-height:100vh;overflow-x:hidden;}
+    canvas#rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+    /* ══ TOAST NOTIFICATIONS ══ */
+    #toastBox{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+    .toast{
+      background:rgba(0,5,0,0.96);border:1px solid var(--green);
+      border-radius:12px;padding:12px 18px;font-size:13px;
+      box-shadow:0 0 20px rgba(0,255,0,0.35);
+      animation:toastIn .4s cubic-bezier(.22,1,.36,1) forwards;
+      min-width:240px;
+    }
+    .toast.out{animation:toastOut .4s ease forwards;}
+    @keyframes toastIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes toastOut{to{transform:translateX(120%);opacity:0}}
+    .toast-rank{color:#ffff55;font-weight:bold;}
+
+    /* ══ WRAPPER ══ */
+    .lb-wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:24px 16px 60px;}
+
+    /* ══ TOP BAR ══ */
+    .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+    #backBtn{
+      padding:9px 18px;background:#000;border:1px solid var(--green);color:var(--green);
+      border-radius:10px;cursor:pointer;font-family:monospace;font-size:13px;transition:.25s;
+    }
+    #backBtn:hover{background:var(--green);color:#000;}
+    .lb-title{font-size:22px;letter-spacing:4px;text-shadow:0 0 12px var(--green);}
+    #refreshBtn{
+      padding:9px 18px;background:rgba(0,255,0,0.08);border:1px solid var(--border);
+      color:var(--green);border-radius:10px;cursor:pointer;font-family:monospace;font-size:13px;
+      transition:.25s;display:flex;align-items:center;gap:6px;
+    }
+    #refreshBtn:hover{border-color:var(--green);background:rgba(0,255,0,0.15);}
+    #refreshBtn.spinning span{animation:spin .7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ══ RESET TIMER ══ */
+    .reset-bar{
+      text-align:center;font-size:11px;color:#336633;letter-spacing:1px;
+      margin-bottom:16px;font-family:monospace;
+    }
+    #resetTimer{color:#558855;}
+
+    /* ══ TABS ══ */
+    .tabs{display:flex;gap:0;margin-bottom:28px;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+    .tab{
+      flex:1;padding:14px;text-align:center;cursor:pointer;font-family:monospace;
+      font-size:13px;letter-spacing:1px;transition:.25s;background:rgba(0,0,0,0.5);
+      border-right:1px solid var(--border);
+    }
+    .tab:last-child{border-right:none;}
+    .tab:hover{background:rgba(0,255,0,0.06);}
+    .tab.active{background:rgba(0,255,0,0.12);color:var(--green);box-shadow:inset 0 -2px 0 var(--green);}
+    .tab-icon{font-size:18px;display:block;margin-bottom:4px;}
+
+    /* ══ LEADERBOARD LIST ══ */
+    #lbList{display:flex;flex-direction:column;gap:10px;position:relative;}
+
+    /* ══ RANK CARD ══ */
+    .rank-card{
+      display:flex;align-items:center;gap:14px;
+      border-radius:14px;padding:14px 18px;
+      border:1px solid var(--border);background:var(--card);
+      transition:transform .6s cubic-bezier(.22,1,.36,1),
+                 box-shadow .4s ease, opacity .3s;
+      position:relative;overflow:hidden;
+    }
+    /* Scanline overlay */
+    .rank-card::before{
+      content:'';position:absolute;inset:0;
+      background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,255,0,0.012) 4px);
+      pointer-events:none;border-radius:14px;
+    }
+    /* Rank 1 */
+    .rank-card.r1{border-color:var(--gold);background:linear-gradient(135deg,#1a1000,#0d0800);box-shadow:0 0 24px rgba(255,215,0,0.3),inset 0 0 30px rgba(255,215,0,0.06);}
+    /* Rank 2 */
+    .rank-card.r2{border-color:var(--silver);background:linear-gradient(135deg,#111111,#0a0a0a);box-shadow:0 0 18px rgba(192,192,192,0.25),inset 0 0 25px rgba(192,192,192,0.04);}
+    /* Rank 3 */
+    .rank-card.r3{border-color:var(--bronze);background:linear-gradient(135deg,#140900,#0d0600);box-shadow:0 0 18px rgba(205,127,50,0.3),inset 0 0 25px rgba(205,127,50,0.05);}
+    /* Lightning 4-10 */
+    .rank-card.rising{border-color:rgba(0,255,0,0.5);box-shadow:0 0 12px rgba(0,255,0,0.2);}
+    /* Current user */
+    .rank-card.me{border-color:#00ffff;box-shadow:0 0 24px rgba(0,255,255,0.35);background:linear-gradient(135deg,#001515,#000d0d);}
+
+    /* ── RANK-UP FLASH ── */
+    .rank-card.rank-up-anim{animation:rankUpFlash .8s ease;}
+    @keyframes rankUpFlash{
+      0%{box-shadow:0 0 0 rgba(0,255,255,0);}
+      30%{box-shadow:0 0 40px rgba(0,255,255,0.8),0 0 80px rgba(0,255,0,0.4);}
+      100%{box-shadow:inherit;}
+    }
+
+    /* ── RANK NUMBER ── */
+    .rank-num{
+      font-size:20px;font-weight:bold;width:36px;text-align:center;flex-shrink:0;
+    }
+    .r1 .rank-num{color:var(--gold);text-shadow:0 0 10px var(--gold);}
+    .r2 .rank-num{color:var(--silver);text-shadow:0 0 8px var(--silver);}
+    .r3 .rank-num{color:var(--bronze);text-shadow:0 0 8px var(--bronze);}
+    .rank-card:not(.r1):not(.r2):not(.r3) .rank-num{color:var(--green);}
+
+    /* ── MEDAL ── */
+    .medal{font-size:24px;flex-shrink:0;}
+
+    /* ── LIGHTNING for 4–10 ── */
+    .lightning{
+      position:absolute;right:590px;top:50%;transform:translateY(-50%);
+      font-size:20px;animation:lightningFlash 1.2s infinite;pointer-events:none;
+    }
+    @keyframes lightningFlash{
+      0%,90%,100%{opacity:0;transform:translateY(-50%) scale(0.8);}
+      45%,55%{opacity:1;transform:translateY(-50%) scale(1.1);}
+    }
+
+    /* ── PLAYER INFO ── */
+    .player-info{flex:1;min-width:0;}
+    .player-name{font-size:16px;color:#dfffdf;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .me .player-name{color:#00ffff;}
+    .player-uid{font-size:11px;color:#336633;margin-top:2px;font-family:monospace;}
+    .player-country{font-size:12px;color:#558855;margin-top:3px;display:flex;align-items:center;gap:5px;}
+
+    /* ── RIGHT SIDE ── */
+    .player-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+    .player-xp{font-size:15px;color:var(--green);font-weight:bold;}
+    .xp-label{font-size:10px;color:#336633;}
+    .league-badge{
+      font-size:10px;padding:3px 10px;border-radius:10px;
+      font-weight:bold;white-space:nowrap;
+    }
+    .lb-Trainee{background:#0a0a0a;color:#888;border:1px solid #333;}
+    .lb-Developer{background:#001a22;color:#00ddff;border:1px solid #00ddff;}
+    .lb-SeniorDeveloper{background:#0d1600;color:#88ff00;border:1px solid #88ff00;}
+    .lb-Hacker{background:#1a0d00;color:#ff9900;border:1px solid #ff9900;}
+    .lb-MasterHacker{background:#1a0010;color:#ff44aa;border:1px solid #ff44aa;}
+    .lb-AceDeveloper{background:linear-gradient(135deg,#200000,#002000,#000020);color:#fff;border:1px solid #888;animation:rainbowBorder 2s linear infinite;}
+    @keyframes rainbowBorder{0%{border-color:#ff0000}33%{border-color:#00ff00}66%{border-color:#0088ff}100%{border-color:#ff0000}}
+
+    /* ── RANK DELTA BADGE ── */
+    .delta{
+      position:absolute;top:8px;right:48px;font-size:11px;
+      padding:2px 8px;border-radius:8px;font-weight:bold;
+      animation:deltaFade 3s ease forwards;
+    }
+    @keyframes deltaFade{0%{opacity:0;transform:translateY(4px)}10%{opacity:1;transform:translateY(0)}80%{opacity:1}100%{opacity:0}}
+    .delta.up{background:rgba(0,255,0,0.15);color:#00ff88;border:1px solid #00ff00;}
+    .delta.down{background:rgba(255,0,0,0.1);color:#ff5555;border:1px solid #ff3333;}
+    .delta.new{background:rgba(0,200,255,0.15);color:#00eeff;border:1px solid #00ccff;}
+
+    /* ── ME STICKY CARD ── */
+    #myCard{
+      background:rgba(0,20,20,0.95);border:1px solid #00ffff;
+      border-radius:14px;padding:14px 18px;margin-bottom:20px;
+      box-shadow:0 0 20px rgba(0,255,255,0.2);
+      display:flex;align-items:center;gap:14px;
+    }
+    #myCard .label{font-size:10px;color:#009999;letter-spacing:2px;margin-bottom:6px;}
+    #myCard .player-name{color:#00ffff;}
+
+    /* ── EMPTY STATE ── */
+    #emptyState{text-align:center;padding:40px;color:#336633;font-size:14px;letter-spacing:1px;}
+
+    /* ══ TOP 3 TROPHY SECTION ══ */
+    .podium-section{display:flex;justify-content:center;gap:16px;margin-bottom:24px;align-items:flex-end;flex-wrap:wrap;}
+    .podium-card{
+      border-radius:16px;padding:20px 16px;text-align:center;width:160px;position:relative;
+      transition:.3s;
+    }
+    .podium-card.p1{
+      background:linear-gradient(180deg,#1a1200,#0d0800);border:2px solid var(--gold);
+      box-shadow:0 0 30px rgba(255,215,0,0.4),0 0 60px rgba(255,215,0,0.15);
+      transform:translateY(-12px);
+    }
+    .podium-card.p2{
+      background:linear-gradient(180deg,#111,#0a0a0a);border:2px solid var(--silver);
+      box-shadow:0 0 20px rgba(192,192,192,0.3);
+    }
+    .podium-card.p3{
+      background:linear-gradient(180deg,#120800,#0a0500);border:2px solid var(--bronze);
+      box-shadow:0 0 20px rgba(205,127,50,0.3);
+    }
+    .podium-trophy{font-size:32px;display:block;margin-bottom:8px;}
+    .podium-name{font-size:13px;font-weight:bold;color:#dfffdf;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .podium-xp{font-size:12px;margin-top:4px;}
+    .p1 .podium-xp{color:var(--gold);}
+    .p2 .podium-xp{color:var(--silver);}
+    .p3 .podium-xp{color:var(--bronze);}
+    .podium-flag{font-size:18px;margin-top:4px;}
+    .podium-rank-label{font-size:10px;color:#888;letter-spacing:2px;margin-top:6px;}
+    .p1 .podium-rank-label{color:var(--gold);}
+
+    /* Crown animation for #1 */
+    .crown{font-size:24px;animation:crownFloat 2s ease-in-out infinite;}
+    @keyframes crownFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+    /* ── LOADING ── */
+    #loadingState{text-align:center;padding:40px;color:#336633;font-size:14px;animation:ldots 1.2s infinite;}
+    @keyframes ldots{0%,100%{opacity:.3}50%{opacity:1}}
+  </style>
+</head>
+<body>
+<script src="config.js"></script>
+<script src="settings-apply.js"></script>
+<canvas id="rain"></canvas>
+<div id="toastBox"></div>
+
+<div class="lb-wrap">
+  <!-- Top bar -->
+  <div class="top-bar">
+    <button id="backBtn" onclick="window.location.href='learning.html'">&#8592; Learning</button>
+    <div class="lb-title">⚡ LEADERBOARD</div>
+    <button id="refreshBtn" onclick="fullRefresh()"><span>↻</span> Refresh</button>
+  </div>
+
+  <!-- Reset timer -->
+  <div class="reset-bar">
+    ⏱ Next reset in: <span id="resetTimer">--</span>
+    &nbsp;|&nbsp; Tab: <span id="resetTypeLabel">Weekly</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" id="tab-global" onclick="switchTab('global')">
+      <span class="tab-icon">🌍</span>GLOBAL
+    </div>
+    <div class="tab" id="tab-national" onclick="switchTab('national')">
+      <span class="tab-icon" id="natFlag">🏳️</span>NATIONAL
+    </div>
+    <div class="tab" id="tab-friends" onclick="switchTab('friends')">
+      <span class="tab-icon">👥</span>FRIENDS
+    </div>
+  </div>
+
+  <!-- My card (sticky) -->
+  <div id="myCard" style="display:none;">
+    <div>
+      <div class="label">YOU ARE</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span id="myRankNum" style="font-size:22px;font-weight:bold;color:#00ffff;"></span>
+        <div>
+          <div class="player-name" id="myCardName">—</div>
+          <div class="player-uid" id="myCardUID"></div>
+          <div class="player-country" id="myCardCountry"></div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;"></div>
+    <div class="player-right">
+      <div class="player-xp" id="myCardXP">0 XP</div>
+      <span class="league-badge" id="myCardLeague">Trainee</span>
+    </div>
+  </div>
+
+  <!-- Podium -->
+  <div class="podium-section" id="podiumSection"></div>
+
+  <!-- List -->
+  <div id="lbList"><div id="loadingState">Loading leaderboard...</div></div>
+</div>
+
+<script>
+/* ── MATRIX RAIN ── */
+(function(){
+  const c=document.getElementById('rain'),ctx=c.getContext('2d');
+  let ri=(window._matrixRainIntensity!==undefined?window._matrixRainIntensity:1);
+  window._setRainIntensity=v=>{ri=v;};
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  resize();window.addEventListener('resize',()=>{resize();init();});
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&アイウエオカキク';
+  const fs=14;let cols,drops;
+  function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(0).map(()=>Math.floor(Math.random()*-40));}
+  init();
+  setInterval(()=>{
+    ctx.fillStyle=`rgba(0,0,0,${0.06/ri})`;ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px monospace';
+    if(Math.random()<ri*0.7||ri===1){
+      drops.forEach((d,i)=>{
+        ctx.fillStyle=d*fs<80?'#ccffcc':'#00ff00';
+        ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*fs,d*fs);
+        if(d*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;
+      });
+    }
+  },45);
+})();
+
+/* ── CONSTANTS ── */
+const API = window.MATRIXON_API;
+const username = localStorage.getItem('matrixon_user') || 'player';
+if (!username || username === 'player') { window.location.href = 'index.html'; }
+const myCountryCode = localStorage.getItem('matrixon_country_code') || '';
+const myCountryFlag = localStorage.getItem('matrixon_country_flag') || '🌐';
+const myCountryName = localStorage.getItem('matrixon_country_name') || 'Unknown';
+
+let currentTab = 'global';
+let currentData = [];
+let lastRanks = JSON.parse(localStorage.getItem('matrixon_last_ranks') || '{}');
+let pollInterval = null;
+
+/* ── LEAGUE HELPERS ── */
+function getLeague(level){
+  if(level>=71)return'Ace Developer';
+  if(level>=51)return'Master Hacker';
+  if(level>=36)return'Hacker';
+  if(level>=21)return'Senior Developer';
+  if(level>=11)return'Developer';
+  return'Trainee';
+}
+function leagueCls(name){return'lb-'+name.replace(/\s/g,'');}
+function leagueEmoji(name){
+  if(name==='Ace Developer')return'🌈';
+  if(name==='Master Hacker')return'👑';
+  if(name==='Hacker')return'💀';
+  if(name==='Senior Developer')return'🚀';
+  if(name==='Developer')return'⚡';
+  return'🔰';
+}
+
+/* ── TABS ── */
+function switchTab(tab){
+  currentTab=tab;
+  ['global','national','friends'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+  // Update reset label
+  const resetLabel=document.getElementById('resetTypeLabel');
+  resetLabel.textContent=tab==='global'?'Monthly':'Weekly';
+  updateResetTimer();
+  loadLeaderboard();
+}
+
+/* ── SET NAT FLAG ── */
+document.getElementById('natFlag').textContent = myCountryFlag || '🏳️';
+
+/* ── RESET TIMER ── */
+function updateResetTimer(){
+  const isGlobal = currentTab === 'global';
+  const now = new Date();
+  let target;
+  if(isGlobal){
+    // First day of next month
+    target = new Date(now.getFullYear(), now.getMonth()+1, 1, 0, 0, 0);
+  } else {
+    // Next Monday
+    const day = now.getDay(); // 0=Sun
+    const daysUntilMon = day===0?1:8-day;
+    target = new Date(now); target.setDate(now.getDate()+daysUntilMon);
+    target.setHours(0,0,0,0);
+  }
+  const diff = target - now;
+  const d=Math.floor(diff/86400000);
+  const h=Math.floor((diff%86400000)/3600000);
+  const m=Math.floor((diff%3600000)/60000);
+  document.getElementById('resetTimer').textContent=`${d}d ${h}h ${m}m`;
+}
+setInterval(updateResetTimer, 60000);
+updateResetTimer();
+
+/* ── LOAD LEADERBOARD ── */
+async function loadLeaderboard(){
+  const list=document.getElementById('lbList');
+  list.innerHTML='<div id="loadingState">Loading leaderboard...</div>';
+  document.getElementById('podiumSection').innerHTML='';
+
+  try {
+    let url='';
+    if(currentTab==='global')      url=`${API}/leaderboard/global`;
+    else if(currentTab==='national') url=`${API}/leaderboard/national/${myCountryCode}`;
+    else                            url=`${API}/leaderboard/friends/${username}`;
+
+    const r=await fetch(url);
+    currentData=await r.json();
+    if(!Array.isArray(currentData)||currentData.length===0){
+      list.innerHTML='<div id="emptyState">No players found yet. Invite friends!</div>';
+      return;
+    }
+    renderLeaderboard(currentData);
+  } catch(e){
+    list.innerHTML='<div id="emptyState">⚠ Could not load — check your connection<br><br><button onclick="fullRefresh()" style="background:rgba(0,255,0,0.1);border:1px solid #00ff00;color:#00ff00;padding:10px 24px;border-radius:8px;cursor:pointer;font-family:monospace;">Retry</button></div>';
+  }
+}
+
+/* ── RENDER ── */
+function renderLeaderboard(data){
+  // Find my rank
+  const myIdx = data.findIndex(p=>p.username===username);
+  const myRank = myIdx>=0?myIdx+1:null;
+
+  // Save ranks for next visit comparison
+  const newRanks = {};
+  data.forEach((p,i)=>newRanks[p.username]=i+1);
+
+  // Check rank changes vs last visit
+  const rankChanges = {};
+  data.forEach((p,i)=>{
+    const prev=lastRanks[p.username];
+    if(prev===undefined) rankChanges[p.username]='new';
+    else if(prev>i+1)    rankChanges[p.username]=prev-(i+1);  // positive = improved
+    else if(prev<i+1)    rankChanges[p.username]=prev-(i+1);  // negative = dropped
+    else                  rankChanges[p.username]=0;
+  });
+
+  // Update my sticky card
+  const myCard=document.getElementById('myCard');
+  if(myRank){
+    myCard.style.display='flex';
+    document.getElementById('myRankNum').textContent='#'+myRank;
+    const me=data[myIdx];
+    document.getElementById('myCardName').textContent=me.nickname||me.username;
+    document.getElementById('myCardUID').textContent=me.uid||'';
+    document.getElementById('myCardCountry').innerHTML=(me.country_flag?me.country_flag+' ':'')+''+(me.country_name||'');
+    const xpVal=currentTab==='global'?me.monthly_xp:me.weekly_xp;
+    document.getElementById('myCardXP').textContent=(xpVal||0)+' XP';
+    const league=getLeague(me.level||1);
+    const lb=document.getElementById('myCardLeague');
+    lb.textContent=leagueEmoji(league)+' '+league;
+    lb.className='league-badge '+leagueCls(league);
+  } else {
+    myCard.style.display='none';
+  }
+
+  // Podium (top 3)
+  renderPodium(data.slice(0,3));
+
+  // List (rest)
+  const list=document.getElementById('lbList');
+  list.innerHTML='';
+  data.forEach((player,i)=>{
+    const rank=i+1;
+    const xp=currentTab==='global'?player.monthly_xp:player.weekly_xp;
+    const league=getLeague(player.level||1);
+    const isMe=player.username===username;
+    const change=rankChanges[player.username]||0;
+
+    const card=document.createElement('div');
+    let cls='rank-card';
+    if(rank===1)cls+=' r1';
+    else if(rank===2)cls+=' r2';
+    else if(rank===3)cls+=' r3';
+    else if(rank<=10)cls+=' rising';
+    if(isMe)cls+=' me';
+    card.className=cls;
+    card.dataset.username=player.username;
+
+    // Medal
+    const medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
+
+    // Delta badge
+    let deltaHTML='';
+    if(change>0) deltaHTML=`<div class="delta up">▲ +${change}</div>`;
+    else if(change<0) deltaHTML=`<div class="delta down">▼ ${change}</div>`;
+    else if(change==='new') deltaHTML=`<div class="delta new">NEW</div>`;
+
+    card.innerHTML=`
+      ${deltaHTML}
+      <div class="rank-num">#${rank}</div>
+      ${medal?`<div class="medal">${medal}</div>`:''}
+      <div class="player-info">
+        <div class="player-name">${player.nickname||player.username}${isMe?' <span style="color:#00ffff;font-size:11px;">(you)</span>':''}</div>
+        <div class="player-uid">${player.uid||''}</div>
+        <div class="player-country">${player.country_flag||'🌐'} ${player.country_name||''}</div>
+      </div>
+      ${rank>=4&&rank<=10?`<div class="lightning">⚡</div>`:''}
+      <div class="player-right">
+        <div class="player-xp">${(xp||0).toLocaleString()}</div>
+        <div class="xp-label">XP (${currentTab==='global'?'monthly':'weekly'})</div>
+        <span class="league-badge ${leagueCls(league)}">${leagueEmoji(league)} ${league}</span>
+      </div>
+    `;
+
+    list.appendChild(card);
+
+    // Animate rank-up for me
+    if(isMe && change>0){
+      setTimeout(()=>{
+        card.classList.add('rank-up-anim');
+        showToast(`🚀 You moved up ${change} spot${change>1?'s':''}! Now #${rank}`, true);
+      },600);
+    }
+  });
+
+  // Save ranks for next comparison
+  localStorage.setItem('matrixon_last_ranks', JSON.stringify(newRanks));
+  lastRanks=newRanks;
+
+  // Simulate other players rising (every 30 seconds)
+  startRankPolling(data, newRanks);
+}
+
+/* ── PODIUM ── */
+function renderPodium(top3){
+  const section=document.getElementById('podiumSection');
+  section.innerHTML='';
+  const order=[1,0,2]; // 2nd, 1st, 3rd for display
+  order.forEach(idx=>{
+    if(!top3[idx])return;
+    const p=top3[idx],rank=idx+1;
+    const xp=currentTab==='global'?p.monthly_xp:p.weekly_xp;
+    const cls=rank===1?'p1':rank===2?'p2':'p3';
+    const trophy=rank===1?'🏆':rank===2?'🥈':'🥉';
+    const div=document.createElement('div');
+    div.className='podium-card '+cls;
+    div.innerHTML=`
+      ${rank===1?`<div class="crown">👑</div>`:''}
+      <div class="podium-trophy">${trophy}</div>
+      <div class="podium-name">${p.nickname||p.username}</div>
+      <div class="player-uid" style="font-size:10px;color:#558855;">${p.uid||''}</div>
+      <div class="podium-flag">${p.country_flag||'🌐'}</div>
+      <div class="podium-xp">${(xp||0).toLocaleString()} XP</div>
+      <div class="podium-rank-label">${rank===1?'🥇 CHAMPION':rank===2?'🥈 2ND PLACE':'🥉 3RD PLACE'}</div>
+    `;
+    section.appendChild(div);
+  });
+}
+
+/* ── TOAST ── */
+function showToast(msg, isMe=false){
+  const box=document.getElementById('toastBox');
+  const t=document.createElement('div');
+  t.className='toast';
+  t.innerHTML=isMe?`<span style="color:#00ffff;">⬆</span> ${msg}`:`<span class="toast-rank">⚡</span> ${msg}`;
+  box.appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),400);},4000);
+}
+
+/* ── POLL FOR CHANGES ── */
+function startRankPolling(initialData, initialRanks){
+  if(pollInterval) clearInterval(pollInterval);
+  pollInterval=setInterval(async()=>{
+    try {
+      let url='';
+      if(currentTab==='global')        url=`${API}/leaderboard/global`;
+      else if(currentTab==='national') url=`${API}/leaderboard/national/${myCountryCode}`;
+      else                              url=`${API}/leaderboard/friends/${username}`;
+
+      const r=await fetch(url);
+      const newData=await r.json();
+      if(!Array.isArray(newData))return;
+
+      newData.forEach((player,i)=>{
+        const newRank=i+1;
+        const prevRank=initialRanks[player.username];
+        if(prevRank&&prevRank>newRank&&player.username!==username){
+          // Other player rose — show toast + animate card
+          const diff=prevRank-newRank;
+          if(diff>=1){
+            showToast(`${player.nickname||player.username} ↑ moved to #${newRank}!`);
+            const card=document.querySelector(`[data-username="${player.username}"]`);
+            if(card){
+              card.classList.remove('rank-up-anim');
+              void card.offsetWidth;
+              card.classList.add('rank-up-anim');
+            }
+          }
+        }
+      });
+      // Update stored ranks
+      const updated={};
+      newData.forEach((p,i)=>updated[p.username]=i+1);
+      Object.assign(initialRanks,updated);
+    } catch(e){}
+  }, 30000);
+}
+
+/* ── FULL REFRESH ── */
+async function fullRefresh(){
+  const btn=document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  await loadLeaderboard();
+  setTimeout(()=>btn.classList.remove('spinning'),700);
+}
+
+/* ── INIT ── */
+loadLeaderboard();
+// Auto-refresh every 30 seconds
+setInterval(()=>{ loadLeaderboard(); }, 30000);
+</script>
+</body>
+</html>

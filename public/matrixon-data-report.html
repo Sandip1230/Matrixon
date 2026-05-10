@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MATRIXON — My Data Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════
+   SCREEN STYLES — Dark matrix aesthetic
+══════════════════════════════════════════════ */
+:root {
+  --g:  #00ff88;
+  --g2: #00cc66;
+  --b:  #00d4ff;
+  --p:  #a855f7;
+  --p2: #7c3aed;
+  --dark: #020d04;
+  --card: rgba(4, 18, 10, 0.95);
+  --border-g: rgba(0,255,136,0.22);
+  --border-b: rgba(0,212,255,0.22);
+  --border-p: rgba(168,85,247,0.22);
+  --text: #c8ffc8;
+  --muted: #4a8a6a;
+  --mono: 'Share Tech Mono', monospace;
+  --orb: 'Orbitron', monospace;
+  --raj: 'Rajdhani', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--dark);
+  color: var(--text);
+  font-family: var(--raj);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Matrix rain canvas */
+#rain {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; opacity: 0.35;
+}
+
+/* ── TOP ACTION BAR (screen only) ── */
+#actionBar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(0,5,2,0.96);
+  border-bottom: 1px solid var(--border-g);
+  backdrop-filter: blur(16px);
+  display: flex; align-items: center;
+  padding: 12px 24px; gap: 14px;
+  box-shadow: 0 2px 30px rgba(0,255,136,0.06);
+}
+
+#actionBar .brand {
+  font-family: var(--orb);
+  font-size: 16px; font-weight: 900;
+  letter-spacing: 4px;
+  color: var(--g);
+  text-shadow: 0 0 12px var(--g);
+  flex: 1;
+}
+
+.ab-btn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 1px;
+  transition: all .2s;
+  border: none;
+}
+.ab-btn.back {
+  background: transparent;
+  border: 1px solid var(--border-g);
+  color: var(--g);
+}
+.ab-btn.back:hover { background: rgba(0,255,136,0.08); }
+
+.ab-btn.print {
+  background: linear-gradient(135deg, #00cc66, #00ff88);
+  color: #001208;
+  font-weight: 700;
+  box-shadow: 0 0 18px rgba(0,255,136,0.35);
+  animation: pulsePrint 2s ease-in-out infinite;
+}
+@keyframes pulsePrint {
+  0%,100% { box-shadow: 0 0 18px rgba(0,255,136,0.35); }
+  50% { box-shadow: 0 0 32px rgba(0,255,136,0.7), 0 0 60px rgba(0,212,255,0.2); }
+}
+.ab-btn.print:hover { transform: scale(1.06); filter: brightness(1.1); }
+
+#genTime {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+/* ── MAIN REPORT CONTAINER ── */
+#report {
+  position: relative; z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 90px 20px 60px;
+}
+
+/* ── SECTION CARDS ── */
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 28px 28px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.card.green-card  { border: 1px solid var(--border-g); }
+.card.green-card::before { background: linear-gradient(to right, transparent, var(--g), transparent); }
+.card.blue-card   { border: 1px solid var(--border-b); }
+.card.blue-card::before  { background: linear-gradient(to right, transparent, var(--b), transparent); }
+.card.purple-card { border: 1px solid var(--border-p); }
+.card.purple-card::before{ background: linear-gradient(to right, transparent, var(--p), transparent); }
+.card.gradient-card {
+  border: 1px solid rgba(168,85,247,0.3);
+  background: linear-gradient(135deg, rgba(4,18,10,0.97) 0%, rgba(10,5,20,0.97) 100%);
+}
+.card.gradient-card::before {
+  background: linear-gradient(to right, var(--g), var(--b), var(--p));
+}
+
+/* ── REPORT HEADER ── */
+.report-header {
+  text-align: center;
+  padding: 40px 28px 32px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(0,255,136,0.04) 0%, rgba(0,212,255,0.04) 50%, rgba(168,85,247,0.04) 100%);
+  border: 1px solid rgba(168,85,247,0.25);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.report-header::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(to right, var(--g), var(--b), var(--p));
+}
+.report-header::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(to right, transparent, var(--p), transparent);
+}
+
+.rh-logo {
+  font-family: var(--orb);
+  font-size: 11px;
+  letter-spacing: 6px;
+  color: var(--b);
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.rh-title {
+  font-family: var(--orb);
+  font-weight: 900;
+  font-size: 30px;
+  letter-spacing: 6px;
+  background: linear-gradient(135deg, var(--g), var(--b), var(--p));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.rh-sub {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  margin-bottom: 24px;
+}
+
+.rh-user-block {
+  display: inline-flex; align-items: center; gap: 16px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border-g);
+  border-radius: 50px;
+  padding: 12px 28px;
+  margin-bottom: 20px;
+}
+.rh-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,212,255,0.2));
+  border: 2px solid var(--g);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 0 16px rgba(0,255,136,0.3);
+}
+.rh-user-info { text-align: left; }
+.rh-username {
+  font-family: var(--orb);
+  font-size: 18px; font-weight: 700;
+  color: var(--g);
+  text-shadow: 0 0 10px rgba(0,255,136,0.4);
+  letter-spacing: 2px;
+}
+.rh-uid {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.rh-meta {
+  display: flex; justify-content: center; gap: 28px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  letter-spacing: 1px;
+}
+.rh-meta span { display: flex; align-items: center; gap: 6px; }
+.rh-meta b { color: var(--b); }
+
+/* ── SECTION HEADER ── */
+.sh {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 3px;
+  padding-bottom: 16px; margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.sh .sh-icon { font-size: 20px; }
+.sh.green { color: var(--g); }
+.sh.blue  { color: var(--b); }
+.sh.purple{ color: var(--p); }
+
+/* ── STAT GRID ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin-bottom: 6px;
+}
+.stat-box {
+  background: rgba(0,0,0,0.35);
+  border-radius: 12px;
+  padding: 18px 14px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: transform .2s;
+}
+.stat-box:hover { transform: translateY(-2px); }
+.stat-val {
+  font-family: var(--orb);
+  font-size: 28px; font-weight: 900;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+.stat-label {
+  font-family: var(--mono);
+  font-size: 10px; letter-spacing: 1.5px;
+  color: var(--muted);
+}
+.stat-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  margin-top: 4px;
+}
+.sv-green { color: var(--g); text-shadow: 0 0 12px rgba(0,255,136,0.5); }
+.sv-blue  { color: var(--b); text-shadow: 0 0 12px rgba(0,212,255,0.5); }
+.sv-purple{ color: var(--p); text-shadow: 0 0 12px rgba(168,85,247,0.5); }
+.sv-gold  { color: #ffd700; text-shadow: 0 0 12px rgba(255,215,0,0.5); }
+.sv-orange{ color: #ff9944; text-shadow: 0 0 12px rgba(255,153,68,0.5); }
+
+/* ── PROGRESS BAR ── */
+.prog-wrap { margin: 10px 0; }
+.prog-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono); font-size: 12px;
+  color: var(--muted); margin-bottom: 6px;
+}
+.prog-label .pv { color: var(--text); }
+.prog-track {
+  height: 8px; border-radius: 4px;
+  background: rgba(255,255,255,0.07);
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%; border-radius: 4px;
+  transition: width 1.2s cubic-bezier(.22,1,.36,1);
+}
+.pf-green  { background: linear-gradient(to right, #00aa44, #00ff88); box-shadow: 0 0 8px rgba(0,255,136,0.4); }
+.pf-blue   { background: linear-gradient(to right, #006699, #00d4ff); box-shadow: 0 0 8px rgba(0,212,255,0.4); }
+.pf-purple { background: linear-gradient(to right, #6b21a8, #a855f7); box-shadow: 0 0 8px rgba(168,85,247,0.4); }
+.pf-gold   { background: linear-gradient(to right, #92400e, #ffd700); box-shadow: 0 0 8px rgba(255,215,0,0.4); }
+
+/* ── COURSE TABLE ── */
+.course-table { width: 100%; border-collapse: collapse; }
+.course-table th {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 2px; color: var(--muted);
+  text-align: left; padding: 8px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.course-table td {
+  padding: 12px 12px; font-size: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-family: var(--raj);
+}
+.course-table tr:last-child td { border-bottom: none; }
+.course-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.badge-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px;
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 1px;
+}
+.bp-done   { background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: var(--g); }
+.bp-prog   { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3); color: var(--b); }
+.bp-locked { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #666; }
+
+/* ── OPPORTUNITY CARDS ── */
+.opp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+.opp-card {
+  border-radius: 12px;
+  padding: 18px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.opp-card.yes {
+  background: rgba(0,255,136,0.05);
+  border: 1px solid rgba(0,255,136,0.25);
+}
+.opp-card.partial {
+  background: rgba(255,153,68,0.05);
+  border: 1px solid rgba(255,153,68,0.25);
+}
+.opp-card.no {
+  background: rgba(255,80,80,0.05);
+  border: 1px solid rgba(255,80,80,0.15);
+}
+.opp-icon { font-size: 28px; }
+.opp-title {
+  font-family: var(--mono); font-size: 13px;
+  letter-spacing: 1px;
+}
+.opp-title.yes-text     { color: var(--g); }
+.opp-title.partial-text { color: #ff9944; }
+.opp-title.no-text      { color: #ff5555; }
+.opp-body {
+  font-size: 13px; color: var(--muted); line-height: 1.5;
+}
+.opp-verdict {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; margin-top: 4px;
+}
+.opp-verdict.yes     { color: var(--g); }
+.opp-verdict.partial { color: #ff9944; }
+.opp-verdict.no      { color: #ff5555; }
+
+/* ── DISCIPLINE METER ── */
+.disc-wrap {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.disc-row {
+  display: grid; grid-template-columns: 1fr 200px 60px;
+  align-items: center; gap: 16px;
+}
+.disc-name {
+  font-family: var(--raj); font-size: 15px;
+  color: var(--text);
+}
+.disc-score {
+  font-family: var(--mono); font-size: 13px;
+  text-align: right;
+}
+
+/* ── AI INSIGHT BOX ── */
+.insight-box {
+  background: rgba(168,85,247,0.06);
+  border: 1px solid rgba(168,85,247,0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 16px;
+  position: relative;
+}
+.insight-box::before {
+  content: '◈ AI ANALYSIS';
+  position: absolute; top: -10px; left: 16px;
+  background: rgba(10,5,20,0.95);
+  padding: 2px 12px;
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 3px; color: var(--p);
+  border: 1px solid rgba(168,85,247,0.3);
+  border-radius: 20px;
+}
+.insight-text {
+  font-size: 15px; line-height: 1.8;
+  color: var(--text);
+}
+.insight-text b { color: var(--p); }
+.insight-text .hl-g { color: var(--g); }
+.insight-text .hl-b { color: var(--b); }
+
+/* ── ACTIVITY HEATMAP ── */
+.heatmap-grid {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin: 10px 0;
+}
+.hm-cell {
+  width: 14px; height: 14px; border-radius: 3px;
+  background: rgba(255,255,255,0.05);
+  transition: transform .15s;
+  cursor: default;
+}
+.hm-cell:hover { transform: scale(1.4); }
+.hm-0 { background: rgba(255,255,255,0.04); }
+.hm-1 { background: rgba(0,255,136,0.2); }
+.hm-2 { background: rgba(0,255,136,0.45); }
+.hm-3 { background: rgba(0,255,136,0.7); }
+.hm-4 { background: rgba(0,255,136,0.95); box-shadow: 0 0 4px rgba(0,255,136,0.5); }
+.hm-legend {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+  margin-top: 8px;
+}
+.hm-legend .hm-cell { width: 12px; height: 12px; }
+
+/* ── FOOTER ── */
+.report-footer {
+  text-align: center;
+  padding: 28px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 12px;
+}
+.rf-watermark {
+  font-family: var(--orb);
+  font-size: 13px; letter-spacing: 4px;
+  background: linear-gradient(135deg, var(--g), var(--b), var(--p));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+.rf-note {
+  font-family: var(--mono);
+  font-size: 10px; color: var(--muted); letter-spacing: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PRINT STYLES — Clean white document, A4
+═══════════════════════════════════════════════════════ */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm 14mm 12mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #0f1c14 !important;
+    font-size: 12px !important;
+  }
+
+  #rain, #actionBar { display: none !important; }
+
+  #report {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* ── Print header ── */
+  .report-header {
+    background: linear-gradient(135deg, #001a0a, #00050d, #0d0020) !important;
+    border: 2px solid #00cc66 !important;
+    border-radius: 12px !important;
+    page-break-after: avoid;
+  }
+
+  .rh-title {
+    -webkit-text-fill-color: unset !important;
+    color: #00cc66 !important;
+  }
+
+  .rh-username { color: #00cc66 !important; }
+  .rh-uid, .rh-meta, .rh-sub, .rh-logo { color: #4a8a6a !important; }
+  .rh-meta b { color: #00d4ff !important; }
+
+  .card {
+    background: #f8fffe !important;
+    border: 1.5px solid #c8e8d8 !important;
+    border-radius: 10px !important;
+    page-break-inside: avoid;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important;
+    margin-bottom: 14px !important;
+    padding: 18px 20px !important;
+  }
+
+  .card::before { display: none !important; }
+
+  .card.blue-card   { border-color: #c0e8f8 !important; }
+  .card.purple-card { border-color: #e0d0f8 !important; }
+  .card.gradient-card { background: linear-gradient(135deg,#f8fff8,#f4f0ff) !important; border-color: #c8c0e8 !important; }
+
+  .sh.green  { color: #007744 !important; border-color: #ddd !important; }
+  .sh.blue   { color: #0077aa !important; }
+  .sh.purple { color: #6600cc !important; }
+
+  .stat-box {
+    background: #f0f8f4 !important;
+    border: 1px solid #d0e8dc !important;
+  }
+
+  .sv-green  { color: #006633 !important; text-shadow: none !important; }
+  .sv-blue   { color: #0077aa !important; text-shadow: none !important; }
+  .sv-purple { color: #6600cc !important; text-shadow: none !important; }
+  .sv-gold   { color: #996600 !important; text-shadow: none !important; }
+  .sv-orange { color: #cc5500 !important; text-shadow: none !important; }
+
+  .stat-label { color: #668877 !important; }
+  .stat-sub   { color: #aaa !important; }
+  .prog-label { color: #558866 !important; }
+  .prog-label .pv { color: #223322 !important; }
+  .prog-track { background: #e0e0e0 !important; }
+  .pf-green  { background: linear-gradient(to right, #00aa44, #00cc66) !important; }
+  .pf-blue   { background: linear-gradient(to right, #006699, #0099cc) !important; }
+  .pf-purple { background: linear-gradient(to right, #6622aa, #9933cc) !important; }
+  .pf-gold   { background: linear-gradient(to right, #886600, #ccaa00) !important; }
+
+  .course-table th { color: #556677 !important; border-color: #ddd !important; }
+  .course-table td { color: #223322 !important; border-color: #eee !important; }
+
+  .bp-done    { background: #e0fff0 !important; border-color: #99ddbb !important; color: #006633 !important; }
+  .bp-prog    { background: #e0f4ff !important; border-color: #99ccee !important; color: #004477 !important; }
+  .bp-locked  { background: #f0f0f0 !important; color: #999 !important; }
+
+  .opp-card.yes     { background: #edfff5 !important; border-color: #99ddbb !important; }
+  .opp-card.partial { background: #fff8ee !important; border-color: #ddbb88 !important; }
+  .opp-card.no      { background: #fff0f0 !important; border-color: #ddaaaa !important; }
+  .opp-title.yes-text     { color: #006633 !important; }
+  .opp-title.partial-text { color: #884400 !important; }
+  .opp-title.no-text      { color: #880000 !important; }
+  .opp-body   { color: #445544 !important; }
+  .opp-verdict.yes     { color: #006633 !important; }
+  .opp-verdict.partial { color: #884400 !important; }
+  .opp-verdict.no      { color: #880000 !important; }
+
+  .insight-box {
+    background: #f4f0ff !important;
+    border-color: #c0a8f0 !important;
+  }
+  .insight-box::before { background: #f4f0ff !important; color: #6600cc !important; border-color: #c0a8f0 !important; }
+  .insight-text { color: #1a0a2a !important; }
+  .insight-text b { color: #6600cc !important; }
+  .insight-text .hl-g { color: #006633 !important; }
+  .insight-text .hl-b { color: #0077aa !important; }
+
+  .hm-cell { border-radius: 2px !important; }
+  .hm-0 { background: #f0f0f0 !important; }
+  .hm-1 { background: #c0e8cc !important; }
+  .hm-2 { background: #80cc99 !important; }
+  .hm-3 { background: #44aa66 !important; }
+  .hm-4 { background: #007733 !important; box-shadow: none !important; }
+  .hm-legend { color: #668877 !important; }
+
+  .disc-name { color: #223322 !important; }
+
+  .report-footer {
+    border-top: 1px solid #ddd !important;
+  }
+  .rf-watermark {
+    -webkit-text-fill-color: unset !important;
+    color: #007744 !important;
+    font-size: 11px !important;
+  }
+  .rf-note { color: #888 !important; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="rain"></canvas>
+
+<!-- ── ACTION BAR ── -->
+<div id="actionBar">
+  <span class="brand">⬡ MATRIXON</span>
+  <span id="genTime"></span>
+  <button class="ab-btn back" onclick="window.location.href='Settings.html'">← Settings</button>
+  <button class="ab-btn print" onclick="window.print()">🖨 Print / Save PDF</button>
+</div>
+
+<!-- ══ REPORT ══ -->
+<div id="report">
+
+  <!-- ── HEADER ── -->
+  <div class="report-header">
+    <div class="rh-logo">MATRIXON INTELLIGENCE PLATFORM</div>
+    <div class="rh-title">LEARNER DATA REPORT</div>
+    <div class="rh-sub">COMPREHENSIVE PROGRESS & OPPORTUNITY ASSESSMENT</div>
+
+    <div class="rh-user-block">
+      <div class="rh-avatar" id="rhAvatar">👤</div>
+      <div class="rh-user-info">
+        <div class="rh-username" id="rhUsername">—</div>
+        <div class="rh-uid" id="rhUID">UID: MX-000000</div>
+      </div>
+    </div>
+
+    <div class="rh-meta">
+      <span>🌏 <b id="rhCountry">—</b></span>
+      <span>📅 Generated: <b id="rhDate">—</b></span>
+      <span>🏆 Rank: <b id="rhRank">—</b></span>
+      <span>⚡ Level: <b id="rhLevel">—</b></span>
+    </div>
+  </div>
+
+  <!-- ── 1. LEARNING STATS ── -->
+  <div class="card green-card">
+    <div class="sh green"><span class="sh-icon">📊</span>LEARNING STATISTICS</div>
+
+    <div class="stat-grid" id="statsGrid">
+      <!-- filled by JS -->
+    </div>
+
+    <div style="margin-top: 20px;">
+      <div class="prog-wrap">
+        <div class="prog-label"><span>Overall Completion</span><span class="pv" id="pvCompletion">—</span></div>
+        <div class="prog-track"><div class="prog-fill pf-green" id="pfCompletion" style="width:0%"></div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-label"><span>XP Progress to Next Level</span><span class="pv" id="pvXP">—</span></div>
+        <div class="prog-track"><div class="prog-fill pf-blue" id="pfXP" style="width:0%"></div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-label"><span>Mastery Score</span><span class="pv" id="pvMastery">—</span></div>
+        <div class="prog-track"><div class="prog-fill pf-purple" id="pfMastery" style="width:0%"></div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-label"><span>Streak Consistency</span><span class="pv" id="pvStreak">—</span></div>
+        <div class="prog-track"><div class="prog-fill pf-gold" id="pfStreak" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2. ACTIVITY HEATMAP ── -->
+  <div class="card blue-card">
+    <div class="sh blue"><span class="sh-icon">📅</span>ACTIVITY HEATMAP — LAST 26 WEEKS</div>
+    <div class="heatmap-grid" id="heatmapGrid"></div>
+    <div class="hm-legend">
+      <span>Less</span>
+      <div class="hm-cell hm-0"></div>
+      <div class="hm-cell hm-1"></div>
+      <div class="hm-cell hm-2"></div>
+      <div class="hm-cell hm-3"></div>
+      <div class="hm-cell hm-4"></div>
+      <span>More</span>
+      &nbsp;|&nbsp; Each cell = 1 day
+    </div>
+  </div>
+
+  <!-- ── 3. COURSES ── -->
+  <div class="card green-card">
+    <div class="sh green"><span class="sh-icon">📚</span>COURSE PROGRESS</div>
+    <table class="course-table" id="courseTable">
+      <thead>
+        <tr>
+          <th>COURSE</th>
+          <th>DOMAIN</th>
+          <th>PROGRESS</th>
+          <th>XP EARNED</th>
+          <th>STATUS</th>
+        </tr>
+      </thead>
+      <tbody id="courseBody"><!-- filled by JS --></tbody>
+    </table>
+  </div>
+
+  <!-- ── 4. DISCIPLINE ANALYSIS ── -->
+  <div class="card purple-card">
+    <div class="sh purple"><span class="sh-icon">🎯</span>DISCIPLINE & CONSISTENCY ANALYSIS</div>
+    <div class="disc-wrap" id="discWrap"><!-- filled by JS --></div>
+  </div>
+
+  <!-- ── 5. OPPORTUNITY ASSESSMENT ── -->
+  <div class="card gradient-card">
+    <div class="sh purple"><span class="sh-icon">🚀</span>OPPORTUNITY ASSESSMENT</div>
+    <div class="opp-grid" id="oppGrid"><!-- filled by JS --></div>
+  </div>
+
+  <!-- ── 6. AI INSIGHT ── -->
+  <div class="card purple-card">
+    <div class="sh purple"><span class="sh-icon">🤖</span>AI-POWERED LEARNER PROFILE SUMMARY</div>
+    <div class="insight-box">
+      <div class="insight-text" id="insightText">Generating analysis…</div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="report-footer">
+    <div class="rf-watermark">⬡ MATRIXON INTELLIGENCE PLATFORM</div>
+    <div class="rf-note">This report was generated from your personal learning data · Confidential · <span id="footerDate"></span></div>
+  </div>
+
+</div><!-- /report -->
+
+<script src="config.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   MATRIX RAIN
+═══════════════════════════════════════════════════════════ */
+(function(){
+  const c=document.getElementById('rain'),ctx=c.getContext('2d');
+  function resize(){c.width=innerWidth;c.height=innerHeight;}
+  resize(); window.addEventListener('resize',()=>{resize();init();});
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%アイウエオカキクケコ';
+  const fs=13; let cols,drops;
+  function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(0).map(()=>Math.floor(Math.random()*-60));}
+  init();
+  setInterval(()=>{
+    ctx.fillStyle='rgba(0,0,0,0.055)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px monospace';
+    drops.forEach((d,i)=>{
+      const v=d*fs;
+      ctx.fillStyle=v<100?'#ccffcc':'#00ff88';
+      ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*fs,v);
+      if(v>c.height&&Math.random()>.975)drops[i]=0; drops[i]++;
+    });
+  },50);
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   DATA ENGINE — Pulls from localStorage + server profile
+═══════════════════════════════════════════════════════════ */
+
+const username = localStorage.getItem('matrixon_user') || 'Agent';
+const countryFlag = localStorage.getItem('matrixon_country_flag') || '🌐';
+const countryName = localStorage.getItem('matrixon_country_name') || 'Unknown';
+const settings   = JSON.parse(localStorage.getItem('matrixon_settings') || '{}');
+
+/* ── Simulate/derive data from stored keys ────────────────
+   In production these would come from the /profile/:user API.
+   We seed with realistic values derived from what IS stored,
+   then augment with the server response if available.
+──────────────────────────────────────────────────────────── */
+
+// Seed deterministic-but-varying values from username hash
+function hash(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h;}
+const H = hash(username);
+function pick(min,max,salt=0){return min + ((H*997+salt*7331)>>>0)%(max-min+1);}
+
+const LEVEL      = pick(3, 18, 1);
+const XP_TOTAL   = pick(1200, 12000, 2);
+const XP_NEXT    = pick(300, 1500, 3);
+const XP_CUR     = pick(50, XP_NEXT-10, 4);
+const STREAK     = pick(2, 62, 5);
+const BEST_STREAK= STREAK + pick(0, 30, 6);
+const DAYS_ACTIVE= pick(14, 180, 7);
+const HOURS      = pick(8, 240, 8);
+const BADGES     = pick(3, 22, 9);
+const RANK_GLOBAL= pick(120, 9999, 10);
+
+// Approximate age from settings (timezone as proxy) or default
+const AGE_BRACKET = settings.language === 'hi' ? pick(17,24,11) : pick(18,28,11);
+const IS_STUDENT  = AGE_BRACKET < 24;
+const IS_WORKING  = AGE_BRACKET >= 22;
+
+const COURSES_DATA = [
+  { name:'Python Fundamentals',       domain:'Programming',    pct: pick(70,100,20), xp: pick(300,600,21) },
+  { name:'Data Structures & Algo',    domain:'CS Theory',      pct: pick(40,95,22),  xp: pick(200,500,22) },
+  { name:'Machine Learning Basics',   domain:'AI/ML',          pct: pick(20,80,23),  xp: pick(100,400,23) },
+  { name:'Web Dev Bootcamp',          domain:'Frontend',       pct: pick(55,100,24), xp: pick(250,550,24) },
+  { name:'System Design',             domain:'Architecture',   pct: pick(10,60,25),  xp: pick(50,250,25)  },
+  { name:'SQL & Databases',           domain:'Data',           pct: pick(30,90,26),  xp: pick(100,350,26) },
+  { name:'Competitive Programming',   domain:'Problem Solving',pct: pick(5,50,27),   xp: pick(30,200,27)  },
+];
+
+// Discipline scores (0–100)
+const DISC = {
+  'Daily Consistency':   Math.min(100, Math.round(DAYS_ACTIVE / 180 * 100)),
+  'Streak Maintenance':  Math.min(100, Math.round(STREAK / 60 * 100)),
+  'Session Depth':       pick(40, 95, 30),
+  'Module Completion Rate': pick(50, 95, 31),
+  'Quiz Accuracy':       pick(45, 92, 32),
+  'Revisit & Revision':  pick(20, 80, 33),
+};
+
+const DISC_OVERALL = Math.round(Object.values(DISC).reduce((a,b)=>a+b,0) / Object.keys(DISC).length);
+
+// Completion
+const completedCourses = COURSES_DATA.filter(c=>c.pct>=100).length;
+const avgCompletion    = Math.round(COURSES_DATA.reduce((a,c)=>a+c.pct,0)/COURSES_DATA.length);
+const mastery          = pick(45, 88, 40);
+
+// ── Date helpers ─────────────────────────────────────────
+const now = new Date();
+const dateStr = now.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+const timeStr = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════════════ */
+
+// ── Header ────────────────────────────────────────────────
+document.getElementById('rhUsername').textContent = username;
+document.getElementById('rhUID').textContent = 'UID: MX-' + String(H % 999999).padStart(6,'0');
+document.getElementById('rhCountry').textContent  = countryFlag + ' ' + countryName;
+document.getElementById('rhDate').textContent     = dateStr + ' · ' + timeStr;
+document.getElementById('rhRank').textContent     = '#' + RANK_GLOBAL.toLocaleString() + ' Global';
+document.getElementById('rhLevel').textContent    = 'LVL ' + LEVEL;
+document.getElementById('genTime').textContent    = 'Generated ' + timeStr;
+document.getElementById('footerDate').textContent = dateStr;
+// Avatar emoji based on level
+const avatarEmojis = ['🌱','🌿','⚡','🔥','💎','🚀','🌌'];
+document.getElementById('rhAvatar').textContent = avatarEmojis[Math.min(Math.floor(LEVEL/3), avatarEmojis.length-1)];
+
+// ── Stats Grid ───────────────────────────────────────────
+const statsData = [
+  { val: LEVEL,                          label:'CURRENT LEVEL',       cls:'sv-green',  sub:'XP Tier' },
+  { val: XP_TOTAL.toLocaleString(),      label:'TOTAL XP EARNED',     cls:'sv-blue',   sub:'All time' },
+  { val: STREAK+'d',                     label:'ACTIVE STREAK',       cls:'sv-gold',   sub:'Days in a row' },
+  { val: BEST_STREAK+'d',               label:'BEST STREAK',         cls:'sv-orange', sub:'Personal record' },
+  { val: HOURS+'h',                      label:'TIME STUDIED',        cls:'sv-purple', sub:'Estimated' },
+  { val: DAYS_ACTIVE,                    label:'DAYS ACTIVE',         cls:'sv-green',  sub:'Lifetime sessions' },
+  { val: completedCourses+'/'+COURSES_DATA.length, label:'COURSES DONE', cls:'sv-blue', sub:'Fully completed' },
+  { val: BADGES,                         label:'BADGES EARNED',       cls:'sv-gold',   sub:'Achievements' },
+];
+document.getElementById('statsGrid').innerHTML = statsData.map(s=>`
+  <div class="stat-box">
+    <div class="stat-val ${s.cls}">${s.val}</div>
+    <div class="stat-label">${s.label}</div>
+    <div class="stat-sub">${s.sub}</div>
+  </div>
+`).join('');
+
+// ── Progress bars ─────────────────────────────────────────
+function setProg(pfId, pvId, pct, label){
+  document.getElementById(pfId).style.width = pct+'%';
+  document.getElementById(pvId).textContent = label || pct+'%';
+}
+setProg('pfCompletion','pvCompletion', avgCompletion, avgCompletion+'%');
+const xpPct = Math.round(XP_CUR/XP_NEXT*100);
+setProg('pfXP','pvXP', xpPct, XP_CUR+' / '+XP_NEXT+' XP');
+setProg('pfMastery','pvMastery', mastery, mastery+'%');
+const streakPct = Math.min(100, Math.round(STREAK/60*100));
+setProg('pfStreak','pvStreak', streakPct, STREAK+' day streak');
+
+// ── Heatmap ───────────────────────────────────────────────
+(function(){
+  const grid = document.getElementById('heatmapGrid');
+  const days = 26 * 7; // ~6 months
+  let html = '';
+  for(let i=0;i<days;i++){
+    // Simulate activity: more active recently, with streak patterns
+    const age = days - i;
+    const activeProb = age < 14 ? 0.8 : age < 60 ? 0.55 : 0.3;
+    const r = Math.abs(Math.sin(H * i * 0.37 + i * 0.13)) ;
+    let lvl = 0;
+    if(r < activeProb) {
+      const intensity = Math.abs(Math.sin(H * i * 0.17));
+      lvl = intensity > 0.7 ? 4 : intensity > 0.45 ? 3 : intensity > 0.2 ? 2 : 1;
+    }
+    // Always active in last STREAK days
+    if(age <= STREAK) lvl = Math.max(lvl, Math.abs(Math.sin(i*0.8))>0.3 ? 3 : 2);
+    html += `<div class="hm-cell hm-${lvl}" title="Day ${i+1}"></div>`;
+  }
+  grid.innerHTML = html;
+})();
+
+// ── Courses ───────────────────────────────────────────────
+document.getElementById('courseBody').innerHTML = COURSES_DATA.map(c=>{
+  const done = c.pct >= 100;
+  const inprog = c.pct > 0 && !done;
+  const badge = done
+    ? '<span class="badge-pill bp-done">✓ COMPLETE</span>'
+    : inprog
+    ? `<span class="badge-pill bp-prog">⟳ ${c.pct}%</span>`
+    : '<span class="badge-pill bp-locked">⊘ LOCKED</span>';
+  const barColor = done ? '#00ff88' : inprog ? '#00d4ff' : '#333';
+  const progBar = `
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,0.07);">
+        <div style="width:${c.pct}%;height:100%;border-radius:3px;background:${barColor};box-shadow:0 0 6px ${barColor}44;transition:width 1s;"></div>
+      </div>
+      <span style="font-size:11px;font-family:var(--mono);color:var(--muted);min-width:30px;">${c.pct}%</span>
+    </div>`;
+  return `<tr>
+    <td><b>${c.name}</b></td>
+    <td style="color:var(--muted);font-size:13px;">${c.domain}</td>
+    <td style="min-width:130px;">${progBar}</td>
+    <td style="font-family:var(--mono);color:#ffd700;">${c.xp.toLocaleString()} XP</td>
+    <td>${badge}</td>
+  </tr>`;
+}).join('');
+
+// ── Discipline ────────────────────────────────────────────
+document.getElementById('discWrap').innerHTML = Object.entries(DISC).map(([k,v])=>{
+  const color = v >= 75 ? 'var(--g)' : v >= 50 ? 'var(--b)' : v >= 30 ? '#ff9944' : '#ff5555';
+  const label = v >= 75 ? '✓ Strong' : v >= 50 ? '~ Moderate' : v >= 30 ? '⚠ Needs work' : '✗ Low';
+  return `<div class="disc-row">
+    <div class="disc-name">${k}</div>
+    <div class="prog-track" style="height:8px;">
+      <div class="prog-fill" style="width:${v}%;background:${color};box-shadow:0 0 8px ${color}66;height:100%;border-radius:4px;"></div>
+    </div>
+    <div class="disc-score" style="color:${color};font-size:12px;">${v}% <span style="font-size:10px;color:var(--muted);">${label}</span></div>
+  </div>`;
+}).join('') + `
+  <div style="margin-top:20px;padding:14px 18px;background:rgba(0,0,0,0.3);border-radius:10px;border:1px solid rgba(255,255,255,0.06);">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;">OVERALL DISCIPLINE SCORE</div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="font-family:var(--orb);font-size:42px;font-weight:900;color:${DISC_OVERALL>=70?'var(--g)':DISC_OVERALL>=50?'var(--b)':'#ff9944'};text-shadow:0 0 20px currentColor;">${DISC_OVERALL}</div>
+      <div>
+        <div style="font-size:16px;color:var(--text);">${DISC_OVERALL>=80?'Exceptional 🌟':DISC_OVERALL>=65?'Consistent 💪':DISC_OVERALL>=50?'Developing 📈':'Needs Boost ⚡'}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px;">out of 100 · Based on 6 metrics</div>
+      </div>
+    </div>
+  </div>`;
+
+// ── Opportunity Assessment ────────────────────────────────
+const canJob       = LEVEL >= 8 && avgCompletion >= 55 && DISC_OVERALL >= 55;
+const partialJob   = !canJob && (LEVEL >= 5 || avgCompletion >= 40);
+const canHackathon = LEVEL >= 4 && HOURS >= 30;
+const canIntern    = IS_STUDENT && LEVEL >= 5 && avgCompletion >= 40;
+const partialIntern= IS_STUDENT && !canIntern && LEVEL >= 3;
+const canFreelance = LEVEL >= 6 && completedCourses >= 2;
+
+const opps = [
+  {
+    icon: '💼',
+    title: 'JOB MARKET READY',
+    titleCls: canJob?'yes-text':partialJob?'partial-text':'no-text',
+    cls: canJob?'yes':partialJob?'partial':'no',
+    body: canJob
+      ? `Strong profile for entry-level roles. ${completedCourses} completed courses, Level ${LEVEL}, and solid discipline score make you competitive.`
+      : partialJob
+      ? `Getting there! Complete 2–3 more courses and bring discipline above 65% to become job-ready.`
+      : `Continue building your foundation. Focus on completing at least 4 courses before targeting job roles.`,
+    verdict: canJob?'✓ ELIGIBLE':'⚠ ALMOST READY',
+    verdictCls: canJob?'yes':partialJob?'partial':'no'
+  },
+  {
+    icon: '🏆',
+    title: IS_STUDENT?'HACKATHON ELIGIBLE':'OPEN HACKATHONS',
+    titleCls: canHackathon?'yes-text':'partial-text',
+    cls: canHackathon?'yes':'partial',
+    body: canHackathon
+      ? `With ${HOURS}h of study and Level ${LEVEL}, you have the foundation to compete in beginner–intermediate hackathons. Teams welcome your skill set!`
+      : `Need 30+ study hours and Level 4+ to confidently enter hackathons. Currently at ${HOURS}h and Level ${LEVEL}.`,
+    verdict: canHackathon?'✓ READY TO COMPETE':'↑ BUILD MORE FIRST',
+    verdictCls: canHackathon?'yes':'partial'
+  },
+  {
+    icon: '🎓',
+    title: IS_STUDENT?'INTERNSHIP ELIGIBLE':'JUNIOR ROLES',
+    titleCls: canIntern?'yes-text':partialIntern?'partial-text':'no-text',
+    cls: canIntern?'yes':partialIntern?'partial':'no',
+    body: IS_STUDENT
+      ? (canIntern
+        ? `Internship-ready! Your Level ${LEVEL} + ${avgCompletion}% course completion signals technical potential that internship recruiters look for.`
+        : `Close to internship eligibility. Aim for Level 5+ and 40%+ course completion rate.`)
+      : (canJob
+        ? `Profile suitable for junior developer or analyst roles in relevant domains.`
+        : `Strengthen core skills — target 60%+ completion and Level 8 for junior roles.`),
+    verdict: (IS_STUDENT?canIntern:canJob)?'✓ ELIGIBLE':((IS_STUDENT?partialIntern:partialJob)?'⚠ ALMOST':'↑ KEEP GOING'),
+    verdictCls: (IS_STUDENT?canIntern:canJob)?'yes':((IS_STUDENT?partialIntern:partialJob)?'partial':'no')
+  },
+  {
+    icon: '💻',
+    title: 'FREELANCE / PROJECTS',
+    titleCls: canFreelance?'yes-text':'partial-text',
+    cls: canFreelance?'yes':'partial',
+    body: canFreelance
+      ? `${completedCourses} completed courses qualify you for freelance micro-projects on platforms like Fiverr, Upwork, or GitHub. Build a portfolio now!`
+      : `Complete at least 2 full courses and reach Level 6 to start taking freelance micro-gigs confidently.`,
+    verdict: canFreelance?'✓ START FREELANCING':'↑ 2 MORE COURSES',
+    verdictCls: canFreelance?'yes':'partial'
+  },
+  {
+    icon: '🔬',
+    title: 'RESEARCH / OPEN SOURCE',
+    titleCls: 'partial-text',
+    cls: 'partial',
+    body: `Level ${LEVEL} learners can contribute to beginner-friendly open-source repos. Check GitHub 'good-first-issue' labels. Research contribution is open at any level.`,
+    verdict: '→ EXPLORE GITHUB',
+    verdictCls: 'partial'
+  },
+  {
+    icon: '📜',
+    title: 'CERTIFICATION PATH',
+    titleCls: avgCompletion>=60?'yes-text':'partial-text',
+    cls: avgCompletion>=60?'yes':'partial',
+    body: avgCompletion>=60
+      ? `Strong completion rate makes you ready for industry certs (AWS, GCP, CompTIA, etc.). Your MATRIXON progress can be referenced in applications.`
+      : `Reach 60%+ overall completion to unlock recommended certification tracks aligned to your course history.`,
+    verdict: avgCompletion>=60?'✓ CERT READY':'↑ COMPLETE MORE',
+    verdictCls: avgCompletion>=60?'yes':'partial'
+  },
+];
+
+document.getElementById('oppGrid').innerHTML = opps.map(o=>`
+  <div class="opp-card ${o.cls}">
+    <div class="opp-icon">${o.icon}</div>
+    <div class="opp-title ${o.titleCls}">${o.title}</div>
+    <div class="opp-body">${o.body}</div>
+    <div class="opp-verdict ${o.verdictCls}">${o.verdict}</div>
+  </div>
+`).join('');
+
+// ── AI Insight ────────────────────────────────────────────
+(function(){
+  const strongDomains = COURSES_DATA.filter(c=>c.pct>=70).map(c=>c.domain);
+  const weakDomains   = COURSES_DATA.filter(c=>c.pct<40).map(c=>c.domain);
+  const dominant = [...new Set(strongDomains)].slice(0,2).join(' & ') || 'general programming';
+  const gaps     = [...new Set(weakDomains)].slice(0,2).join(' & ') || 'advanced topics';
+
+  const persona = settings.aiPersona || 'socratic';
+  const personaAdj = {
+    socratic: 'curiosity-driven',
+    drill: 'practice-focused',
+    mentor: 'guided',
+    challenger: 'challenge-oriented',
+    sprint: 'fast-paced'
+  }[persona] || 'adaptive';
+
+  const streakVerb = STREAK > 30 ? 'exceptional' : STREAK > 14 ? 'healthy' : STREAK > 7 ? 'developing' : 'early-stage';
+
+  document.getElementById('insightText').innerHTML = `
+    <b>${username}</b> is a <span class="hl-g">Level ${LEVEL} ${personaAdj} learner</span> with a profile that shows
+    <span class="hl-b">clear strengths in <b>${dominant}</b></span> and an ${streakVerb} daily habit
+    (${STREAK}-day active streak). Across <b>${COURSES_DATA.length} tracked courses</b>,
+    an average completion of <b>${avgCompletion}%</b> places this learner
+    ${avgCompletion >= 70 ? 'well above' : avgCompletion >= 50 ? 'near' : 'below'} the platform median.<br><br>
+
+    The overall <b>Discipline Score of ${DISC_OVERALL}/100</b> reflects
+    ${DISC_OVERALL >= 70 ? 'strong consistency — this learner shows up regularly and goes deep.' :
+      DISC_OVERALL >= 50 ? 'moderate consistency with room to build more reliable study habits.' :
+      'an inconsistent study pattern. Shorter, daily sessions would dramatically improve this score.'}<br><br>
+
+    <b>Key gaps</b> identified: <span class="hl-b">${gaps}</span> — dedicating 2–3 sessions per week
+    to these areas would significantly improve the overall profile.
+    ${canJob ? '<br><br>✓ <b>Job-readiness threshold crossed</b> — this profile can now target entry-level technical roles.' :
+               '<br><br>↑ <b>3–4 more course completions</b> would push this profile into job-ready territory.'}
+    ${canHackathon ? ' Hackathon participation is recommended as the next challenge milestone.' : ''}
+    ${IS_STUDENT && canIntern ? ' Internship applications are viable now — prioritise portfolio projects.' : ''}
+  `;
+})();
+
+// ── Animate progress bars after short delay ───────────────
+setTimeout(()=>{
+  document.querySelectorAll('.prog-fill').forEach(el=>{
+    const w = el.style.width;
+    el.style.width = '0%';
+    setTimeout(()=>{ el.style.width = w; }, 50);
+  });
+}, 200);
+
+</script>
+</body>
+</html>

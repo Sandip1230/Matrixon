@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATRIXON — Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --green:#00ff00;--dark-green:#00aa00;--bg:#020d02;
+  --card-bg:rgba(0,10,0,0.92);--border:rgba(0,255,0,0.25);
+  --bronze:#cd7f32;--silver:#c0c0c0;--gold:#ffd700;
+  --pro-a:#ff0055;--pro-b:#ff00aa;
+  --legend-a:#cc00ff;--legend-b:#ff44aa;
+}
+body{font-family:'Share Tech Mono',monospace;background:var(--bg);color:var(--green);min-height:100vh;overflow-x:hidden;}
+#matrixRain{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ─── PARTICLES ─── */
+.xp-particle{
+  position:fixed;border-radius:50%;pointer-events:none;z-index:9999;
+  animation:particleExplode .9s ease-out forwards;
+}
+@keyframes particleExplode{
+  0%{opacity:1;transform:translate(0,0) scale(1);}
+  100%{opacity:0;transform:translate(var(--ex),var(--ey)) scale(0);}
+}
+
+/* ─── KEYFRAME EXPLODE (card-level glow burst) ─── */
+@keyframes explode{
+  0%  {transform:scale(1);box-shadow:0 0 0 rgba(255,255,255,0);}
+  20% {transform:scale(1.4);box-shadow:0 0 40px 30px rgba(255,230,0,.7);}
+  40% {transform:scale(.9);box-shadow:0 0 70px 50px rgba(255,180,0,.3);}
+  60% {transform:scale(1.2);box-shadow:0 0 25px 15px rgba(0,255,0,.5);}
+  80% {transform:scale(1);box-shadow:0 0 12px 6px rgba(0,255,0,.25);}
+  100%{transform:scale(1);box-shadow:none;}
+}
+
+/* ─── KEYFRAME GLOWS ─── */
+@keyframes avatarGlow{0%,100%{box-shadow:0 0 20px rgba(0,255,0,.6),0 0 40px rgba(0,255,0,.2);}50%{box-shadow:0 0 35px rgba(0,255,0,.9),0 0 60px rgba(0,255,0,.4);}}
+@keyframes bronzeShine{0%,100%{box-shadow:0 0 6px rgba(205,127,50,.4);}50%{box-shadow:0 0 18px rgba(205,127,50,.8);}}
+@keyframes silverShine{0%,100%{box-shadow:0 0 6px rgba(192,192,192,.4);}50%{box-shadow:0 0 18px rgba(192,192,192,.8);}}
+@keyframes goldShine{0%,100%{box-shadow:0 0 8px rgba(255,215,0,.5);}50%{box-shadow:0 0 22px rgba(255,215,0,.9);}}
+@keyframes proShine{0%{box-shadow:0 0 8px #ff0055;}50%{box-shadow:0 0 28px #ff0055,0 0 12px #ff00aa;}100%{box-shadow:0 0 8px #ff0055;}}
+@keyframes legendPulse{0%{border-color:var(--legend-a);box-shadow:0 0 12px var(--legend-a);}50%{border-color:var(--legend-b);box-shadow:0 0 24px var(--legend-b),0 0 48px rgba(204,0,255,.3);}100%{border-color:var(--legend-a);box-shadow:0 0 12px var(--legend-a);}}
+@keyframes rainbowText{0%{color:#f00}16%{color:#f80}33%{color:#ff0}50%{color:#0f0}66%{color:#08f}83%{color:#80f}100%{color:#f00}}
+@keyframes badgePulse{0%,100%{box-shadow:inset 0 0 10px rgba(0,255,0,.1),0 0 8px rgba(0,255,0,.1);}50%{box-shadow:inset 0 0 20px rgba(0,255,0,.2),0 0 16px rgba(0,255,0,.2);}}
+@keyframes slotAppear{from{transform:scale(.7) rotate(-10deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
+@keyframes pickerIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* ─── LAYOUT ─── */
+.profile-wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 16px 80px;}
+#backBtn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:#000;border:1px solid var(--green);color:var(--green);border-radius:10px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:14px;transition:.25s;margin-bottom:20px;}
+#backBtn:hover{background:var(--green);color:#000;transform:scale(1.05);}
+.profile-card{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:32px 28px;box-shadow:0 0 40px rgba(0,255,0,.08);}
+
+/* ─── ARMY BADGE ROW ─── */
+.army-badge-row{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:6px;padding:10px 0;flex-wrap:wrap;}
+
+/* ─── TITLE TAG SLOT — */
+.army-badge-slot{
+  position:relative;width:200px;height:52px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:.25s;flex-shrink:0;border-radius: 75px;;
+}
+.army-badge-slot:hover{transform:scale(1.04) translateY(-2px);}
+.army-badge-slot.drag-over .tag-svg-body{filter:brightness(1.5);}
+
+/* ─── SVG TAG SHAPE ─── */
+.badge-shape-svg{position:absolute;inset:0;width:100%;height:100%;}
+
+/* ─── SLOT CONTENT ─── */
+.army-slot-content{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:100%;height:100%;text-align:center;pointer-events:none;
+  color:#2a5a2a;font-size:10px;letter-spacing:1px;
+}
+.slot-empty-plus{font-size:18px;margin-bottom:1px;opacity:.4;}
+.slot-empty-label{font-size:8px;opacity:.5;letter-spacing:.5px;}
+
+/* ─── FILLED TAG STATE ─── */
+.army-badge-slot.has-badge{cursor:grab;}
+.army-badge-slot.has-badge:active{cursor:grabbing;}
+
+/* The single title text inside the banner */
+.slot-tag-text{
+  font-size:11px;font-weight:bold;letter-spacing:2px;
+  text-align:center;font-family:'Orbitron',monospace;
+  text-shadow:0 0 8px currentColor, 0 1px 2px rgba(0,0,0,.8);
+  padding:0 28px;line-height:1;position:relative;z-index:2;
+  width:100%;
+}
+
+.slot-remove{
+  position:absolute;top:-6px;right:-4px;z-index:5;
+  font-size:11px;background:rgba(0,0,0,.85);border-radius:50%;
+  width:18px;height:18px;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:.2s;cursor:pointer;color:#ff4444;border:1px solid #ff444466;
+}
+.army-badge-slot:hover .slot-remove{opacity:1;}
+
+/* ─── TIER COLOUR VARIANTS — glow on the tag ─── */
+.army-badge-slot.bs-bronze{filter:drop-shadow(0 0 6px rgba(205,127,50,.6));animation:bronzeShine 3s infinite;}
+.army-badge-slot.bs-silver{filter:drop-shadow(0 0 6px rgba(192,192,192,.5));animation:silverShine 3s infinite;}
+.army-badge-slot.bs-gold  {filter:drop-shadow(0 0 8px rgba(255,215,0,.7));animation:goldShine 3s infinite;}
+.army-badge-slot.bs-pro   {filter:drop-shadow(0 0 8px rgba(255,0,85,.7));animation:proShine 2s infinite;}
+.army-badge-slot.bs-legend{filter:drop-shadow(0 0 10px rgba(204,0,255,.8));animation:legendPulse 2s infinite;}
+
+/* ─── PHOTO SECTION ─── */
+.photo-section{text-align:center;flex-shrink:0;}
+.avatar-wrap{position:relative;display:inline-block;cursor:pointer;margin-bottom:10px;}
+.avatar-ring{width:130px;height:130px;border-radius:50%;border:3px solid var(--green);box-shadow:0 0 20px rgba(0,255,0,.6),0 0 40px rgba(0,255,0,.2);overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000;margin:0 auto;animation:avatarGlow 2.5s infinite;}
+#avatarImg{width:100%;height:100%;object-fit:cover;display:none;}
+#avatarPlaceholder{font-size:64px;line-height:1;}
+.change-photo-btn{background:transparent;border:1px solid var(--border);color:var(--green);padding:6px 16px;border-radius:20px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:12px;transition:.2s;display:block;margin:6px auto 0;}
+.change-photo-btn:hover{background:rgba(0,255,0,.1);border-color:var(--green);}
+#photoFileInput{display:none;}
+
+/* ─── BADGE PICKER MODAL ─── */
+#badgePickerModal{
+  display:none;position:fixed;inset:0;z-index:8000;
+  background:rgba(0,0,0,.82);justify-content:center;align-items:center;
+}
+#badgePickerModal.open{display:flex;}
+#pickerBox{
+  background:#020d02;border:1px solid var(--green);border-radius:18px;
+  padding:24px;max-width:560px;width:92%;
+  box-shadow:0 0 40px rgba(0,255,0,.3);
+  animation:pickerIn .35s cubic-bezier(.22,1,.36,1);
+}
+.picker-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.picker-title{font-size:13px;color:var(--green);letter-spacing:2px;font-family:'Orbitron',monospace;}
+.picker-close{font-size:18px;color:#ff4444;cursor:pointer;transition:.2s;background:none;border:none;font-family:monospace;}
+.picker-close:hover{transform:scale(1.3);}
+.picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;max-height:320px;overflow-y:auto;padding-right:4px;}
+.picker-grid::-webkit-scrollbar{width:4px;}.picker-grid::-webkit-scrollbar-thumb{background:var(--dark-green);border-radius:4px;}
+.picker-item{border-radius:12px;padding:12px 6px;text-align:center;cursor:pointer;border:1px solid transparent;transition:.2s;background:rgba(0,0,0,.5);}
+.picker-item:hover{transform:scale(1.06);}
+.pi-bronze{border-color:rgba(205,127,50,.55);background:rgba(205,127,50,.05);}
+.pi-silver{border-color:rgba(192,192,192,.45);background:rgba(192,192,192,.04);}
+.pi-gold{border-color:rgba(255,215,0,.55);background:rgba(255,215,0,.05);}
+.pi-pro{border-color:rgba(255,0,85,.55);background:rgba(255,0,85,.05);}
+.pi-legend{border-color:var(--legend-a);background:rgba(204,0,255,.05);}
+.picker-icon{font-size:26px;margin-bottom:4px;}
+.picker-name{font-size:8px;color:#ccc;line-height:1.3;margin-bottom:2px;}
+.picker-tier-lbl{font-size:8px;font-weight:bold;letter-spacing:1px;}
+.picker-tag{font-size:7px;padding:1px 5px;border-radius:5px;border:1px solid;margin-top:2px;display:inline-block;letter-spacing:.5px;}
+.picker-empty{color:#2a5a2a;font-size:12px;text-align:center;padding:30px;letter-spacing:1px;}
+
+/* ─── CROP MODAL ─── */
+#cropModal{display:none;position:fixed;inset:0;z-index:8888;background:rgba(0,0,0,.85);justify-content:center;align-items:center;}
+#cropModal.show{display:flex;}
+#cropBox{background:#000;border:2px solid var(--green);border-radius:16px;padding:24px;text-align:center;box-shadow:0 0 40px rgba(0,255,0,.4);}
+#cropBox h3{color:var(--green);margin-bottom:12px;font-size:18px;}
+#cropCanvasWrap{position:relative;display:inline-block;cursor:grab;}
+#cropCanvasWrap:active{cursor:grabbing;}
+#cropCanvas{display:block;border-radius:8px;}
+#cropBox p{color:#555;font-size:12px;margin:10px 0;}
+.crop-btns{display:flex;gap:12px;justify-content:center;margin-top:12px;}
+.crop-btns button{padding:10px 24px;border-radius:30px;border:none;cursor:pointer;font-family:monospace;font-size:14px;font-weight:bold;transition:.2s;}
+#cancelCropBtn{background:#111;color:#555;border:1px solid #333;}
+#saveCropBtn{background:linear-gradient(to right,#00cc44,#00ff88);color:#000;}
+#saveCropBtn:hover{transform:scale(1.05);}
+
+/* ─── NICK SECTION ─── */
+.nick-section{text-align:center;margin-bottom:22px;}
+#nicknameDisplay{font-size:26px;color:var(--green);letter-spacing:3px;text-shadow:0 0 10px rgba(0,255,0,.5);margin-bottom:6px;font-family:'Orbitron',monospace;}
+.change-name-row{display:flex;align-items:center;gap:8px;justify-content:center;}
+#nicknameEdit{display:none;background:#000;border:1px solid var(--green);color:var(--green);padding:6px 12px;border-radius:8px;font-family:monospace;font-size:14px;width:180px;outline:none;}
+#editNickBtn,#saveNickBtn{background:transparent;border:1px solid var(--border);color:var(--dark-green);padding:6px 14px;border-radius:16px;cursor:pointer;font-family:monospace;font-size:12px;transition:.2s;}
+#editNickBtn:hover,#saveNickBtn:hover{background:rgba(0,255,0,.1);color:var(--green);}
+#saveNickBtn{display:none;}
+
+/* ─── INFO ROW ─── */
+.info-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px;}
+.info-box{background:rgba(0,255,0,.04);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;}
+.info-label{font-size:10px;color:#558855;letter-spacing:2px;margin-bottom:6px;}
+.info-val{font-size:16px;color:var(--green);font-weight:bold;word-break:break-all;}
+.league-trainee{color:#aaa;}.league-developer{color:#00ddff;}.league-senior{color:#88ff00;}.league-hacker{color:#ff9900;}.league-master{color:#ff44aa;}.league-ace{animation:rainbowText 2s linear infinite;}
+
+/* ─── XP BAR ─── */
+.xp-section{margin-bottom:28px;}
+.xp-label{font-size:12px;color:#558855;margin-bottom:6px;}
+.xp-bar{height:10px;background:#0a0a0a;border-radius:6px;border:1px solid var(--border);overflow:hidden;}
+#xpFill{height:100%;width:0%;border-radius:6px;background:linear-gradient(to right,#006600,#00ff44);transition:width 1.5s ease;box-shadow:0 0 8px rgba(0,255,0,.5);}
+
+/* ─── SECTION HEADER ─── */
+.section-header{font-size:15px;color:var(--green);letter-spacing:2px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.section-header a{margin-left:auto;font-size:11px;color:var(--dark-green);text-decoration:none;border:1px solid var(--border);padding:4px 12px;border-radius:10px;transition:.2s;}
+.section-header a:hover{color:var(--green);border-color:var(--green);}
+
+/* ─── RINGS ─── */
+.rings-section{margin-bottom:28px;}
+.rings-wrap{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap;}
+.rings-legend{display:flex;flex-direction:column;gap:12px;}
+.legend-item{display:flex;align-items:center;gap:10px;font-size:13px;}
+.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.legend-val{color:var(--green);font-size:11px;margin-top:2px;}
+
+/* ─── ACHIEVEMENTS GRID ─── */
+.achieve-section{margin-bottom:28px;}
+#achieveGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;}
+#noAchievements{color:#2a5a2a;font-size:13px;text-align:center;padding:20px;letter-spacing:1px;grid-column:1/-1;}
+
+.ach-card{border-radius:14px;padding:16px 10px 12px;text-align:center;position:relative;transition:.25s;overflow:hidden;cursor:grab;}
+.ach-card:hover{transform:translateY(-2px);}
+.ach-card:active{cursor:grabbing;opacity:.75;}
+.ach-card.exploding{animation:explode .7s ease forwards;}
+.ach-card.t-bronze{background:linear-gradient(145deg,#1a0a00,#0d0500);border:1px solid rgba(205,127,50,.55);animation:bronzeShine 3s infinite;}
+.ach-card.t-silver{background:linear-gradient(145deg,#111,#080808);border:1px solid rgba(192,192,192,.45);animation:silverShine 3s infinite;}
+.ach-card.t-gold{background:linear-gradient(145deg,#1a1000,#0d0800);border:1px solid rgba(255,215,0,.6);animation:goldShine 3s infinite;}
+.ach-card.t-pro{background:linear-gradient(145deg,#1a0010,#0d0008);border:1px solid rgba(255,0,85,.65);animation:proShine 2s infinite;}
+.ach-card.t-legend{background:linear-gradient(145deg,#1a0020,#0d0015,#001520);border:1px solid var(--legend-a);animation:legendPulse 2.5s infinite;}
+.tier-ribbon{position:absolute;top:0;right:0;padding:3px 10px 3px 12px;font-size:8px;letter-spacing:1.5px;font-weight:bold;border-radius:0 14px 0 14px;}
+.rib-bronze{background:rgba(205,127,50,.2);color:var(--bronze);}
+.rib-silver{background:rgba(192,192,192,.15);color:var(--silver);}
+.rib-gold{background:rgba(255,215,0,.18);color:var(--gold);}
+.rib-pro{background:linear-gradient(90deg,rgba(255,0,85,.25),rgba(255,0,170,.12));color:var(--pro-a);}
+.rib-legend{background:linear-gradient(90deg,rgba(204,0,255,.3),rgba(255,68,170,.15));color:var(--legend-b);}
+.ach-icon{font-size:30px;margin-bottom:6px;display:block;}
+.ach-name{font-size:11px;color:#ccc;margin-bottom:5px;line-height:1.3;}
+.ach-tag-chip{font-size:8px;padding:1px 6px;border-radius:6px;border:1px solid;display:inline-block;margin-bottom:4px;letter-spacing:.5px;}
+.ach-tag-bronze{color:var(--bronze);border-color:rgba(205,127,50,.35);background:rgba(205,127,50,.07);}
+.ach-tag-silver{color:var(--silver);border-color:rgba(192,192,192,.3);background:rgba(192,192,192,.06);}
+.ach-tag-gold{color:var(--gold);border-color:rgba(255,215,0,.32);background:rgba(255,215,0,.07);}
+.ach-tag-pro{color:var(--pro-a);border-color:rgba(255,0,85,.32);background:rgba(255,0,85,.07);}
+.ach-tag-legend{color:var(--legend-b);border-color:rgba(204,0,255,.32);background:rgba(204,0,255,.07);}
+.tier-dots{display:flex;justify-content:center;gap:3px;margin:4px 0;}
+.tier-dot{width:7px;height:7px;border-radius:50%;border:1px solid #333;}
+.td-bronze{background:var(--bronze);border-color:var(--bronze);box-shadow:0 0 3px var(--bronze);}
+.td-silver{background:var(--silver);border-color:var(--silver);box-shadow:0 0 3px var(--silver);}
+.td-gold{background:var(--gold);border-color:var(--gold);box-shadow:0 0 4px var(--gold);}
+.td-pro{background:var(--pro-a);border-color:var(--pro-a);box-shadow:0 0 5px var(--pro-a);}
+.td-legend{background:var(--legend-a);border-color:var(--legend-a);box-shadow:0 0 6px var(--legend-a);}
+.ach-date{font-size:9px;color:#2a5a2a;margin-top:4px;}
+.drag-hint{font-size:8px;color:#1a3a1a;margin-top:2px;letter-spacing:.5px;}
+
+/* ─── COURSES ─── */
+.courses-section{margin-bottom:28px;}
+#coursesGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
+.course-card{background:rgba(0,0,0,.6);border:1px solid #1a1a1a;border-radius:12px;padding:14px 10px;text-align:center;transition:.3s;}
+.course-card.done{border-color:rgba(0,255,0,.4);}.course-card.not-done{opacity:.4;}
+.course-icon{font-size:28px;margin-bottom:6px;}.course-name{font-size:12px;color:#ccc;}.course-check{font-size:14px;margin-top:4px;}
+
+/* ─── FRIENDS ─── */
+.friends-section{margin-bottom:16px;}
+.friend-search-row{display:flex;gap:10px;margin-bottom:16px;}
+#friendUIDInput{flex:1;background:#000;border:1px solid var(--border);color:var(--green);padding:10px 14px;border-radius:8px;font-family:monospace;font-size:13px;outline:none;}
+#friendUIDInput:focus{border-color:var(--green);box-shadow:0 0 8px rgba(0,255,0,.3);}
+#addFriendBtn{padding:10px 18px;background:linear-gradient(to right,#006622,#00ff44);color:#000;border:none;border-radius:8px;cursor:pointer;font-family:monospace;font-weight:bold;transition:.2s;}
+#addFriendBtn:hover{transform:scale(1.05);}
+#friendsList{display:flex;flex-direction:column;gap:10px;}
+.friend-card{display:flex;align-items:center;gap:12px;background:rgba(0,255,0,.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;}
+.friend-avatar{font-size:28px;}.friend-name{font-size:14px;color:var(--green);}.friend-uid{font-size:11px;color:#558855;}
+#noFriends{color:#333;font-size:13px;font-style:italic;}
+
+/* ─── ACHIEVEMENT UNLOCK POPUP ─── */
+#achievePopup{
+  position:fixed;top:24px;right:24px;z-index:9998;
+  background:rgba(0,0,0,.97);border:2px solid var(--green);border-radius:16px;
+  padding:18px 24px;min-width:280px;box-shadow:0 0 30px rgba(0,255,0,.5);
+  transform:translateX(150%);transition:transform .5s cubic-bezier(.22,1,.36,1);
+  display:flex;align-items:center;gap:14px;pointer-events:none;
+}
+#achievePopup.show{transform:translateX(0);}
+.pop-icon{font-size:36px;}
+.pop-title{font-size:11px;color:var(--dark-green);letter-spacing:2px;}
+.pop-name{font-size:16px;color:var(--green);font-weight:bold;margin-top:2px;}
+.pop-tier{font-size:11px;margin-top:3px;}
+
+/* ─── BADGE SHOWCASE LABEL ─── */
+.badge-showcase-label{
+  text-align:center;font-size:9px;color:#2a5a2a;letter-spacing:2px;
+  margin-top:4px;margin-bottom:20px;
+}
+</style>
+</head>
+<body>
+<script src="config.js"></script>
+<script src="settings-apply.js"></script>
+<canvas id="matrixRain"></canvas>
+
+<!-- ACHIEVEMENT UNLOCK POPUP -->
+<div id="achievePopup">
+  <div class="pop-icon" id="popIcon">🎖️</div>
+  <div>
+    <div class="pop-title">🏆 ACHIEVEMENT UNLOCKED!</div>
+    <div class="pop-name" id="popName">Achievement Name</div>
+    <div class="pop-tier" id="popTier"></div>
+  </div>
+</div>
+
+<!-- BADGE PICKER MODAL -->
+<div id="badgePickerModal">
+  <div id="pickerBox">
+    <div class="picker-header">
+      <div class="picker-title">🎖️ SELECT BADGE FOR THIS SLOT</div>
+      <button class="picker-close" onclick="closePicker()">✕</button>
+    </div>
+    <div class="picker-grid" id="pickerGrid"></div>
+  </div>
+</div>
+
+<!-- CROP MODAL -->
+<div id="cropModal">
+  <div id="cropBox">
+    <h3>📸 Crop Your Photo</h3>
+    <div id="cropCanvasWrap"><canvas id="cropCanvas" width="320" height="320"></canvas></div>
+    <p>🖱️ Drag to reposition &nbsp;•&nbsp; Scroll to zoom</p>
+    <div class="crop-btns">
+      <button id="cancelCropBtn">✕ Cancel</button>
+      <button id="saveCropBtn">✓ Save Photo</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="photoFileInput" accept="image/*">
+
+<div class="profile-wrap">
+  <button id="backBtn">&#8592; Back to Learning</button>
+  <div class="profile-card">
+
+    <!-- ═══ AVATAR (centered, no badges) ═══ -->
+    <div class="photo-section" style="text-align:center;margin-bottom:16px;">
+      <div class="avatar-wrap" onclick="document.getElementById('photoFileInput').click()">
+        <div class="avatar-ring">
+          <img id="avatarImg" alt="Profile">
+          <span id="avatarPlaceholder">👤</span>
+        </div>
+      </div>
+      <button class="change-photo-btn" onclick="document.getElementById('photoFileInput').click()">📷 Change Photo</button>
+    </div>
+
+    <!-- ═══ NICKNAME ═══ -->
+    <div class="nick-section">
+      <div id="nicknameDisplay">Loading...</div>
+      <div class="change-name-row">
+        <input id="nicknameEdit" type="text" placeholder="New nickname..." maxlength="20">
+        <button id="editNickBtn" onclick="startEditNick()">✏️ Edit</button>
+        <button id="saveNickBtn" onclick="saveNickname()">✓ Save</button>
+      </div>
+    </div>
+
+    <!-- ═══ TITLE TAG SLOTS (Free Fire banner style) ═══ -->
+    <div class="army-badge-row">
+      <!-- LEFT TAG SLOT -->
+      <div class="army-badge-slot" id="slot-left" data-slot="0"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="dropBadge(event,0)"
+           onclick="openPicker(0)">
+        <!-- Banner SVG: horizontal tag with notched ends + side wings -->
+        <svg class="badge-shape-svg" viewBox="0 0 200 52" xmlns="http://www.w3.org/2000/svg" id="slot-left-svg">
+          <!-- Wing left -->
+          <polygon class="tag-svg-wing" points="0,26 14,14 18,26 14,38" fill="rgba(0,255,0,0.15)" stroke="rgba(0,255,0,0.4)" stroke-width="1"/>
+          <!-- Wing right -->
+          <polygon class="tag-svg-wing" points="200,26 186,14 182,26 186,38" fill="rgba(0,255,0,0.15)" stroke="rgba(0,255,0,0.4)" stroke-width="1"/>
+          <!-- Main body: notched left & right edges -->
+          <polygon class="tag-svg-body" points="14,4 186,4 196,26 186,48 14,48 4,26" fill="rgba(0,12,0,0.92)" stroke="rgba(0,255,0,0.55)" stroke-width="1.5"/>
+          <!-- Inner border -->
+          <polygon class="tag-svg-inner" points="17,8 183,8 191,26 183,44 17,44 9,26" fill="none" stroke="rgba(0,255,0,0.18)" stroke-width="1"/>
+          <!-- Corner accents -->
+          <line x1="14" y1="4" x2="22" y2="4" stroke="rgba(0,255,0,0.7)" stroke-width="2"/>
+          <line x1="186" y1="4" x2="178" y2="4" stroke="rgba(0,255,0,0.7)" stroke-width="2"/>
+          <line x1="14" y1="48" x2="22" y2="48" stroke="rgba(0,255,0,0.7)" stroke-width="2"/>
+          <line x1="186" y1="48" x2="178" y2="48" stroke="rgba(0,255,0,0.7)" stroke-width="2"/>
+        </svg>
+        <div class="army-slot-content" id="slot-left-content">
+          <div class="slot-empty-plus">+</div>
+          <div class="slot-empty-label">TITLE TAG</div>
+        </div>
+        <div class="slot-remove" onclick="event.stopPropagation();removeBadge(0)">✕</div>
+      </div>
+
+      <!-- RIGHT TAG SLOT -->
+      <div class="army-badge-slot" id="slot-right" data-slot="1"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="dropBadge(event,1)"
+           onclick="openPicker(1)">
+        <svg class="badge-shape-svg" viewBox="0 0 200 52" xmlns="http://www.w3.org/2000/svg" id="slot-right-svg">
+          <polygon class="tag-svg-wing" points="0,26 14,14 18,26 14,38" fill="rgba(0,255,0,0.15)" stroke="rgba(0,255,0,0.4)" stroke-width="1"/>
+          <polygon class="tag-svg-wing" points="200,26 186,14 182,26 186,38" fill="rgba(0,255,0,0.15)" stroke="rgba(0,255,0,0.4)" stroke-width="1"/>
+          <polygon class="tag-svg-body" points="14,4 186,4 196,26 186,48 14,48 4,26" fill="rgba(0,12,0,0.92)" stroke="rgba(0,255,0,0.55)" stroke-width="1.5"/>
+          <polygon class="tag-svg-inner" points="17,8 183,8 191,26 183,44 17,44 9,26" fill="none" stroke="rgba(0,255,0,0.18)" stroke-width="1"/>
+          <line x1="14" y1="4" x2="22" y2="4" stroke="rgba(0,255,0,0.7)" stroke-width="2"/>
+          <line x1="186" y1="4" x2="178" y2="4" stroke="rgba(0,255,0,0.7)" stroke-width="2"/>
+          <line x1="14" y1="48" x2="22" y2="48" stroke="rgba(0,255,0,0.7)" stroke-width="2"/>
+          <line x1="186" y1="48" x2="178" y2="48" stroke="rgba(0,255,0,0.7)" stroke-width="2"/>
+        </svg>
+        <div class="army-slot-content" id="slot-right-content">
+          <div class="slot-empty-plus">+</div>
+          <div class="slot-empty-label">TITLE TAG</div>
+        </div>
+        <div class="slot-remove" onclick="event.stopPropagation();removeBadge(1)">✕</div>
+      </div>
+    </div>
+    <div class="badge-showcase-label">⬆ DRAG FROM ACHIEVEMENTS OR CLICK TO PICK ⬆</div>
+
+    <!-- ═══ INFO ═══ -->
+    <div class="info-row">
+      <div class="info-box"><div class="info-label">UID</div><div class="info-val" id="uidDisplay">--</div></div>
+      <div class="info-box"><div class="info-label">LEAGUE</div><div class="info-val" id="leagueDisplay">--</div></div>
+      <div class="info-box"><div class="info-label">LEVEL</div><div class="info-val" id="levelDisplay">1</div></div>
+    </div>
+
+    <!-- ═══ XP BAR ═══ -->
+    <div class="xp-section">
+      <div class="xp-label">XP Progress: <span id="xpDisplay">0</span> / <span id="xpMax">1000</span></div>
+      <div class="xp-bar"><div id="xpFill"></div></div>
+    </div>
+
+    <!-- ═══ RINGS ═══ -->
+    <div class="rings-section">
+      <div class="section-header">📊 Activity Overview</div>
+      <div class="rings-wrap">
+        <div>
+          <svg id="ringSVG" viewBox="0 0 200 200" width="200" height="200">
+            <circle cx="100" cy="100" r="85" fill="none" stroke="#111" stroke-width="12"/>
+            <circle cx="100" cy="100" r="65" fill="none" stroke="#111" stroke-width="12"/>
+            <circle cx="100" cy="100" r="45" fill="none" stroke="#111" stroke-width="12"/>
+            <circle id="ring1" cx="100" cy="100" r="85" fill="none" stroke="#00ffcc" stroke-width="12" stroke-dasharray="534" stroke-dashoffset="534" stroke-linecap="round" transform="rotate(-90 100 100)" style="transition:stroke-dashoffset 1.5s ease;"/>
+            <circle id="ring2" cx="100" cy="100" r="65" fill="none" stroke="#00ff44" stroke-width="12" stroke-dasharray="408" stroke-dashoffset="408" stroke-linecap="round" transform="rotate(-90 100 100)" style="transition:stroke-dashoffset 1.8s ease .3s;"/>
+            <circle id="ring3" cx="100" cy="100" r="45" fill="none" stroke="#aaff00" stroke-width="12" stroke-dasharray="283" stroke-dashoffset="283" stroke-linecap="round" transform="rotate(-90 100 100)" style="transition:stroke-dashoffset 2s ease .6s;"/>
+            <text x="100" y="94" text-anchor="middle" fill="#00ffcc" font-size="20" font-family="monospace">🔥</text>
+            <text id="centerStreakText" x="100" y="113" text-anchor="middle" fill="#00ffcc" font-size="11" font-family="monospace">0 days</text>
+          </svg>
+        </div>
+        <div class="rings-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#00ffcc;box-shadow:0 0 6px #00ffcc;"></div><div><div>Login Streak</div><div class="legend-val" id="legendStreak">0 / 30 day goal</div></div></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#00ff44;box-shadow:0 0 6px #00ff44;"></div><div><div>Level Progress</div><div class="legend-val" id="legendXP">0 / 1000 XP</div></div></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#aaff00;box-shadow:0 0 6px #aaff00;"></div><div><div>Achievements</div><div class="legend-val" id="legendAchieve">0 / 55 unlocked</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ COMPLETED ACHIEVEMENTS (drag to slots) ═══ -->
+    <div class="achieve-section">
+      <div class="section-header">🎖️ Completed Achievements <a href="achievements.html">View All 55 →</a></div>
+      <div id="achieveGrid"><span id="noAchievements">No achievements unlocked yet. Start learning!</span></div>
+    </div>
+
+    <!-- ═══ COURSES ═══ -->
+    <div class="courses-section">
+      <div class="section-header">📚 Courses Completed</div>
+      <div id="coursesGrid"></div>
+    </div>
+
+    <!-- ═══ FRIENDS ═══ -->
+    <div class="friends-section">
+      <div class="section-header">👥 Friends</div>
+      <div class="friend-search-row">
+        <input id="friendUIDInput" type="text" placeholder="Enter friend's UID...">
+        <button id="addFriendBtn" onclick="addFriend()">Add +</button>
+      </div>
+      <div id="friendsList"><span id="noFriends">No friends added yet.</span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ── MATRIX RAIN ── */
+(function(){
+  const c=document.getElementById('matrixRain'),ctx=c.getContext('2d');
+  let ri=(window._matrixRainIntensity!==undefined?window._matrixRainIntensity:1);
+  window._setRainIntensity=v=>{ri=v;};
+  function resize(){c.width=innerWidth;c.height=innerHeight;}resize();
+  window.addEventListener('resize',()=>{resize();init();});
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*アイウエオカキク';
+  const fs=14;let cols,drops;
+  function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(0).map(()=>Math.floor(Math.random()*-50));}
+  init();
+  setInterval(()=>{
+    ctx.fillStyle=`rgba(0,0,0,${0.05/ri})`;ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px monospace';
+    if(Math.random()<ri*0.7||ri===1){
+      drops.forEach((d,i)=>{
+        ctx.fillStyle=d*fs<80?'#ccffcc':'#00ff00';
+        ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*fs,d*fs);
+        if(d*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;
+      });
+    }
+  },45);
+})();
+
+/* ── CONSTANTS ── */
+const TIERS=['Bronze','Silver','Gold','Pro','Legend'];
+const TIER_CARD=['t-bronze','t-silver','t-gold','t-pro','t-legend'];
+const RIB_CLASSES=['rib-bronze','rib-silver','rib-gold','rib-pro','rib-legend'];
+const DOT_CLASSES=['td-bronze','td-silver','td-gold','td-pro','td-legend'];
+const BS_CLASSES=['bs-bronze','bs-silver','bs-gold','bs-pro','bs-legend'];
+const TAG_CLASSES=['ach-tag-bronze','ach-tag-silver','ach-tag-gold','ach-tag-pro','ach-tag-legend'];
+const PARTICLE_COLORS={
+  Bronze:['#cd7f32','#a0522d','#daa520','#8b4513'],
+  Silver:['#c0c0c0','#e0e0e0','#ffffff','#a8a8a8'],
+  Gold:['#ffd700','#ffaa00','#fffaaa','#ff8c00'],
+  Pro:['#ff0055','#ff44aa','#ff00aa','#ffffff'],
+  Legend:['#cc00ff','#ff44aa','#ff88ff','#dd00cc'],
+};
+function tierColor(i){return['#cd7f32','#c0c0c0','#ffd700','#ff0055','#cc00ff'][i]||'#00ff00';}
+
+/* ── SAME 55 ACHIEVEMENTS AS achievements.html ── */
+const ACHIEVEMENTS=[
+  {id:1,name:'Daily Check-in',icon:'📅',cat:'Streak',tag:'STREAK MASTER',hasBadge:true,desc:'Log in consistently to power up your streak'},
+  {id:2,name:'Night Owl',icon:'🦉',cat:'Streak',tag:'NIGHT CODER',hasBadge:true,desc:'Code late into the night — the real hackers never sleep'},
+  {id:3,name:'Early Bird',icon:'🌅',cat:'Streak',tag:'DAWN CODER',hasBadge:true,desc:'Rise early, code first — the morning belongs to legends'},
+  {id:4,name:'Weekend Warrior',icon:'⚔️',cat:'Streak',tag:'WEEKEND GRIND',hasBadge:true,desc:'Even weekends belong to the grind'},
+  {id:5,name:'Perfect Month',icon:'🗓️',cat:'Streak',tag:'PERFECT RECORD',hasBadge:true,desc:'Not a single day missed — flawless discipline'},
+  {id:6,name:'Comeback Kid',icon:'🔄',cat:'Streak',tag:'PHOENIX RISER',hasBadge:true,desc:'You fell, you rose — stronger each time'},
+  {id:7,name:'Eternal Flame',icon:'🌈',cat:'Streak',tag:'UNDYING',hasBadge:false,desc:'Your fire never dies — 365 days of unstoppable commitment'},
+  {id:8,name:'Dedication',icon:'💎',cat:'Streak',tag:null,hasBadge:false,desc:'Sheer dedication separates the good from the legendary'},
+  {id:9,name:'Day One',icon:'🔓',cat:'Streak',tag:'OG MEMBER',hasBadge:true,desc:'Every legend has a first step'},
+  {id:10,name:'Grind Mode',icon:'⚡',cat:'Streak',tag:'NON-STOP',hasBadge:true,desc:'No days off. No excuses. Only progress.'},
+  {id:11,name:'Python Master',icon:'🐍',cat:'Learning',tag:'SNAKE CHARMER',hasBadge:true,desc:'Tame the serpent — Python bends to your will'},
+  {id:12,name:'Web Architect',icon:'🌐',cat:'Learning',tag:'WEB WIZARD',hasBadge:true,desc:'From HTML to JavaScript — you built the web'},
+  {id:13,name:'Language Collector',icon:'🎓',cat:'Learning',tag:'POLYGLOT',hasBadge:true,desc:'One language is a tool. Six is a superpower.'},
+  {id:14,name:'C Programmer',icon:'🔵',cat:'Learning',tag:'SYSTEM HACKER',hasBadge:true,desc:'The foundation of all. C is where the real ones start.'},
+  {id:15,name:'Java Champion',icon:'☕',cat:'Learning',tag:'JAVA KNIGHT',hasBadge:true,desc:'Write once, run anywhere — the Java way'},
+  {id:16,name:'Code Writer',icon:'✍️',cat:'Learning',tag:'AUTHOR OF CODE',hasBadge:true,desc:'Every great app began with a single line'},
+  {id:17,name:'Knowledge Base',icon:'📖',cat:'Learning',tag:'LIBRARIAN',hasBadge:false,desc:'Commands memorized. Concepts mastered.'},
+  {id:18,name:'Speed Learner',icon:'🚀',cat:'Learning',tag:'FAST TRACK',hasBadge:true,desc:'Others take months. You take days.'},
+  {id:19,name:'Algorithm Ace',icon:'🧮',cat:'Learning',tag:'ALGO GURU',hasBadge:true,desc:'Sorting, searching, solving — algorithms are your art'},
+  {id:20,name:'Debug Master',icon:'🐛',cat:'Learning',tag:'BUG SLAYER',hasBadge:true,desc:'Errors fear you. Bugs bow before your logic.'},
+  {id:21,name:'Full Stack Dev',icon:'🏗️',cat:'Learning',tag:'STACK MASTER',hasBadge:true,desc:'Front to back — you own the entire stack'},
+  {id:22,name:'Course Champion',icon:'🏅',cat:'Learning',tag:null,hasBadge:false,desc:'Completing courses is your superpower'},
+  {id:23,name:'Puzzle Hunter',icon:'🧩',cat:'Puzzle',tag:'ENIGMA SOLVER',hasBadge:true,desc:'Every puzzle is a door. You have all the keys.'},
+  {id:24,name:'Speed Solver',icon:'⏱️',cat:'Puzzle',tag:'FLASH MIND',hasBadge:true,desc:'Your brain processes faster than most computers'},
+  {id:25,name:'Flawless Mind',icon:'🌟',cat:'Puzzle',tag:'PERFECT SOLVE',hasBadge:true,desc:'No mistakes. No hints. Just pure cognitive power.'},
+  {id:26,name:'Logic King',icon:'👑',cat:'Puzzle',tag:'LOGIC LORD',hasBadge:true,desc:'Logic is your native language'},
+  {id:27,name:'Brain Flexer',icon:'🧠',cat:'Puzzle',tag:'GENIUS FLEX',hasBadge:true,desc:'Hard puzzles? Just warm-ups.'},
+  {id:28,name:'Puzzle Streak',icon:'🔢',cat:'Puzzle',tag:null,hasBadge:false,desc:'Solving every day keeps the mind sharp'},
+  {id:29,name:'Perfect Score',icon:'💯',cat:'Puzzle',tag:'100% CERTIFIED',hasBadge:true,desc:'100%. Not 99. Not 98. One hundred.'},
+  {id:30,name:'Puzzle Master',icon:'🏆',cat:'Puzzle',tag:'GRAND SOLVER',hasBadge:true,desc:'They call you when no one else can solve it'},
+  {id:31,name:'Connector',icon:'🤝',cat:'Social',tag:'NETWORK KING',hasBadge:true,desc:'Your network is your net worth'},
+  {id:32,name:'Social Butterfly',icon:'🦋',cat:'Social',tag:'PEOPLE MAGNET',hasBadge:true,desc:'Everyone knows you. Everyone follows you.'},
+  {id:33,name:'Community Star',icon:'⭐',cat:'Social',tag:'CROWD FAVORITE',hasBadge:true,desc:'Rising in the leaderboard — the community watches'},
+  {id:34,name:'Influencer',icon:'📢',cat:'Social',tag:'TREND SETTER',hasBadge:false,desc:'Your presence shapes the community'},
+  {id:35,name:'Recruiter',icon:'📩',cat:'Social',tag:'HEADHUNTER',hasBadge:true,desc:'You bring new talent to MATRIXON'},
+  {id:36,name:'Team Player',icon:'🫂',cat:'Social',tag:'SQUAD LEADER',hasBadge:true,desc:'Alone you go fast. Together you go far.'},
+  {id:37,name:'Global Citizen',icon:'🌍',cat:'Social',tag:'WORLD TRAVELER',hasBadge:true,desc:'Your reach spans the entire globe'},
+  {id:38,name:'Veteran',icon:'🎖️',cat:'Social',tag:'OLD GUARD',hasBadge:true,desc:'Time tested. Community trusted.'},
+  {id:39,name:'Rising Star',icon:'🌠',cat:'Level',tag:'ON THE RISE',hasBadge:true,desc:'Your trajectory is straight up'},
+  {id:40,name:'XP Hunter',icon:'💰',cat:'Level',tag:'XP FARMER',hasBadge:true,desc:'Where there is XP, you find it'},
+  {id:41,name:'Elite Status',icon:'💫',cat:'Level',tag:'ELITE TIER',hasBadge:true,desc:'The highest levels are your neighborhood'},
+  {id:42,name:'Power Leveler',icon:'🔝',cat:'Level',tag:'HYPER GROWER',hasBadge:true,desc:'Other players level once a month. You level daily.'},
+  {id:43,name:'Completionist',icon:'✅',cat:'Level',tag:'100% DONE',hasBadge:true,desc:'Half measures are not in your vocabulary'},
+  {id:44,name:'MATRIXON God',icon:'🌩️',cat:'Level',tag:'DIVINE LEVEL',hasBadge:false,desc:'Level 100. The absolute pinnacle.'},
+  {id:45,name:'XP Overflow',icon:'🌊',cat:'Level',tag:'OVERFLOW',hasBadge:true,desc:'Your XP bar just keeps overflowing'},
+  {id:46,name:'League Champion',icon:'🏆',cat:'Level',tag:'CHAMPION',hasBadge:true,desc:'Every league conquered. Every tier dominated.'},
+  {id:47,name:'Hacker Spirit',icon:'💀',cat:'Special',tag:'TRUE HACKER',hasBadge:true,desc:'The terminal is your weapon. Commands are your bullets.'},
+  {id:48,name:'Marathon Runner',icon:'🏃',cat:'Special',tag:'ENDURANCE',hasBadge:true,desc:'Hours fly by when you are in the zone'},
+  {id:49,name:'Overachiever',icon:'🎯',cat:'Special',tag:'OVERDRIVEN',hasBadge:true,desc:'Expectations? You shattered them on day one.'},
+  {id:50,name:'Speedrunner',icon:'⚡',cat:'Special',tag:'LIGHTNING FAST',hasBadge:true,desc:'Finish line? You crossed it before others started.'},
+  {id:51,name:'Self Expression',icon:'🎨',cat:'Special',tag:'IDENTITY',hasBadge:true,desc:'Your profile is a canvas. Paint your legacy.'},
+  {id:52,name:'Badge Collector',icon:'🏷️',cat:'Special',tag:'BADGE HOARDER',hasBadge:true,desc:'Every badge tells a story. Collect them all.'},
+  {id:53,name:'Night Scholar',icon:'🌙',cat:'Special',tag:'MIDNIGHT OIL',hasBadge:false,desc:'While the world sleeps, you build empires'},
+  {id:54,name:'Challenge Master',icon:'🎮',cat:'Special',tag:'CHALLENGER',hasBadge:true,desc:'Every challenge accepted. Every challenge conquered.'},
+  {id:55,name:'Legend Maker',icon:'🎆',cat:'Special',tag:'LEGENDARY',hasBadge:true,desc:'You do not just reach Legend. You define it.'},
+];
+const ACH_MAP={};ACHIEVEMENTS.forEach(a=>ACH_MAP[a.id]=a);
+
+/* ── BADGE SLOTS (2) ── */
+let badgeSlots=[null,null]; // [left, right]
+let activePickerSlot=null;
+let unlockedBadges=[];
+
+function loadBadgeState(){
+  const s=localStorage.getItem('matrixon_badge_slots_v2_'+username);
+  if(s)try{badgeSlots=JSON.parse(s);}catch(e){}
+}
+function saveBadgeState(){
+  localStorage.setItem('matrixon_badge_slots_v2_'+username,JSON.stringify(badgeSlots));
+}
+
+function renderBadgeSlot(slotIdx){
+  const id=slotIdx===0?'slot-left':'slot-right';
+  const el=document.getElementById(id);
+  const contentEl=document.getElementById(id+'-content');
+  const filled=badgeSlots[slotIdx];
+  // Reset tier classes but keep base army class
+  el.className='army-badge-slot';
+  if(filled){
+    const a=ACH_MAP[filled.achId];const ti=filled.tierIdx;
+    if(a){
+      const tierName=TIERS[ti];const col=tierColor(ti);
+      el.classList.add('has-badge',BS_CLASSES[ti]);
+      // Update SVG colors to match tier
+      const svgId=slotIdx===0?'slot-left-svg':'slot-right-svg';
+      const svgEl=document.getElementById(svgId);
+      if(svgEl){
+        svgEl.querySelectorAll('.tag-svg-body').forEach(p=>{p.setAttribute('stroke',col);p.setAttribute('fill',`rgba(0,6,0,0.93)`);});
+        svgEl.querySelectorAll('.tag-svg-wing').forEach(p=>{p.setAttribute('stroke',col);p.setAttribute('fill',col.replace(')',',0.2)').replace('rgb','rgba'));});
+        svgEl.querySelectorAll('.tag-svg-inner').forEach(p=>{p.setAttribute('stroke',col.replace(')',',0.3)').replace('rgb','rgba'));});
+        svgEl.querySelectorAll('line').forEach(l=>{l.setAttribute('stroke',col);});
+      }
+      // Show ONLY the title tag text — no icon/name/tier
+      const label=a.tag||a.name;
+      contentEl.innerHTML=`<div class="slot-tag-text" style="color:${col}">${label}</div>`;
+    }
+  }else{
+    contentEl.innerHTML=`<div class="slot-empty-plus">+</div><div class="slot-empty-label">${slotIdx===0?'LEFT':'RIGHT'}<br>BADGE</div>`;
+  }
+}
+function removeBadge(slotIdx){badgeSlots[slotIdx]=null;saveBadgeState();renderBadgeSlot(slotIdx);}
+function renderBadgeSlots(){renderBadgeSlot(0);renderBadgeSlot(1);}
+
+function dropBadge(e,slotIdx){
+  e.preventDefault();
+  document.getElementById(slotIdx===0?'slot-left':'slot-right').classList.remove('drag-over');
+  const d=e.dataTransfer.getData('text/plain');
+  if(!d)return;
+  try{
+    const {achId,tierIdx}=JSON.parse(d);
+    badgeSlots[slotIdx]={achId,tierIdx};
+    saveBadgeState();renderBadgeSlot(slotIdx);
+  }catch(err){}
+}
+
+function openPicker(slotIdx){
+  activePickerSlot=slotIdx;
+  const grid=document.getElementById('pickerGrid');
+  grid.innerHTML='';
+  if(!unlockedBadges.length){
+    grid.innerHTML='<div class="picker-empty">No badge-eligible achievements yet!<br>Complete achievements to earn badges.</div>';
+  }else{
+    unlockedBadges.forEach(({achId,tierIdx})=>{
+      const a=ACH_MAP[achId];if(!a)return;
+      const tierName=TIERS[tierIdx];const col=tierColor(tierIdx);
+      const tagHTML=a.tag?`<div class="picker-tag ${TAG_CLASSES[tierIdx]}" style="color:${col};border-color:${col}">${a.tag}</div>`:'';
+      const item=document.createElement('div');
+      item.className=`picker-item pi-${tierName.toLowerCase()}`;
+      item.innerHTML=`<div class="picker-icon">${a.icon}</div><div class="picker-name">${a.name}</div><div class="picker-tier-lbl" style="color:${col}">${tierName}</div>${tagHTML}`;
+      item.onclick=()=>{
+        badgeSlots[slotIdx]={achId,tierIdx};
+        saveBadgeState();renderBadgeSlot(slotIdx);closePicker();
+      };
+      grid.appendChild(item);
+    });
+  }
+  document.getElementById('badgePickerModal').classList.add('open');
+}
+function closePicker(){
+  document.getElementById('badgePickerModal').classList.remove('open');
+  activePickerSlot=null;
+}
+document.getElementById('badgePickerModal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('badgePickerModal'))closePicker();
+});
+
+/* ── PARTICLE EXPLOSION ── */
+function explodeParticles(x,y,tierName){
+  const cols=(PARTICLE_COLORS[tierName]||['#00ff00','#aaffaa']);
+  for(let i=0;i<60;i++){
+    const p=document.createElement('div');p.className='xp-particle';
+    const angle=Math.random()*Math.PI*2,dist=60+Math.random()*200;
+    const ex=Math.cos(angle)*dist,ey=Math.sin(angle)*dist;
+    const sz=4+Math.random()*8,color=cols[Math.floor(Math.random()*cols.length)];
+    p.style.cssText=`left:${x}px;top:${y}px;width:${sz}px;height:${sz}px;background:${color};box-shadow:0 0 6px ${color};--ex:${ex}px;--ey:${ey}px;`;
+    document.body.appendChild(p);setTimeout(()=>p.remove(),900);
+  }
+}
+
+/* ── API & STATE ── */
+const API = window.MATRIXON_API;
+const username=localStorage.getItem('matrixon_user')||'player';
+if (!username || username === 'player') { window.location.href = 'index.html'; }
+let profileData=null;
+
+const ALL_COURSES=[
+  {name:'Python',icon:'🐍'},{name:'JAVA',icon:'☕'},
+  {name:'HTML',icon:'🌐'},{name:'CSS',icon:'🎨'},
+  {name:'JavaScript',icon:'⚡'},{name:'C',icon:'🔵'}
+];
+
+function getLeague(lv){
+  if(lv>=71)return{name:'Ace Developer',cls:'league-ace'};
+  if(lv>=51)return{name:'Master Hacker',cls:'league-master'};
+  if(lv>=36)return{name:'Hacker',cls:'league-hacker'};
+  if(lv>=21)return{name:'Senior Developer',cls:'league-senior'};
+  if(lv>=11)return{name:'Developer',cls:'league-developer'};
+  return{name:'Trainee',cls:'league-trainee'};
+}
+function generateUID(u){const b=u.toLowerCase().replace(/[^a-z]/g,'').slice(0,6);const s=['!','@','#','$','_','.'];return b+s[Math.floor(Math.random()*s.length)]+Math.floor(10+Math.random()*90);}
+function generateNickname(u){const e=['y','ie','ster','z','x','Man','Pro','Dev'];const b=u.charAt(0).toUpperCase()+u.slice(1,4).toLowerCase();return b+e[Math.floor(Math.random()*e.length)];}
+
+async function loadProfile(){
+  try{
+    await fetch(`${API}/profile/setup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username})});
+    // Fetch profile AND achievement tiers in parallel — same tier source as achievements.html
+    const [profRes, achRes] = await Promise.all([
+      fetch(`${API}/profile/${username}`),
+      fetch(`${API}/achievements/tiers/${username}`)
+    ]);
+    profileData = await profRes.json();
+    // Override unlocked_achievements with the authoritative /achievements/tiers data
+    try {
+      const achData = await achRes.json();
+      if (Array.isArray(achData)) {
+        profileData.unlocked_achievements = achData.map(row => ({
+          achievement_id: row.achievement_id,
+          tier: row.tier ?? 0,
+          unlocked_at: row.unlocked_at || null
+        }));
+        // Seed the known-tiers map so the poller won't re-fire for existing unlocks
+        achData.forEach(row => { knownTiers[row.achievement_id] = row.tier ?? 0; });
+      }
+    } catch(e) { /* keep whatever the profile endpoint returned */ }
+    renderProfile(profileData);
+  }catch(e){
+    profileData={username,uid:generateUID(username),nickname:generateNickname(username),photo:null,level:1,xp:0,points:0,unlocked_achievements:[],courses_completed:[],friends:[],login_days:0};
+    renderProfile(profileData);
+  }
+}
+
+function renderProfile(p){
+  if(p.photo){document.getElementById('avatarImg').src=p.photo;document.getElementById('avatarImg').style.display='block';document.getElementById('avatarPlaceholder').style.display='none';}
+  document.getElementById('nicknameDisplay').textContent='✦ '+(p.nickname||p.username)+' ✦';
+  document.getElementById('uidDisplay').textContent=p.uid||'—';
+  const xpPerLevel=1000;
+  let lvl=p.level||1;
+  let totalXP=p.xp||0;
+  // Handle XP overflow: advance level for every full 1000 XP block
+  let xpIntoLevel=totalXP-((lvl-1)*xpPerLevel);
+  while(xpIntoLevel>=xpPerLevel){
+    xpIntoLevel-=xpPerLevel;
+    lvl++;
+  }
+  xpIntoLevel=Math.max(0,xpIntoLevel);
+  const xpNeeded=xpPerLevel;
+  const xpPct=Math.min(100,(xpIntoLevel/xpNeeded*100));
+  document.getElementById('levelDisplay').textContent=lvl;
+  const league=getLeague(lvl);
+  const ld=document.getElementById('leagueDisplay');ld.textContent=league.name;ld.className='info-val '+league.cls;
+  document.getElementById('xpDisplay').textContent=xpIntoLevel;document.getElementById('xpMax').textContent=xpNeeded;
+  setTimeout(()=>{document.getElementById('xpFill').style.width=xpPct+'%';},200);
+  const streak=p.login_days||0;
+  const rawUnlocked=p.unlocked_achievements||[];
+  // Count achievements where we have a valid tier entry from /achievements/tiers
+  const unlockedCount=rawUnlocked.filter(u=>(u.achievement_id||u)!==undefined).length;
+  setTimeout(()=>{
+    animateRing('ring1',streak,30,534);
+    animateRing('ring2',xpIntoLevel,xpNeeded,408);
+    animateRing('ring3',unlockedCount,55,283);
+    document.getElementById('centerStreakText').textContent=streak+' days';
+    document.getElementById('legendStreak').textContent=streak+' / 30 day goal';
+    document.getElementById('legendXP').textContent=xpIntoLevel+' / '+xpNeeded+' XP';
+    document.getElementById('legendAchieve').textContent=unlockedCount+' / 55 unlocked';
+  },400);
+  renderAchievements(rawUnlocked);
+  renderCourses(p.courses_completed||[]);
+  renderFriends(p.friends||[]);
+  // Build unlocked badges list for picker
+  unlockedBadges=rawUnlocked
+    .filter(u=>ACH_MAP[u.achievement_id||u]?.hasBadge)
+    .map(u=>({achId:u.achievement_id||u,tierIdx:u.tier??0}));
+  loadBadgeState();renderBadgeSlots();
+}
+
+function animateRing(id,current,max,circumference){
+  const ratio=Math.min(1,Math.max(0,current/max));
+  document.getElementById(id).style.strokeDashoffset=circumference*(1-ratio);
+}
+
+/* ── RENDER COMPLETED ACHIEVEMENTS ── */
+function renderAchievements(rawUnlocked){
+  const grid=document.getElementById('achieveGrid');
+  const noMsg=document.getElementById('noAchievements');
+  if(!rawUnlocked.length){if(noMsg)noMsg.style.display='block';return;}
+  if(noMsg)noMsg.style.display='none';
+  grid.innerHTML='';
+  rawUnlocked.forEach(u=>{
+    const achId=u.achievement_id||u;const tierIdx=u.tier??0;
+    const a=ACH_MAP[achId];if(!a)return;
+    const tierName=TIERS[tierIdx];const col=tierColor(tierIdx);
+    const dotsHTML=TIERS.map((_,i)=>`<div class="tier-dot ${i<=tierIdx?DOT_CLASSES[i]:''}"></div>`).join('');
+    const tagHTML=a.hasBadge&&a.tag
+      ?`<div class="ach-tag-chip ${TAG_CLASSES[tierIdx]}">${a.tag}</div>`:'';
+    const dateStr=u.unlocked_at?new Date(u.unlocked_at).toLocaleDateString():'';
+    const card=document.createElement('div');
+    card.className=`ach-card ${TIER_CARD[tierIdx]}`;
+    card.dataset.achId=achId;
+    if(a.hasBadge){
+      card.draggable=true;
+      card.title=`Drag to badge slot — ${a.desc}`;
+    }else{
+      card.title=a.desc;
+    }
+    card.innerHTML=`
+      <div class="tier-ribbon ${RIB_CLASSES[tierIdx]}">${tierName.toUpperCase()}</div>
+      <span class="ach-icon">${a.icon}</span>
+      <div class="ach-name">${a.name}</div>
+      ${tagHTML}
+      <div class="tier-dots">${dotsHTML}</div>
+      ${dateStr?`<div class="ach-date">✓ ${dateStr}</div>`:''}
+      ${a.hasBadge?'<div class="drag-hint">⇆ drag to badge slot</div>':''}
+    `;
+    if(a.hasBadge){
+      card.addEventListener('dragstart',e=>{
+        e.dataTransfer.setData('text/plain',JSON.stringify({achId:a.id,tierIdx}));
+        e.dataTransfer.effectAllowed='copy';
+      });
+    }
+    grid.appendChild(card);
+  });
+}
+
+/* ── SHOW UNLOCK POPUP + EXPLOSION ── */
+function showAchievementPopup(achId,tierIdx){
+  const a=ACH_MAP[achId];if(!a)return;
+  const col=tierColor(tierIdx);const tierName=TIERS[tierIdx];
+  document.getElementById('popIcon').textContent=a.icon;
+  document.getElementById('popName').textContent=a.name;
+  document.getElementById('popTier').innerHTML=`<span style="color:${col};font-weight:bold">${tierName} tier unlocked!</span>`;
+  const popup=document.getElementById('achievePopup');
+  popup.style.borderColor=col;popup.style.boxShadow=`0 0 30px ${col}66`;
+  popup.classList.add('show');
+  setTimeout(()=>popup.classList.remove('show'),4500);
+  // Particle burst on the card
+  const card=document.querySelector(`[data-ach-id="${achId}"]`);
+  if(card){
+    card.classList.add('exploding');
+    setTimeout(()=>card.classList.remove('exploding'),700);
+    const rect=card.getBoundingClientRect();
+    explodeParticles(rect.left+rect.width/2,rect.top+rect.height/2,tierName);
+  }else{
+    // Burst from center if card not visible yet
+    explodeParticles(window.innerWidth/2,window.innerHeight/2,tierName);
+  }
+  localStorage.setItem('matrixon_new_achievements','true');
+}
+
+/* ── POLL FOR NEW ACHIEVEMENTS ── */
+let knownTiers={};
+setInterval(async()=>{
+  try{
+    const r=await fetch(`${API}/achievements/tiers/${username}`);
+    const data=await r.json();if(!Array.isArray(data))return;
+    let hasNew=false;
+    data.forEach(row=>{
+      const prev=knownTiers[row.achievement_id]??-1;const curr=row.tier??0;
+      if(curr>prev){
+        showAchievementPopup(row.achievement_id,curr);
+        knownTiers[row.achievement_id]=curr;
+        hasNew=true;
+      }
+    });
+    // If anything changed, reload profile so achievement grid + rings + badge picker refresh
+    if(hasNew) loadProfile();
+  }catch(e){}
+},30000);
+
+/* ── COURSES ── */
+function renderCourses(completed){
+  const grid=document.getElementById('coursesGrid');grid.innerHTML='';
+  ALL_COURSES.forEach(c=>{
+    const done=completed.includes(c.name);
+    const card=document.createElement('div');
+    card.className='course-card '+(done?'done':'not-done');
+    card.innerHTML=`<div class="course-icon">${c.icon}</div><div class="course-name">${c.name}</div><div class="course-check">${done?'✅':'🔒'}</div>`;
+    grid.appendChild(card);
+  });
+}
+
+/* ── FRIENDS ── */
+function renderFriends(friends){
+  const list=document.getElementById('friendsList');const no=document.getElementById('noFriends');
+  if(!friends||!friends.length){if(no)no.style.display='block';return;}
+  if(no)no.style.display='none';list.innerHTML='';
+  friends.forEach(f=>{
+    const card=document.createElement('div');card.className='friend-card';
+    card.innerHTML=`<div class="friend-avatar">👤</div><div><div class="friend-name">${f.friend_username||f}</div><div class="friend-uid">${f.friend_uid||''}</div></div>`;
+    list.appendChild(card);
+  });
+}
+async function addFriend(){
+  const uid=document.getElementById('friendUIDInput').value.trim();if(!uid){alert('Enter a UID');return;}
+  try{const r=await fetch(`${API}/friends/add`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,friend_uid:uid})});const data=await r.json();if(data.success){document.getElementById('friendUIDInput').value='';loadProfile();}else alert(data.message||'Could not add friend');}
+  catch(e){alert('Server not reachable');}
+}
+
+/* ── NICKNAME EDIT ── */
+function startEditNick(){const inp=document.getElementById('nicknameEdit');inp.value=profileData?.nickname||username;inp.style.display='block';document.getElementById('editNickBtn').style.display='none';document.getElementById('saveNickBtn').style.display='inline-block';document.getElementById('nicknameDisplay').style.display='none';inp.focus();}
+async function saveNickname(){const val=document.getElementById('nicknameEdit').value.trim();if(!val||val.length<2){alert('Nickname too short');return;}try{await fetch(`${API}/profile/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,nickname:val})});}catch(e){}if(profileData)profileData.nickname=val;document.getElementById('nicknameDisplay').textContent='✦ '+val+' ✦';document.getElementById('nicknameDisplay').style.display='block';document.getElementById('nicknameEdit').style.display='none';document.getElementById('editNickBtn').style.display='inline-block';document.getElementById('saveNickBtn').style.display='none';}
+
+/* ── PHOTO CROP ── */
+let cropState={img:null,scale:1,x:0,y:0,dragging:false,lx:0,ly:0};
+const CROP_R=130,CW=320,CH=320;
+document.getElementById('photoFileInput').addEventListener('change',function(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){const img=new Image();img.onload=function(){cropState.img=img;const scale=Math.max(CW/img.width,CH/img.height);cropState.scale=scale;cropState.x=(CW-img.width*scale)/2;cropState.y=(CH-img.height*scale)/2;document.getElementById('cropModal').classList.add('show');renderCrop();};img.src=ev.target.result;};reader.readAsDataURL(file);e.target.value='';});
+function renderCrop(){const canvas=document.getElementById('cropCanvas'),ctx=canvas.getContext('2d');const cx=CW/2,cy=CH/2;ctx.clearRect(0,0,CW,CH);const img=cropState.img;ctx.drawImage(img,cropState.x,cropState.y,img.width*cropState.scale,img.height*cropState.scale);ctx.save();ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(0,0,CW,CH);ctx.globalCompositeOperation='destination-out';ctx.beginPath();ctx.arc(cx,cy,CROP_R,0,Math.PI*2);ctx.fill();ctx.restore();ctx.save();ctx.strokeStyle='#00ff00';ctx.lineWidth=2;ctx.shadowColor='#00ff00';ctx.shadowBlur=12;ctx.beginPath();ctx.arc(cx,cy,CROP_R,0,Math.PI*2);ctx.stroke();ctx.restore();}
+const cWrap=document.getElementById('cropCanvasWrap');cWrap.addEventListener('mousedown',e=>{cropState.dragging=true;cropState.lx=e.clientX;cropState.ly=e.clientY;});window.addEventListener('mousemove',e=>{if(!cropState.dragging)return;cropState.x+=e.clientX-cropState.lx;cropState.y+=e.clientY-cropState.ly;cropState.lx=e.clientX;cropState.ly=e.clientY;renderCrop();});window.addEventListener('mouseup',()=>cropState.dragging=false);cWrap.addEventListener('wheel',e=>{e.preventDefault();const delta=e.deltaY>0?-0.08:0.08;const newScale=Math.min(4,Math.max(0.3,cropState.scale+delta));const cx=CW/2,cy=CH/2;cropState.x=cx+(cropState.x-cx)*(newScale/cropState.scale);cropState.y=cy+(cropState.y-cy)*(newScale/cropState.scale);cropState.scale=newScale;renderCrop();},{passive:false});
+document.getElementById('saveCropBtn').onclick=function(){const out=document.createElement('canvas');out.width=240;out.height=240;const octx=out.getContext('2d');octx.save();octx.beginPath();octx.arc(120,120,120,0,Math.PI*2);octx.clip();const img=cropState.img,cx=CW/2,cy=CH/2;octx.drawImage(img,cropState.x-(cx-CROP_R),cropState.y-(cy-CROP_R),img.width*cropState.scale,img.height*cropState.scale);octx.restore();applyAndSavePhoto(out.toDataURL('image/jpeg',0.88));document.getElementById('cropModal').classList.remove('show');};
+document.getElementById('cancelCropBtn').onclick=function(){document.getElementById('cropModal').classList.remove('show');};
+async function applyAndSavePhoto(dataURL){document.getElementById('avatarImg').src=dataURL;document.getElementById('avatarImg').style.display='block';document.getElementById('avatarPlaceholder').style.display='none';try{await fetch(`${API}/profile/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,photo:dataURL})});}catch(e){}}
+
+document.getElementById('backBtn').onclick=()=>window.location.href='learning.html';
+loadProfile();
+fetch(`${API}/streak/record`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username})}).catch(()=>{});
+</script>
+</body>
+</html>
