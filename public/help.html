@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MATRIXON — Help Center</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --green:#00ff88;--blue:#00d4ff;--bg:#000508;
+      --card:rgba(0,255,136,0.04);--border:rgba(0,255,136,0.18);
+      --muted:rgba(0,255,136,0.5);--text:#c8ffe0;
+    }
+    body{
+      font-family:'Share Tech Mono','Courier New',monospace;
+      background:var(--bg);color:var(--text);
+      min-height:100vh;padding:80px 20px 60px;
+    }
+    canvas#rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.35;}
+
+    .wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;}
+
+    /* Header */
+    .page-header{text-align:center;margin-bottom:48px;}
+    .page-title{
+      font-size:clamp(24px,4vw,38px);letter-spacing:8px;
+      color:var(--green);text-shadow:0 0 20px rgba(0,255,136,0.4);
+      margin-bottom:10px;
+    }
+    .page-sub{font-size:13px;color:var(--muted);letter-spacing:2px;}
+
+    /* Search */
+    .search-wrap{
+      position:relative;margin-bottom:40px;
+    }
+    #helpSearch{
+      width:100%;padding:14px 20px 14px 44px;
+      background:rgba(0,0,0,0.7);border:1px solid var(--border);
+      border-radius:30px;color:var(--green);
+      font-family:'Share Tech Mono',monospace;font-size:14px;
+      outline:none;transition:.3s;
+    }
+    #helpSearch:focus{border-color:var(--green);box-shadow:0 0 16px rgba(0,255,136,0.2);}
+    #helpSearch::placeholder{color:rgba(0,255,136,0.3);}
+    .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;}
+
+    /* Category tabs */
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px;}
+    .tab{
+      padding:7px 18px;border-radius:20px;font-size:11px;letter-spacing:1.5px;
+      border:1px solid var(--border);background:transparent;
+      color:var(--muted);cursor:pointer;transition:.2s;
+      font-family:'Share Tech Mono',monospace;
+    }
+    .tab:hover,.tab.active{
+      border-color:var(--green);color:var(--green);
+      background:rgba(0,255,136,0.08);
+    }
+
+    /* FAQ accordion */
+    .faq-group{margin-bottom:32px;}
+    .faq-cat{
+      font-size:11px;letter-spacing:3px;color:var(--blue);
+      margin-bottom:14px;padding-bottom:8px;
+      border-bottom:1px solid rgba(0,212,255,0.2);
+    }
+    .faq-item{
+      border:1px solid var(--border);border-radius:12px;
+      margin-bottom:8px;overflow:hidden;
+      background:var(--card);transition:.2s;
+    }
+    .faq-item:hover{border-color:rgba(0,255,136,0.3);}
+    .faq-item.open{border-color:rgba(0,255,136,0.4);background:rgba(0,255,136,0.06);}
+    .faq-q{
+      padding:16px 20px;cursor:pointer;
+      display:flex;justify-content:space-between;align-items:center;
+      font-size:14px;color:var(--green);letter-spacing:.5px;
+      list-style:none;
+    }
+    .faq-q::-webkit-details-marker{display:none;}
+    .faq-arrow{
+      font-size:18px;color:var(--muted);transition:transform .3s;flex-shrink:0;
+    }
+    .faq-item.open .faq-arrow{transform:rotate(180deg);color:var(--green);}
+    .faq-a{
+      padding:0 20px 16px;font-size:13px;
+      color:rgba(0,255,136,0.75);line-height:1.8;
+    }
+    .faq-a a{color:var(--blue);text-decoration:none;}
+    .faq-a a:hover{text-decoration:underline;}
+    .faq-a code{
+      background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);
+      padding:2px 8px;border-radius:4px;font-size:12px;color:var(--blue);
+    }
+
+    /* No results */
+    #noResults{display:none;text-align:center;padding:48px;color:var(--muted);font-size:14px;}
+
+    /* Quick links */
+    .quick-links{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+      gap:12px;margin-bottom:40px;
+    }
+    .ql{
+      border:1px solid var(--border);border-radius:14px;
+      padding:18px;cursor:pointer;transition:.25s;
+      background:var(--card);text-align:center;
+      text-decoration:none;display:block;
+    }
+    .ql:hover{border-color:var(--green);background:rgba(0,255,136,0.08);transform:translateY(-3px);}
+    .ql-icon{font-size:28px;margin-bottom:8px;}
+    .ql-title{font-size:12px;color:var(--green);letter-spacing:1px;}
+    .ql-desc{font-size:11px;color:var(--muted);margin-top:4px;}
+
+    /* Contact CTA */
+    .contact-cta{
+      text-align:center;padding:32px;
+      border:1px solid var(--border);border-radius:16px;
+      background:var(--card);margin-top:20px;
+    }
+    .contact-cta p{font-size:13px;color:var(--muted);margin-bottom:16px;letter-spacing:.5px;}
+    .cta-btn{
+      display:inline-block;padding:12px 32px;
+      background:linear-gradient(to right,#00cc66,#00ff88);
+      color:#001208;font-weight:bold;font-size:13px;
+      border-radius:30px;text-decoration:none;letter-spacing:2px;
+      transition:.2s;
+    }
+    .cta-btn:hover{transform:scale(1.05);}
+  </style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<script src="config.js"></script>
+<script src="navbar.js"></script>
+<script src="sounds.js"></script>
+<script src="transitions.js"></script>
+
+<div class="wrap">
+  <div class="page-header">
+    <div class="page-title">❓ HELP CENTER</div>
+    <div class="page-sub">Everything you need to know about MATRIXON</div>
+  </div>
+
+  <!-- Quick links -->
+  <div class="quick-links">
+    <a class="ql" href="learning.html"><div class="ql-icon">⚡</div><div class="ql-title">START LEARNING</div><div class="ql-desc">Jump back to learning hub</div></a>
+    <a class="ql" href="courses.html"><div class="ql-icon">📚</div><div class="ql-title">COURSES</div><div class="ql-desc">Browse available courses</div></a>
+    <a class="ql" href="Settings.html"><div class="ql-icon">⚙</div><div class="ql-title">SETTINGS</div><div class="ql-desc">Customize your experience</div></a>
+    <a class="ql" href="contact.html"><div class="ql-icon">📨</div><div class="ql-title">CONTACT SUPPORT</div><div class="ql-desc">Report a bug or issue</div></a>
+  </div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input id="helpSearch" type="text" placeholder="Search help articles..." autocomplete="off">
+  </div>
+
+  <!-- Category tabs -->
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-cat="all">All</button>
+    <button class="tab" data-cat="account">Account</button>
+    <button class="tab" data-cat="learning">Learning</button>
+    <button class="tab" data-cat="xp">XP & Levels</button>
+    <button class="tab" data-cat="settings">Settings</button>
+    <button class="tab" data-cat="technical">Technical</button>
+  </div>
+
+  <div id="faqContainer"></div>
+  <div id="noResults">No articles found for your search. Try different keywords or <a href="contact.html" style="color:var(--blue)">contact support</a>.</div>
+
+  <div class="contact-cta">
+    <p>Can't find what you're looking for? Our support team is ready to help.</p>
+    <a class="cta-btn" href="contact.html">✉ CONTACT SUPPORT</a>
+  </div>
+</div>
+
+<script>
+MatrixAuth.requireAuth();
+
+/* Matrix rain */
+(function(){
+  const c=document.getElementById('rain'),ctx=c.getContext('2d');
+  function rs(){c.width=innerWidth;c.height=innerHeight;}rs();
+  addEventListener('resize',()=>{rs();init();});
+  const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%';
+  const fs=14;let cols,drops;
+  function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(0).map(()=>Math.floor(Math.random()*-40));}
+  init();
+  setInterval(()=>{
+    ctx.fillStyle='rgba(0,0,0,0.07)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px monospace';
+    drops.forEach((d,i)=>{
+      ctx.fillStyle='#00ff88';
+      ctx.fillText(ch[Math.floor(Math.random()*ch.length)],i*fs,d*fs);
+      if(d*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;
+    });
+  },50);
+})();
+
+const FAQ = [
+  {cat:'account', q:'How do I change my username or password?',
+   a:'Go to <a href="Settings.html">Settings</a> → Account tab. You can update your nickname there. Password resets are available on the login screen via the "Forgot Password" option.'},
+  {cat:'account', q:'How do I upload or change my profile photo?',
+   a:'Visit your <a href="profile.html">Profile</a> page and click on your avatar circle or the "Change Photo" button. You can upload any image (JPG/PNG) or choose from the built-in avatar picker.'},
+  {cat:'account', q:'How do I delete my account?',
+   a:'Go to <a href="Settings.html">Settings</a> → Account → scroll to the bottom. Click "Delete Account". This is permanent — all your XP, achievements, and progress will be erased.'},
+  {cat:'account', q:'How do I change my country?',
+   a:'Country is set once during onboarding. To change it, go to <a href="Settings.html">Settings</a> → Account. Your flag is displayed on the leaderboard.'},
+  {cat:'learning', q:'How does the daily streak work?',
+   a:'Log in every day to keep your streak alive. Your streak resets at midnight. You get a <code>Streak Warn</code> notification (if enabled) when you haven\'t logged in yet that day.'},
+  {cat:'learning', q:'What are the grace days setting?',
+   a:'Grace Days let you miss up to N consecutive days without losing your streak. Configure this in <a href="Settings.html">Settings</a> → Learning. Default is 3 grace days.'},
+  {cat:'learning', q:'How do I mute all sounds?',
+   a:'Open the avatar menu (top-right circle) and click the 🔊 Mute button. A red banner confirms mute is active. All audio and video on the page will be silenced immediately, including any content loaded after the button was clicked.'},
+  {cat:'learning', q:'Can I use MATRIXON offline?',
+   a:'Enable Offline Mode in <a href="Settings.html">Settings</a> → Data & Sync. Cached content will load from your browser, but XP and achievements won\'t sync until you reconnect.'},
+  {cat:'xp', q:'How is XP calculated?',
+   a:'You earn XP by completing lessons, courses, and daily login streaks. Bonus XP is awarded for finishing in the top 3 of the weekly leaderboard (20 XP). XP resets weekly and monthly for competitive tracking, but your total XP always increases.'},
+  {cat:'xp', q:'How do leagues work?',
+   a:'Your league is determined by your level: Trainee (1–10), Developer (11–20), Senior Developer (21–35), Hacker (36–50), Master Hacker (51–70), Ace Developer (71+). League unlocks visual themes throughout the app.'},
+  {cat:'xp', q:'Why did my weekly XP reset?',
+   a:'Weekly XP resets every Monday at midnight to keep the leaderboard competitive. Your total XP and level are never reset — only the weekly and monthly counters used for rankings.'},
+  {cat:'xp', q:'How do I unlock achievements?',
+   a:'Achievements are unlocked automatically when you hit milestones (login streaks, courses completed, puzzles solved, level thresholds). Check <a href="achievements.html">Achievements</a> to see your progress toward each badge.'},
+  {cat:'settings', q:'What does Zen Mode do?',
+   a:'Zen Mode hides the sidebar, progress bars, and navigation extras so you can focus on the lesson content. Toggle it in <a href="Settings.html">Settings</a> → Display.'},
+  {cat:'settings', q:'How do I increase text size?',
+   a:'Go to <a href="Settings.html">Settings</a> → Accessibility → Font Size slider. Changes apply immediately across all pages (12px–24px range).'},
+  {cat:'settings', q:'What is Commute Mode?',
+   a:'Commute Mode optimises the UI for one-handed phone use and reduces animations. Useful if you\'re learning on the go.'},
+  {cat:'settings', q:'How do I enable dyslexia-friendly font?',
+   a:'Go to <a href="Settings.html">Settings</a> → Accessibility → toggle Dyslexia-Friendly Font. This applies OpenDyslexic with wider letter spacing across the entire app.'},
+  {cat:'technical', q:'The app is showing "Server Offline" banner — what do I do?',
+   a:'The yellow banner means your browser can\'t reach the MATRIXON server. Your settings are still loaded from cache. Check your internet connection. If the server is down, it will auto-reconnect — you don\'t need to do anything.'},
+  {cat:'technical', q:'My ping shows "—" instead of a number.',
+   a:'This means the ping check failed — either you\'re offline or the server is unreachable. It auto-retries every 5 seconds.'},
+  {cat:'technical', q:'Why does my XP not update immediately on the leaderboard?',
+   a:'XP is written to the server in real time, but the leaderboard fetches a fresh snapshot on each page load. Reload the Leaderboard page to see the latest standings.'},
+  {cat:'technical', q:'The page looks broken on my phone.',
+   a:'Use the hamburger menu (top-left) to navigate on mobile. If layout issues persist, try refreshing or clearing your browser cache (Ctrl+Shift+R / Cmd+Shift+R).'},
+];
+
+let activeCat = 'all';
+let searchTerm = '';
+
+function buildHTML(items) {
+  if (!items.length) {
+    document.getElementById('noResults').style.display = 'block';
+    document.getElementById('faqContainer').innerHTML = '';
+    return;
+  }
+  document.getElementById('noResults').style.display = 'none';
+
+  const cats = activeCat === 'all'
+    ? [...new Set(items.map(i=>i.cat))]
+    : [activeCat];
+
+  const catLabels = {
+    account:'👤 Account & Profile', learning:'⚡ Learning & Streaks',
+    xp:'🏆 XP, Levels & Leagues', settings:'⚙ Settings & Customisation',
+    technical:'🔧 Technical Issues'
+  };
+
+  let html = '';
+  cats.forEach(cat => {
+    const group = items.filter(i=>i.cat===cat);
+    if (!group.length) return;
+    html += `<div class="faq-group">`;
+    if (activeCat === 'all') html += `<div class="faq-cat">${catLabels[cat]||cat.toUpperCase()}</div>`;
+    group.forEach((item,idx) => {
+      const id = cat+idx;
+      html += `
+        <div class="faq-item" id="fi-${id}">
+          <div class="faq-q" onclick="toggle('${id}')">
+            <span>${item.q}</span>
+            <span class="faq-arrow" id="arr-${id}">▾</span>
+          </div>
+          <div class="faq-a" id="fa-${id}" style="display:none">${item.a}</div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('faqContainer').innerHTML = html;
+}
+
+function toggle(id) {
+  const item = document.getElementById('fi-'+id);
+  const ans  = document.getElementById('fa-'+id);
+  const open = item.classList.contains('open');
+  item.classList.toggle('open', !open);
+  ans.style.display = open ? 'none' : 'block';
+}
+
+function render() {
+  let items = FAQ;
+  if (activeCat !== 'all') items = items.filter(i=>i.cat===activeCat);
+  if (searchTerm) {
+    const q = searchTerm.toLowerCase();
+    items = items.filter(i=>i.q.toLowerCase().includes(q)||i.a.toLowerCase().includes(q));
+  }
+  buildHTML(items);
+}
+
+document.getElementById('helpSearch').addEventListener('input', function(){
+  searchTerm = this.value.trim();
+  render();
+});
+
+document.getElementById('tabs').addEventListener('click', function(e){
+  const btn = e.target.closest('.tab');
+  if (!btn) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  activeCat = btn.dataset.cat;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

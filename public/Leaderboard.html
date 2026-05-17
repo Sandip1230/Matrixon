@@ -31,12 +31,6 @@
 
     /* ══ TOP BAR ══ */
     .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
-    #backBtn{
-      padding:9px 18px;background:#000;border:1px solid var(--green);color:var(--green);
-      border-radius:10px;cursor:pointer;font-family:monospace;font-size:13px;transition:.25s;
-    }
-    #backBtn:hover{background:var(--green);color:#000;}
-    .lb-title{font-size:22px;letter-spacing:4px;text-shadow:0 0 12px var(--green);}
     #refreshBtn{
       padding:9px 18px;background:rgba(0,255,0,0.08);border:1px solid var(--border);
       color:var(--green);border-radius:10px;cursor:pointer;font-family:monospace;font-size:13px;
@@ -211,6 +205,8 @@
 </head>
 <body>
 <script src="config.js"></script>
+<script src="navbar.js"></script>
+<script src="sounds.js"></script>
 <script src="settings-apply.js"></script>
 <canvas id="rain"></canvas>
 <div id="toastBox"></div>
@@ -218,7 +214,6 @@
 <div class="lb-wrap">
   <!-- Top bar -->
   <div class="top-bar">
-    <button id="backBtn" onclick="window.location.href='learning.html'">&#8592; Learning</button>
     <div class="lb-title">⚡ LEADERBOARD</div>
     <button id="refreshBtn" onclick="fullRefresh()"><span>↻</span> Refresh</button>
   </div>

@@ -34,40 +34,7 @@
     }
 
     /* ── TOP NAV BAR ── */
-    #topNav {
-      position: fixed; top: 0; left: 0; right: 0;
-      height: 58px;
-      background: rgba(0,5,2,0.92);
-      border-bottom: 1px solid rgba(0,255,136,0.15);
-      backdrop-filter: blur(12px);
-      z-index: 900;
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      gap: 16px;
-      box-shadow: 0 2px 30px rgba(0,255,136,0.06);
-    }
 
-    #backBtn {
-      display: flex; align-items: center; gap: 7px;
-      padding: 7px 16px;
-      background: transparent;
-      border: 1px solid rgba(0,255,136,0.3);
-      color: rgba(0,255,136,0.7);
-      cursor: pointer;
-      border-radius: 6px;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 12px;
-      letter-spacing: 1px;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    #backBtn:hover {
-      border-color: var(--g);
-      color: var(--g);
-      background: rgba(0,255,136,0.05);
-    }
-    #backBtn::before { content: '←'; font-size: 14px; }
 
     #navBrand {
       font-family: 'Orbitron', monospace;
@@ -860,61 +827,14 @@
   </style>
 </head>
 <body>
+<script src="config.js"></script>
 <script src="settings-apply.js"></script>
+<script src="sounds.js"></script>
+<script src="transitions.js"></script>
 
 <canvas id="matrixRain"></canvas>
 <div id="muteBar">🔇 &nbsp;MUTED — open the avatar menu and click Mute to restore</div>
 <div id="acctOverlay" onclick="closeAcctMenu()"></div>
-
-<!-- ══ TOP NAV BAR ══ -->
-<nav id="topNav">
-  <button id="backBtn">Back to Login</button>
-
-  <div id="navBrand">MATRIX<span>ON</span></div>
-
-  <div id="navStatus">
-    <div class="nav-dot"></div>
-    <span>SYS ONLINE</span>
-  </div>
-
-  <!-- Account button lives in the nav now -->
-  <div id="acctWrap">
-    <div id="acctRing"></div>
-    <div id="acctCommandStrip">
-      <div class="rb" id="rb-switch" onclick="switchAccount()" title="Switch Account">
-        <span class="rb-icon">⇄</span>
-        <span class="rb-label">SWITCH ACCOUNT</span>
-        <span class="rb-arrow">▶</span>
-      </div>
-      <div class="rb" id="rb-mute" onclick="toggleMute()" title="Toggle Mute">
-        <span class="rb-icon" id="muteIcon">🔊</span>
-        <span class="rb-label" id="muteLabel">MUTE AUDIO</span>
-        <span class="rb-arrow">▶</span>
-      </div>
-      <div class="rb" id="rb-logout" onclick="logOut()" title="Logout">
-        <span class="rb-icon">⏏</span>
-        <span class="rb-label">LOGOUT</span>
-        <span class="rb-arrow">▶</span>
-      </div>
-      <div class="rb" id="rb-exit" onclick="exitApp()" title="Exit App">
-        <span class="rb-icon">✕</span>
-        <span class="rb-label">EXIT APP</span>
-        <span class="rb-arrow">▶</span>
-      </div>
-    </div>
-    <div id="acctBtn" onclick="toggleAcctMenu()">
-      <div id="acctStripe"></div>
-      <div id="acctAvatarCircle">
-        <img id="acctAvatarImg" alt="">
-        <span id="acctAvatarDefault">👤</span>
-      </div>
-      <div id="acctTextBlock">
-        <div id="acctNameLine" id="acctLabel">AGENT</div>
-        <div id="acctStatusLine"><span class="acct-ping"></span>ONLINE</div>
-      </div>
-    </div>
-  </div>
-</nav>
 
 <!-- ══ SIDEBAR ══ -->
 <div id="sidebarArrow" onclick="toggleSidebar()">&#10095;</div>
@@ -1129,6 +1049,17 @@ function logOut(){ closeAcctMenu(); localStorage.removeItem('matrixon_user'); wi
 function exitApp(){ closeAcctMenu(); addLine('&gt; Closing MATRIXON... Goodbye. 👋','sys'); setTimeout(()=>{ window.close(); setTimeout(()=>window.location.href='index.html',600); },800); }
 function toggleMute(){ isMuted=!isMuted; localStorage.setItem('matrixon_muted',isMuted?'1':'0'); applyMuteState(isMuted); closeAcctMenu(); }
 function applyMuteState(m){ document.getElementById('muteIcon').textContent=m?'🔇':'🔊'; document.getElementById('muteLabel').textContent=m?'UNMUTE AUDIO':'MUTE AUDIO'; document.getElementById('rb-mute').classList.toggle('muted-on',m); document.getElementById('muteBar').classList.toggle('show',m); document.querySelectorAll('audio,video').forEach(el=>el.muted=m); }
+/* FIX #10: watch for dynamically injected audio/video and mute them immediately */
+(function(){
+  const obs=new MutationObserver(muts=>{
+    muts.forEach(m=>m.addedNodes.forEach(n=>{
+      if(n.nodeType!==1)return;
+      if(n.matches&&n.matches('audio,video'))n.muted=isMuted;
+      n.querySelectorAll&&n.querySelectorAll('audio,video').forEach(el=>el.muted=isMuted);
+    }));
+  });
+  obs.observe(document.body,{childList:true,subtree:true});
+})();
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&acctOpen)closeAcctMenu();});
 
 /* ══ SIDEBAR ══ */
@@ -1158,6 +1089,7 @@ async function loadSidebarProfile(){
 
 /* ══ ACHIEVEMENT TOAST ══ */
 function triggerAchievement(name, icon='🏅'){
+  if(window.MatrixSounds) MatrixSounds.achievement(); // 🔊 SFX
   const av=document.getElementById('panelPicWrap');
   av.classList.remove('explode-effect'); void av.offsetWidth; av.classList.add('explode-effect');
   av.addEventListener('animationend',()=>av.classList.remove('explode-effect'),{once:true});
@@ -1237,7 +1169,7 @@ const builtins={
   'learn c'(){askAI('Give a 4-line terminal-style introduction to C programming for beginners with one tip. Plain text only, no markdown.');},
   'logic puzzles'(){askAI('Give me one short fun logic puzzle to solve. Under 5 lines. Plain text only.');},
   'engineering basics'(){askAI('Give a 4-line terminal-style intro to engineering fundamentals. Plain text only.');},
-  'basic electronics'(){askAI('Give a 4-line terminal-style intro to basic electronics. Plain text only.');},
+  'basic electronics'(){ startElectronicsGame(); },
   'play game'(){addLine('&gt; ── NUMBER GUESS GAME STARTED ──','sys');addLine('&gt; I picked a number between 1 and 100.','sys');addLine('&gt; Type your guess and press Enter!','sys');window._game={secret:Math.floor(Math.random()*100)+1,tries:0};window._gameMode=true;},
   'courses'(){addLine('&gt; Launching Course Lab...','sys');setTimeout(()=>glitchNavigate('courses.html'),600);}
 };
@@ -1257,6 +1189,14 @@ function runCmd(raw){
   const trimmed=raw.trim();if(!trimmed)return;
   const lower=trimmed.toLowerCase();
   addLine('&gt; '+trimmed,'usr');
+
+  // Electronics game handler takes priority
+  if(window._gameMode && window._gameHandler){
+    const handled = window._gameHandler(trimmed);
+    if(handled) return;
+  }
+
+  // Number guess game
   if(window._gameMode&&window._game){
     const guess=parseInt(lower);
     if(isNaN(guess)){addLine('&gt; Enter a number 1-100.','err');return;}
@@ -1269,29 +1209,814 @@ function runCmd(raw){
   else askAI(trimmed+' — Answer in 4 lines max, plain text only, no markdown.');
 }
 function injectCmd(cmd){runCmd(cmd);cmdInput.focus();}
+
+/* ══════════════════════════════════════════════════════════════════
+   BASIC ELECTRONICS — TERMINAL GAME ENGINE
+   RPG-style quest through electronics, fully inside the terminal.
+   No external UI — pure terminal text + interactive prompts.
+   ══════════════════════════════════════════════════════════════════ */
+
+window._elec = null; // game state
+
+const ELEC_CHAPTERS = [
+  {
+    id: 1, title: 'VOLTAGE — The Force Awakens',
+    story: [
+      '╔══════════════════════════════════════════════════════╗',
+      '║   CHAPTER 1 · VOLTAGE — THE FORCE AWAKENS           ║',
+      '╚══════════════════════════════════════════════════════╝',
+      '',
+      '  You are a lone electron deep inside a copper wire.',
+      '  A mysterious FORCE is pushing you forward.',
+      '  That force is called VOLTAGE (V).',
+      '',
+      '  ⚡ VOLTAGE = electrical pressure = Volts (V)',
+      '  Think of it like water pressure in a pipe.',
+      '  Higher voltage → more push → more electrons moving.',
+      '',
+      '  A 9V battery pushes electrons with 9 volts of force.',
+      '  A phone charger uses ~5V. Your wall socket: 220V.',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ],
+    quiz: {
+      q: '  MISSION: A battery has 12V. A USB cable has 5V.\n  Which one pushes electrons with MORE force?',
+      choices: ['A) USB Cable (5V)', 'B) Battery (12V)', 'C) Both are equal'],
+      answer: 1, // index B
+      hint: 'Higher number = more electrical pressure.',
+      win:  'CORRECT! 12V > 5V. The battery pushes harder. +50 XP ⚡',
+      fail: 'Not quite. Voltage is like pressure — higher number = stronger push.',
+    }
+  },
+  {
+    id: 2, title: 'CURRENT — The River of Electrons',
+    story: [
+      '╔══════════════════════════════════════════════════════╗',
+      '║   CHAPTER 2 · CURRENT — THE RIVER OF ELECTRONS      ║',
+      '╚══════════════════════════════════════════════════════╝',
+      '',
+      '  Voltage pushes electrons. But HOW MANY flow per second?',
+      '  That\'s CURRENT — measured in Amperes (A) or milliamps (mA).',
+      '',
+      '  💧 CURRENT = flow rate of electrons = Amperes (A)',
+      '  Like how much water flows through a pipe per second.',
+      '',
+      '  A phone charger: ~1–2A',
+      '  An LED: ~0.02A (20mA)',
+      '  A microwave: ~8–10A',
+      '  A lightning bolt: ~30,000A (!)',
+      '',
+      '  More current = more electrons flowing = more power delivered.',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ],
+    quiz: {
+      q: '  MISSION: Your circuit has 2 paths.\n  Path A lets 500mA through. Path B lets 50mA through.\n  Which path carries MORE current?',
+      choices: ['A) Path B (50mA)', 'B) Path A (500mA)', 'C) They carry the same'],
+      answer: 1,
+      hint: 'milliamps (mA) — higher number = more flow.',
+      win:  'CORRECT! 500mA > 50mA. Path A is the high-current superhighway. +50 XP ⚡',
+      fail: 'Remember: mA is milliamps. 500 > 50. Path A wins.',
+    }
+  },
+  {
+    id: 3, title: "RESISTANCE — The Gatekeeper",
+    story: [
+      '╔══════════════════════════════════════════════════════╗',
+      '║   CHAPTER 3 · RESISTANCE — THE GATEKEEPER           ║',
+      '╚══════════════════════════════════════════════════════╝',
+      '',
+      '  Something is slowing the electrons down.',
+      '  It\'s RESISTANCE — measured in Ohms (Ω).',
+      '',
+      '  🚧 RESISTANCE = opposition to current flow = Ohms (Ω)',
+      '  Like a narrow section of pipe that limits water flow.',
+      '',
+      '  Copper wire: near 0Ω  (electrons flow freely)',
+      '  Resistor:    100Ω–10kΩ (limits current on purpose)',
+      '  Rubber:      near ∞Ω  (electrons can\'t pass at all)',
+      '',
+      '  Resistors PROTECT components from too much current.',
+      '  That\'s why LEDs always need a resistor in series!',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ],
+    quiz: {
+      q: '  MISSION: You connect an LED directly to 9V with no resistor.\n  What happens to the LED?',
+      choices: ['A) It glows brighter', 'B) Nothing changes', 'C) It burns out instantly'],
+      answer: 2,
+      hint: 'No resistance = no current limit = too much current.',
+      win:  'CORRECT! Without resistance, too much current flows → LED burns out. +50 XP ⚡',
+      fail: 'Think: no resistance = unlimited current. That destroys the LED.',
+    }
+  },
+  {
+    id: 4, title: "OHM'S LAW — The Sacred Equation",
+    story: [
+      '╔══════════════════════════════════════════════════════╗',
+      "║   CHAPTER 4 · OHM'S LAW — THE SACRED EQUATION       ║",
+      '╚══════════════════════════════════════════════════════╝',
+      '',
+      '  Georg Ohm discovered the relationship between V, I, and R.',
+      '',
+      '  ⚡ OHM\'S LAW:   V = I × R',
+      '',
+      '     V = Voltage (Volts)',
+      '     I = Current (Amperes)',
+      '     R = Resistance (Ohms)',
+      '',
+      '  Rearranged:',
+      '     I = V ÷ R   (current = voltage divided by resistance)',
+      '     R = V ÷ I   (resistance = voltage divided by current)',
+      '',
+      '  EXAMPLE: 9V battery, 100Ω resistor',
+      '     I = 9 ÷ 100 = 0.09A = 90mA',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ],
+    quiz: {
+      q: "  MISSION: A circuit has 12V across a 300Ω resistor.\n  Calculate the current. Type the number only (in mA).",
+      choices: null, // free input quiz
+      answer: '40',
+      hint: 'I = V ÷ R = 12 ÷ 300 = 0.04A = 40mA',
+      win:  'CORRECT! I = 12÷300 = 0.04A = 40mA. Ohm\'s Law mastered. +75 XP ⚡',
+      fail: 'Use I = V ÷ R. I = 12 ÷ 300 = 0.04A = 40mA.',
+    }
+  },
+  {
+    id: 5, title: 'CIRCUIT TYPES — Series vs Parallel',
+    story: [
+      '╔══════════════════════════════════════════════════════╗',
+      '║   CHAPTER 5 · CIRCUIT TYPES — SERIES vs PARALLEL    ║',
+      '╚══════════════════════════════════════════════════════╝',
+      '',
+      '  SERIES CIRCUIT: components chained one after another.',
+      '  ┌─[R1]─[R2]─[LED]─┐',
+      '  └──────────────────┘',
+      '  • Same current through all',
+      '  • Voltage splits across each component',
+      '  • One break = whole circuit dies (old Christmas lights!)',
+      '',
+      '  PARALLEL CIRCUIT: components on separate branches.',
+      '  ┌─[R1]─┐',
+      '  ├─[R2]─┤',
+      '  └─[LED]─┘',
+      '  • Same voltage across all branches',
+      '  • Current splits across branches',
+      '  • One branch breaks = others keep working',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ],
+    quiz: {
+      q: '  MISSION: Your house lights stay on even when one bulb dies.\n  What type of circuit powers your house?',
+      choices: ['A) Series', 'B) Parallel', 'C) Neither'],
+      answer: 1,
+      hint: 'If one fails and others survive — they must be independent.',
+      win:  'CORRECT! Houses use PARALLEL wiring. Each light is independent. +50 XP ⚡',
+      fail: 'In series, one break kills all. Houses use parallel — each branch is independent.',
+    }
+  },
+  {
+    id: 6, title: 'COMPONENTS — Meet the Team',
+    story: [
+      '╔══════════════════════════════════════════════════════╗',
+      '║   CHAPTER 6 · COMPONENTS — MEET THE TEAM            ║',
+      '╚══════════════════════════════════════════════════════╝',
+      '',
+      '  The heroes of every circuit:',
+      '',
+      '  🔲 RESISTOR   — limits current, drops voltage',
+      '  ⚡ CAPACITOR  — stores charge, releases in bursts',
+      '                  (like a tiny rechargeable battery)',
+      '  🔁 INDUCTOR   — stores energy in magnetic field,',
+      '                  resists changes in current',
+      '  💡 LED        — emits light when current flows',
+      '                  (needs resistor! one-way only)',
+      '  🔀 TRANSISTOR — electronic switch / amplifier',
+      '                  (the basis of all computers)',
+      '  🔋 DIODE      — lets current flow ONE way only',
+      '                  (like a one-way valve)',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ],
+    quiz: {
+      q: '  MISSION: You need to allow current to flow in only ONE direction.\n  Which component do you use?',
+      choices: ['A) Resistor', 'B) Capacitor', 'C) Diode'],
+      answer: 2,
+      hint: 'One-way valve for electrons.',
+      win:  'CORRECT! A DIODE is a one-way gate for current. +50 XP ⚡',
+      fail: 'The DIODE only lets current flow one way — like a one-way valve.',
+    }
+  },
+  {
+    id: 7, title: 'POWER — The Final Boss',
+    story: [
+      '╔══════════════════════════════════════════════════════╗',
+      '║   CHAPTER 7 · POWER — THE FINAL BOSS                ║',
+      '╚══════════════════════════════════════════════════════╝',
+      '',
+      '  You\'ve mastered voltage, current, resistance.',
+      '  Now — POWER. Measured in Watts (W).',
+      '',
+      '  ⚡ POWER = V × I  (Watts = Volts × Amperes)',
+      '',
+      '  A 60W bulb at 220V draws: I = P÷V = 60÷220 ≈ 0.27A',
+      '  A phone charger: 5V × 2A = 10W',
+      '  A microwave: 220V × 8A = 1760W = 1.76kW',
+      '',
+      '  Power = energy consumed per second.',
+      '  Your electricity bill is in kWh = kilowatt-hours.',
+      '',
+      '  Combined with Ohm\'s Law:',
+      '     P = I² × R',
+      '     P = V² ÷ R',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ],
+    quiz: {
+      q: '  FINAL BOSS: A circuit runs at 5V with 2A of current.\n  What is the power consumption? Type the number only (in W).',
+      choices: null,
+      answer: '10',
+      hint: 'P = V × I = 5 × 2',
+      win:  'CORRECT! P = 5 × 2 = 10W. You have completed Basic Electronics! +100 XP ⚡',
+      fail: 'P = V × I = 5 × 2 = 10W.',
+    }
+  },
+];
+
+function elecLine(txt, cls) { addLine(txt || '', cls || 'sys'); }
+
+function startElectronicsGame() {
+  window._elec = {
+    chapter: 0,
+    xp: 0,
+    lives: 3,
+    quizActive: false,
+    quizData: null,
+    awaitingNext: false,
+  };
+  window._gameMode = true; // hijack the terminal input
+  window._gameHandler = handleElecInput;
+
+  elecLine('');
+  elecLine('▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓', 'sys');
+  elecLine('  ⚡ BASIC ELECTRONICS — QUEST MODE ACTIVATED ⚡', 'ai');
+  elecLine('▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓', 'sys');
+  elecLine('  7 Chapters · 7 Missions · Earn XP · 3 Lives', 'hint');
+  elecLine('');
+  elecLine('  Press ENTER to begin Chapter 1...', 'ai');
+  elecLine('');
+  window._elec.awaitingNext = true;
+}
+
+function showElecChapter(idx) {
+  const ch = ELEC_CHAPTERS[idx];
+  if (!ch) { elecGameOver(true); return; }
+  window._elec.quizActive = false;
+  window._elec.awaitingNext = false;
+
+  // HUD
+  elecLine('');
+  elecLine('  ❤️ '.repeat(window._elec.lives) + '   XP: ' + window._elec.xp + '   CH: ' + (idx+1) + '/7', 'hint');
+
+  // Story
+  ch.story.forEach(l => elecLine('  ' + l, 'sys'));
+  elecLine('');
+
+  // Quiz
+  const q = ch.quiz;
+  elecLine('  ┌─ MISSION ──────────────────────────────────────────┐', 'ai');
+  q.q.split('\n').forEach(l => elecLine(l, 'ai'));
+  elecLine('  └────────────────────────────────────────────────────┘', 'ai');
+  elecLine('');
+
+  if (q.choices) {
+    q.choices.forEach((c, i) => elecLine('    ' + c, 'sys'));
+    elecLine('');
+    elecLine('  Type A, B, or C and press Enter:', 'hint');
+  } else {
+    elecLine('  Type your numeric answer and press Enter:', 'hint');
+  }
+
+  window._elec.quizActive = true;
+  window._elec.quizData = q;
+}
+
+function handleElecInput(raw) {
+  const e = window._elec;
+  if (!e) return false;
+  const input = raw.trim().toUpperCase();
+
+  // Awaiting "press enter to continue"
+  if (e.awaitingNext) {
+    e.awaitingNext = false;
+    showElecChapter(e.chapter);
+    return true;
+  }
+
+  // Quiz active
+  if (e.quizActive) {
+    const q = e.quizData;
+    let correct = false;
+
+    if (q.choices) {
+      const map = { 'A': 0, 'B': 1, 'C': 2 };
+      const chosen = map[input];
+      correct = (chosen === q.answer);
+    } else {
+      correct = (input === q.answer.toString().toUpperCase() || raw.trim() === q.answer.toString());
+    }
+
+    if (correct) {
+      const xpGain = e.chapter === 6 ? 100 : (e.chapter === 3 ? 75 : 50);
+      e.xp += xpGain;
+      elecLine('');
+      elecLine('  ✅ ' + q.win, 'ai');
+      elecLine('  ──────────────────────────────────────────────────', 'sys');
+      e.chapter++;
+      e.quizActive = false;
+      if (e.chapter >= ELEC_CHAPTERS.length) {
+        setTimeout(() => elecGameOver(true), 600);
+      } else {
+        elecLine('  Press ENTER for Chapter ' + (e.chapter + 1) + '...', 'hint');
+        e.awaitingNext = true;
+      }
+    } else {
+      e.lives--;
+      elecLine('');
+      elecLine('  ❌ ' + q.fail, 'err');
+      elecLine('  💡 HINT: ' + q.hint, 'hint');
+      if (e.lives <= 0) {
+        setTimeout(() => elecGameOver(false), 600);
+      } else {
+        elecLine('  ❤️ Lives remaining: ' + e.lives + '  — Try again:', 'hint');
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
+function elecGameOver(won) {
+  const e = window._elec;
+  window._gameMode = false;
+  window._gameHandler = null;
+  window._elec = null;
+
+  elecLine('');
+  if (won) {
+    elecLine('╔══════════════════════════════════════════════════════╗', 'ai');
+    elecLine('║   🏆  QUEST COMPLETE — ELECTRONICS MASTERED!         ║', 'ai');
+    elecLine('╚══════════════════════════════════════════════════════╝', 'ai');
+    elecLine('  Total XP Earned: ' + e.xp, 'ai');
+    elecLine('  You now understand: Voltage · Current · Resistance', 'sys');
+    elecLine("  Ohm\'s Law · Circuit Types · Components · Power", 'sys');
+    elecLine('');
+    elecLine('  Type "basic electronics" to replay.', 'hint');
+    elecLine('  Type "help" for other commands.', 'hint');
+    // Award XP to profile
+    try {
+      fetch(window.MATRIXON_API + '/profile/update', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ username: localStorage.getItem('matrixon_user'), xp: e.xp })
+      });
+    } catch(_) {}
+  } else {
+    elecLine('╔══════════════════════════════════════════════════════╗', 'err');
+    elecLine('║   💀  GAME OVER — All Lives Lost                      ║', 'err');
+    elecLine('╚══════════════════════════════════════════════════════╝', 'err');
+    elecLine('  XP earned before defeat: ' + e.xp, 'hint');
+    elecLine('  Type "basic electronics" to try again.', 'hint');
+  }
+  elecLine('');
+}
 cmdInput.addEventListener('keydown',e=>{if(e.key==='Enter'){const v=cmdInput.value;cmdInput.value='';runCmd(v);}});
 document.getElementById('backBtn').addEventListener('click',()=>glitchNavigate('index.html'));
 cmdInput.focus();
 fetch(`${API}/streak/record`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username})}).catch(()=>{});
 </script>
 
-<!-- ═══════════════════════════════════════════════════════════
-     CORRUPTED MEMORY / GLITCH REASSEMBLY TRANSITION — learning.html
-     EXIT: Page shatters into pixel chunks → scrambles like
-           corrupted RAM → chunks fly into new-page positions.
-     ENTRY: Chunks assemble from all directions into the page.
-     ═══════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════════
+     NEURAL PLASMA DISINTEGRATION — learning.html
+     ENTRY: Cascading plasma filaments shoot in from all sides, weave
+            into a neural web, then the web collapses into the page
+            with a shockwave flash. Never seen before.
+     EXIT:  Page dissolves into a spiralling plasma vortex → flies out.
+     ═══════════════════════════════════════════════════════════════ -->
 <canvas id="glitchCanvas" style="position:fixed;inset:0;z-index:99990;pointer-events:none;opacity:0;background:#020d04;"></canvas>
 <style>
   #glitchCanvas { image-rendering: pixelated; }
 </style>
 <script>
 (function(){
-  /* ─── ENTRY: chunks fly in and reassemble ─── */
+
+  /* ══════════════════════════════════════════════════════════════
+     NEURAL PLASMA ENTRY — filaments → web → collapse → shockwave
+     ══════════════════════════════════════════════════════════════ */
   if(sessionStorage.getItem('glitch_entry')==='1'){
     sessionStorage.removeItem('glitch_entry');
     const canvas=document.getElementById('glitchCanvas');
     canvas.style.opacity='1';
+
+    window.addEventListener('load',function(){
+      const W=canvas.width=window.innerWidth;
+      const H=canvas.height=window.innerHeight;
+      const ctx=canvas.getContext('2d');
+      const CX=W/2, CY=H/2;
+
+      /* ── PHASE TIMINGS ─────── */
+      const T_FILAMENTS = 1200; // plasma shoots in
+      const T_WEB       = 800;  // web holds, pulses
+      const T_COLLAPSE  = 600;  // web collapses to centre
+      const T_SHOCKWAVE = 500;  // ring expands, page revealed
+      const TOTAL = T_FILAMENTS + T_WEB + T_COLLAPSE + T_SHOCKWAVE;
+
+      /* ── FILAMENT DATA ─────── */
+      const NUM_FILAMENTS = 80;
+      const filaments = [];
+      for(let i=0;i<NUM_FILAMENTS;i++){
+        const angle  = (Math.random()*Math.PI*2);
+        const dist   = Math.max(W,H) * (0.9 + Math.random()*0.4);
+        const targetX= CX + (Math.random()-0.5)*W*0.7;
+        const targetY= CY + (Math.random()-0.5)*H*0.7;
+        filaments.push({
+          sx: CX + Math.cos(angle)*dist,
+          sy: CY + Math.sin(angle)*dist,
+          tx: targetX, ty: targetY,
+          hue: Math.random() > 0.5 ? 140 : 195, // green or cyan
+          width: 0.6 + Math.random()*1.2,
+          delay: Math.random()*0.6,
+          glowSize: 3 + Math.random()*6,
+          nodes: []
+        });
+      }
+
+      /* ── NODE NETWORK (web) ── */
+      const NUM_NODES = 35;
+      const nodes = [];
+      for(let i=0;i<NUM_NODES;i++){
+        nodes.push({
+          x: CX + (Math.random()-0.5)*W*0.6,
+          y: CY + (Math.random()-0.5)*H*0.55,
+          vx:(Math.random()-0.5)*0.4,
+          vy:(Math.random()-0.5)*0.4,
+          r: 2+Math.random()*3,
+          hue: Math.random()>0.5?140:195,
+          pulse:Math.random()*Math.PI*2
+        });
+      }
+      /* Connect nearby nodes */
+      const nodeEdges = [];
+      for(let i=0;i<NUM_NODES;i++){
+        for(let j=i+1;j<NUM_NODES;j++){
+          const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+          if(Math.sqrt(dx*dx+dy*dy)<180) nodeEdges.push([i,j]);
+        }
+      }
+
+      /* ── SHOCKWAVE ─────────── */
+      let shockR=0, shockAlpha=1;
+
+      let startTs=null;
+      function animate(ts){
+        if(!startTs) startTs=ts;
+        const elapsed = ts - startTs;
+        ctx.clearRect(0,0,W,H);
+        ctx.fillStyle='#020d04';
+        ctx.fillRect(0,0,W,H);
+
+        /* ─── PHASE 1: FILAMENTS FLY IN ─── */
+        if(elapsed < T_FILAMENTS + T_WEB){
+          const baseT = Math.min(1, elapsed/T_FILAMENTS);
+          filaments.forEach(f=>{
+            const t = Math.max(0,(baseT-f.delay)/(1-f.delay));
+            if(t<=0) return;
+            const ease = 1-Math.pow(1-Math.min(1,t),3);
+            const cx = f.sx + (f.tx-f.sx)*ease;
+            const cy = f.sy + (f.ty-f.sy)*ease;
+
+            /* Draw trailing filament line */
+            const grad=ctx.createLinearGradient(f.sx,f.sy,cx,cy);
+            grad.addColorStop(0,`hsla(${f.hue},100%,60%,0)`);
+            grad.addColorStop(0.6,`hsla(${f.hue},100%,65%,${t*0.5})`);
+            grad.addColorStop(1,`hsla(${f.hue},100%,80%,${t*0.9})`);
+            ctx.beginPath();
+            ctx.moveTo(f.sx,f.sy);
+            ctx.lineTo(cx,cy);
+            ctx.strokeStyle=grad;
+            ctx.lineWidth=f.width;
+            ctx.shadowColor=`hsl(${f.hue},100%,60%)`;
+            ctx.shadowBlur=f.glowSize;
+            ctx.stroke();
+            ctx.shadowBlur=0;
+
+            /* Particle head */
+            if(t<1){
+              ctx.beginPath();
+              ctx.arc(cx,cy,2+f.glowSize*0.3,0,Math.PI*2);
+              ctx.fillStyle=`hsla(${f.hue},100%,90%,${t*0.9})`;
+              ctx.shadowColor=`hsl(${f.hue},100%,70%)`;
+              ctx.shadowBlur=12;
+              ctx.fill();
+              ctx.shadowBlur=0;
+            }
+          });
+        }
+
+        /* ─── PHASE 2: WEB HOLDS ─── */
+        const webStart = T_FILAMENTS;
+        const webEnd   = T_FILAMENTS + T_WEB;
+        if(elapsed >= webStart && elapsed < webEnd + T_COLLAPSE){
+          const webT = Math.min(1,(elapsed-webStart)/T_WEB);
+          const collapseT = elapsed >= webEnd
+            ? Math.min(1,(elapsed-webEnd)/T_COLLAPSE) : 0;
+          const pull = Math.pow(collapseT,2) * 1.5;
+
+          /* Update node positions */
+          nodes.forEach((n,ni)=>{
+            n.pulse += 0.04;
+            n.x += n.vx;
+            n.y += n.vy;
+            /* Keep in bounds */
+            if(n.x<50||n.x>W-50) n.vx*=-1;
+            if(n.y<50||n.y>H-50) n.vy*=-1;
+            /* Collapse to centre */
+            if(collapseT>0){
+              n.x += (CX-n.x)*pull*0.08;
+              n.y += (CY-n.y)*pull*0.08;
+            }
+          });
+
+          /* Draw edges */
+          nodeEdges.forEach(([i,j])=>{
+            const ni=nodes[i], nj=nodes[j];
+            const dx=ni.x-nj.x, dy=ni.y-nj.y;
+            const dist=Math.sqrt(dx*dx+dy*dy);
+            const alpha = Math.max(0,(1-dist/180)) * webT * (1-collapseT*0.7);
+            if(alpha<=0) return;
+            const grad=ctx.createLinearGradient(ni.x,ni.y,nj.x,nj.y);
+            grad.addColorStop(0,`hsla(140,100%,60%,${alpha*0.7})`);
+            grad.addColorStop(0.5,`hsla(195,100%,65%,${alpha*0.5})`);
+            grad.addColorStop(1,`hsla(140,100%,60%,${alpha*0.7})`);
+            ctx.beginPath();
+            ctx.moveTo(ni.x,ni.y);
+            ctx.lineTo(nj.x,nj.y);
+            ctx.strokeStyle=grad;
+            ctx.lineWidth=0.8;
+            ctx.shadowColor='rgba(0,255,136,0.3)';
+            ctx.shadowBlur=4;
+            ctx.stroke();
+            ctx.shadowBlur=0;
+          });
+
+          /* Draw nodes */
+          nodes.forEach(n=>{
+            const pulseFac = 0.5+0.5*Math.sin(n.pulse);
+            const alpha = webT * (1-collapseT*0.8);
+            const r = n.r * (1+pulseFac*0.4) * (1-collapseT*0.6);
+            ctx.beginPath();
+            ctx.arc(n.x,n.y,r,0,Math.PI*2);
+            ctx.fillStyle=`hsla(${n.hue},100%,75%,${alpha})`;
+            ctx.shadowColor=`hsl(${n.hue},100%,60%)`;
+            ctx.shadowBlur=10+pulseFac*8;
+            ctx.fill();
+            ctx.shadowBlur=0;
+
+            /* Outer ring */
+            ctx.beginPath();
+            ctx.arc(n.x,n.y,r*2.5,0,Math.PI*2);
+            ctx.strokeStyle=`hsla(${n.hue},100%,70%,${alpha*0.25})`;
+            ctx.lineWidth=0.5;
+            ctx.stroke();
+          });
+
+          /* Collapse energy spiral */
+          if(collapseT > 0){
+            for(let i=0;i<6;i++){
+              const a = collapseT * Math.PI * 8 + i*(Math.PI*2/6);
+              const rad = (1-collapseT)*Math.min(W,H)*0.35;
+              const px = CX + Math.cos(a)*rad;
+              const py = CY + Math.sin(a)*rad;
+              ctx.beginPath();
+              ctx.arc(px,py,3+collapseT*4,0,Math.PI*2);
+              ctx.fillStyle=`hsla(${i*30+140},100%,80%,${collapseT*0.9})`;
+              ctx.shadowColor=`hsl(${i*30+140},100%,70%)`;
+              ctx.shadowBlur=20;
+              ctx.fill();
+              ctx.shadowBlur=0;
+            }
+            /* White hot core */
+            const coreR = collapseT * 40;
+            const coreGrad=ctx.createRadialGradient(CX,CY,0,CX,CY,coreR);
+            coreGrad.addColorStop(0,`rgba(255,255,255,${collapseT*0.9})`);
+            coreGrad.addColorStop(0.4,`rgba(0,255,136,${collapseT*0.6})`);
+            coreGrad.addColorStop(1,'rgba(0,255,136,0)');
+            ctx.beginPath(); ctx.arc(CX,CY,coreR,0,Math.PI*2);
+            ctx.fillStyle=coreGrad; ctx.fill();
+          }
+        }
+
+        /* ─── PHASE 3: SHOCKWAVE EXPANDS ─── */
+        const swStart = T_FILAMENTS + T_WEB + T_COLLAPSE;
+        if(elapsed >= swStart){
+          const swT = Math.min(1,(elapsed-swStart)/T_SHOCKWAVE);
+          shockR = Math.max(W,H) * swT * 1.5;
+          shockAlpha = 1 - swT;
+
+          /* Black cutout revealing the page beneath */
+          ctx.save();
+          ctx.globalCompositeOperation='destination-out';
+          ctx.beginPath();
+          ctx.arc(CX,CY,shockR*0.7,0,Math.PI*2);
+          ctx.fillStyle=`rgba(0,0,0,${Math.min(1,swT*3)})`;
+          ctx.fill();
+          ctx.restore();
+
+          /* Shockwave ring */
+          for(let ring=0;ring<3;ring++){
+            const rOffset = ring * 40;
+            const rAlpha = shockAlpha * (1-ring*0.3) * Math.max(0,1-(shockR-rOffset)/(Math.max(W,H)*0.5));
+            if(rAlpha<=0) continue;
+            ctx.beginPath();
+            ctx.arc(CX,CY,Math.max(0,shockR-rOffset),0,Math.PI*2);
+            const hue = ring===0?140:ring===1?195:60;
+            ctx.strokeStyle=`hsla(${hue},100%,70%,${rAlpha})`;
+            ctx.lineWidth=6-ring*1.5;
+            ctx.shadowColor=`hsl(${hue},100%,60%)`;
+            ctx.shadowBlur=25;
+            ctx.stroke();
+            ctx.shadowBlur=0;
+          }
+
+          /* Flash overlay */
+          if(swT < 0.3){
+            ctx.fillStyle=`rgba(0,255,136,${(0.3-swT)/0.3 * 0.4})`;
+            ctx.fillRect(0,0,W,H);
+          }
+
+          if(swT >= 1){
+            canvas.style.transition='opacity 0.3s';
+            canvas.style.opacity='0';
+            return;
+          }
+        }
+
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    });
+
+    /* ── Fallback: never freeze forever ── */
+    setTimeout(()=>{
+      canvas.style.transition='opacity 0.5s';
+      canvas.style.opacity='0';
+    }, 4500);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     PLASMA VORTEX EXIT — page spirals into a vortex then vanishes
+     ══════════════════════════════════════════════════════════════ */
+  window.glitchNavigate=function(url){
+    const canvas=document.getElementById('glitchCanvas');
+    const W=canvas.width=window.innerWidth;
+    const H=canvas.height=window.innerHeight;
+    canvas.style.opacity='1';
+    const ctx=canvas.getContext('2d');
+    const CX=W/2, CY=H/2;
+
+    /* Pixel grid we'll distort */
+    const COLS=32, ROWS=22;
+    const cw=Math.ceil(W/COLS), ch=Math.ceil(H/ROWS);
+    const tiles=[];
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+      const tx=c*cw, ty=r*ch;
+      const dx=tx+cw/2-CX, dy=ty+ch/2-CY;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      const angle=Math.atan2(dy,dx);
+      tiles.push({tx,ty,dist,angle,
+        hue:Math.random()>0.5?140:195,
+        delay:dist/(Math.max(W,H)*0.7)*0.5
+      });
+    }
+
+    /* Plasma particles */
+    const particles=[];
+    for(let i=0;i<120;i++){
+      const angle=Math.random()*Math.PI*2;
+      const dist=20+Math.random()*(Math.max(W,H)*0.5);
+      particles.push({
+        angle, dist,
+        speed:0.02+Math.random()*0.04,
+        r:1+Math.random()*3,
+        hue:Math.random()>0.5?140:195,
+        alpha:0.4+Math.random()*0.6
+      });
+    }
+
+    const VORTEX_DUR=1400;
+    const EXIT_DUR=400;
+    let start=null;
+
+    function animate(ts){
+      if(!start) start=ts;
+      const elapsed=ts-start;
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle='rgba(2,13,4,0.15)';
+      ctx.fillRect(0,0,W,H);
+
+      const vT=Math.min(1,elapsed/VORTEX_DUR);
+      const exitT=elapsed>VORTEX_DUR?Math.min(1,(elapsed-VORTEX_DUR)/EXIT_DUR):0;
+
+      /* Vortex spiral glow from centre */
+      for(let i=0;i<3;i++){
+        const r=vT*Math.max(W,H)*(0.3+i*0.2);
+        const grad=ctx.createRadialGradient(CX,CY,0,CX,CY,r);
+        grad.addColorStop(0,`rgba(0,255,136,${0.15*(1-vT)*(1-i*0.3)})`);
+        grad.addColorStop(1,'rgba(0,255,136,0)');
+        ctx.beginPath(); ctx.arc(CX,CY,r,0,Math.PI*2);
+        ctx.fillStyle=grad; ctx.fill();
+      }
+
+      /* Spiral particles */
+      particles.forEach(p=>{
+        p.angle += p.speed*(1+vT*4);  // spin faster over time
+        p.dist  *= (1 - vT*0.025);    // spiral inward
+        const px=CX+Math.cos(p.angle)*p.dist;
+        const py=CY+Math.sin(p.angle)*p.dist;
+        const shrink=1-vT*0.6;
+        const a=p.alpha*(1-exitT);
+        ctx.beginPath();
+        ctx.arc(px,py,p.r*shrink,0,Math.PI*2);
+        ctx.fillStyle=`hsla(${p.hue},100%,70%,${a})`;
+        ctx.shadowColor=`hsl(${p.hue},100%,60%)`;
+        ctx.shadowBlur=8;
+        ctx.fill();
+        ctx.shadowBlur=0;
+
+        /* Comet tail */
+        if(p.dist>10){
+          const tx2=CX+Math.cos(p.angle-0.2)*p.dist;
+          const ty2=CY+Math.sin(p.angle-0.2)*p.dist;
+          ctx.beginPath();
+          ctx.moveTo(px,py); ctx.lineTo(tx2,ty2);
+          ctx.strokeStyle=`hsla(${p.hue},100%,65%,${a*0.4})`;
+          ctx.lineWidth=p.r*shrink;
+          ctx.stroke();
+        }
+      });
+
+      /* Tile distortion + RGB glitch */
+      tiles.forEach(t=>{
+        const localT=Math.max(0,(vT-t.delay)/(1-t.delay));
+        if(localT<=0) return;
+        /* Twist towards centre */
+        const spinAngle=t.angle+localT*Math.PI*2.5;
+        const newDist=t.dist*(1-localT*0.95);
+        const drawX=CX+Math.cos(spinAngle)*newDist - cw/2;
+        const drawY=CY+Math.sin(spinAngle)*newDist - ch/2;
+        const alpha=Math.max(0,1-localT*0.9)*(1-exitT);
+        const glitch=(Math.random()-0.5)*14*localT;
+
+        ctx.save();
+        ctx.globalAlpha=alpha;
+        /* R channel */
+        ctx.fillStyle=`rgba(255,0,80,0.15)`;
+        ctx.fillRect(drawX+glitch,drawY,cw,ch);
+        /* G channel */
+        ctx.fillStyle=`hsla(${t.hue},80%,${6+localT*10}%,0.7)`;
+        ctx.fillRect(drawX,drawY,cw,ch);
+        /* Scanline */
+        ctx.fillStyle='rgba(0,255,100,0.05)';
+        for(let i=0;i<ch;i+=3) ctx.fillRect(drawX,drawY+i,cw,1);
+        ctx.restore();
+      });
+
+      /* Centre singularity */
+      const singR=vT*50;
+      const singGrad=ctx.createRadialGradient(CX,CY,0,CX,CY,singR);
+      singGrad.addColorStop(0,`rgba(255,255,255,${vT*0.9*(1-exitT)})`);
+      singGrad.addColorStop(0.3,`rgba(0,255,136,${vT*0.7*(1-exitT)})`);
+      singGrad.addColorStop(1,'rgba(0,255,136,0)');
+      ctx.beginPath(); ctx.arc(CX,CY,singR,0,Math.PI*2);
+      ctx.fillStyle=singGrad; ctx.fill();
+
+      /* Final white flash & navigate */
+      if(exitT>0){
+        ctx.fillStyle=`rgba(0,255,136,${exitT*0.6})`;
+        ctx.fillRect(0,0,W,H);
+        if(exitT>=1){
+          sessionStorage.setItem('glitch_entry','1');
+          window.location.href=url;
+          return;
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  };
+})();
+</script>
 
     window.addEventListener('load',function(){
       const W=canvas.width=window.innerWidth, H=canvas.height=window.innerHeight;

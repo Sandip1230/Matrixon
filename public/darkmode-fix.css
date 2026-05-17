@@ -1,0 +1,148 @@
+/**
+ * darkmode-fix.css — MATRIXON Dark Mode Protection
+ * Include on every page AFTER styles.css.
+ *
+ * Prevents CSS filters (contrast/brightness from highContrast setting)
+ * from washing out: profile photos, flag emojis, course thumbnails,
+ * achievement icons, and avatar images.
+ *
+ * Also ensures key UI elements stay visible regardless of OS dark mode.
+ */
+
+/* ── PROFILE & AVATAR IMAGES ─────────────────────────────────────────────── */
+img[id="avatarImg"],
+.avatar-wrap img,
+.sr-avatar img,
+.fc-avatar img,
+.peek-avatar img,
+img[alt="Profile"],
+img[alt="Avatar"],
+.morph-avatar img,
+.leaderboard-avatar img {
+  /* Counteract body filter when highContrast is on */
+  filter: none !important;
+  /* Ensure clean circular crop everywhere */
+  object-fit: cover !important;
+  border-radius: 50%;
+  /* Prevent invisible-when-no-photo fallback from being white box */
+  background: rgba(0, 255, 136, 0.08);
+}
+
+/* ── FALLBACK AVATAR (letter circle) ────────────────────────────────────── */
+.avatar-initials,
+.avatar-letter,
+[class*="avatar"][class*="initial"] {
+  filter: none !important;
+  /* Keep text readable on colored circle */
+  color: inherit !important;
+}
+
+/* ── FLAG EMOJIS ─────────────────────────────────────────────────────────── */
+.cc-flag,
+#flyTarget,
+.country-flag,
+[class*="flag"] {
+  filter: none !important;
+  /* Flags are emoji — prevent OS inversion on some Android WebViews */
+  -webkit-text-stroke: 0 !important;
+}
+
+/* ── ACHIEVEMENT ICONS / BADGES ─────────────────────────────────────────── */
+.achievement-icon,
+.ach-icon,
+.badge-icon,
+.badge-img,
+img[class*="badge"],
+img[class*="achievement"] {
+  filter: none !important;
+  object-fit: contain !important;
+}
+
+/* ── COURSE THUMBNAILS ───────────────────────────────────────────────────── */
+.course-thumb,
+.course-img,
+img[class*="course"],
+img[class*="thumb"] {
+  filter: none !important;
+  object-fit: cover !important;
+}
+
+/* ── PREVENT BODY FILTER CASCADING TO CANVASES ──────────────────────────── */
+/* Matrix rain, radar, stars canvases must not double-apply contrast */
+canvas {
+  filter: none !important;
+}
+
+/* ── LEADERBOARD RANK NUMBERS ────────────────────────────────────────────── */
+/* High contrast can make gold/silver/bronze rank numbers invisible */
+.rank-1, .rank-gold,
+.rank-2, .rank-silver,
+.rank-3, .rank-bronze {
+  filter: none !important;
+  /* Ensure text shadow still shows on dark background */
+  text-shadow: 0 0 8px currentColor;
+}
+
+/* ── NAV BRAND LOGO ──────────────────────────────────────────────────────── */
+#matrixNavBrand {
+  filter: none !important;
+}
+
+/* ── INPUT FIELDS IN HIGH CONTRAST ──────────────────────────────────────── */
+/* Prevent inputs from becoming unreadable white-on-white */
+input, textarea, select {
+  color-scheme: dark;
+}
+
+/* ── SETTINGS TOGGLE SWITCHES ────────────────────────────────────────────── */
+/* Ensure toggle knobs don't get washed out by brightness filter */
+.toggle-switch,
+.switch-knob,
+input[type="checkbox"] {
+  filter: none !important;
+}
+
+/* ── SCAN LINE & OVERLAY ─────────────────────────────────────────────────── */
+/* HUD overlays must not compound with highContrast body filter */
+#scanlines,
+#scanLine,
+#cvHUD,
+.hud-corner,
+.hud-tag,
+#reticle {
+  filter: none !important;
+}
+
+/* ── PROFILE PHOTO UPLOAD PREVIEW ─────────────────────────────────────────── */
+/* Prevent the "no photo" placeholder from showing as a white square */
+.avatar-wrap {
+  background: rgba(0, 255, 136, 0.06);
+  border: 2px solid rgba(0, 255, 136, 0.25);
+  overflow: hidden;
+}
+.avatar-wrap:hover {
+  border-color: rgba(0, 255, 136, 0.6);
+  background: rgba(0, 255, 136, 0.12);
+}
+
+/* ── DARK MODE MEDIA QUERY — explicit overrides ──────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  /* Ensure these never go transparent or invisible */
+  #matrixNav,
+  #matrixOfflineBanner {
+    border-color: rgba(0, 255, 136, 0.25) !important;
+  }
+
+  /* Keep profile photo border visible */
+  .avatar-wrap,
+  .profile-photo-wrap {
+    border-color: rgba(0, 255, 136, 0.35) !important;
+  }
+
+  /* Ensure leaderboard rows don't wash out to transparent */
+  .lb-row,
+  .leaderboard-row,
+  [class*="leader"][class*="row"] {
+    background: rgba(0, 255, 136, 0.04) !important;
+  }
+}

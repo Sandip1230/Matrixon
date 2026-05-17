@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MATRIXON — Community</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --g:#00ff88; --b:#00d4ff; --dark:#000508;
+      --card:rgba(0,255,136,0.03); --border:rgba(0,255,136,0.14);
+      --muted:rgba(0,255,136,0.45); --text:#c8ffe0;
+      --glow:rgba(0,255,136,0.18);
+    }
+    body{
+      font-family:'Share Tech Mono','Courier New',monospace;
+      background:var(--dark); color:var(--text);
+      min-height:100vh; overflow-x:hidden;
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(0,255,136,0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(0,212,255,0.03) 0%, transparent 50%);
+    }
+
+    /* MATRIX RAIN */
+    #rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.18;}
+
+    /* LAYOUT */
+    .page-wrap{
+      position:relative;z-index:1;
+      max-width:1280px; margin:0 auto;
+      padding:80px 20px 60px;
+      display:grid;
+      grid-template-columns:280px 1fr 240px;
+      grid-template-rows:auto 1fr;
+      gap:20px;
+      align-items:start;
+    }
+
+    /* PAGE HEADER */
+    .page-header{
+      grid-column:1/-1;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 4px 16px;
+      border-bottom:1px solid var(--border);
+    }
+    .page-title{
+      font-family:'Orbitron',monospace;
+      font-size:clamp(18px,3vw,28px);
+      letter-spacing:6px; color:var(--g);
+      text-shadow:0 0 20px rgba(0,255,136,0.4);
+    }
+    .page-title span{color:var(--b);}
+    .live-badge{
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(0,255,136,0.06);
+      border:1px solid rgba(0,255,136,0.25);
+      border-radius:20px;padding:5px 14px;
+      font-size:10px;letter-spacing:2px;color:var(--g);
+    }
+    .live-dot{width:6px;height:6px;border-radius:50%;background:var(--g);
+      box-shadow:0 0 6px var(--g);animation:pulse 1.5s infinite;}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+    /* ── LEFT SIDEBAR ── */
+    .sidebar-left{
+      display:flex;flex-direction:column;gap:14px;
+      position:sticky;top:80px;
+    }
+
+    /* ── RIGHT SIDEBAR ── */
+    .sidebar-right{
+      display:flex;flex-direction:column;gap:14px;
+      position:sticky;top:80px;
+    }
+
+    /* SIDEBAR CARD */
+    .s-card{
+      border:1px solid var(--border);border-radius:14px;
+      padding:18px;background:var(--card);
+      backdrop-filter:blur(8px);
+    }
+    .s-card-title{
+      font-size:10px;color:var(--b);letter-spacing:3px;
+      margin-bottom:14px;display:flex;align-items:center;gap:7px;
+    }
+    .s-card-title::before{content:'▸';color:var(--g);}
+
+    /* My profile card */
+    .my-profile{text-align:center;padding:20px 16px;}
+    .my-avatar{
+      width:64px;height:64px;border-radius:50%;
+      border:2px solid var(--g);
+      background:rgba(0,255,136,0.06);
+      display:flex;align-items:center;justify-content:center;
+      font-size:28px;margin:0 auto 10px;
+      box-shadow:0 0 18px rgba(0,255,136,0.2);
+      position:relative;overflow:hidden;
+    }
+    .my-avatar::before{
+      content:'';position:absolute;inset:-4px;
+      border-radius:50%;
+      border:1px dashed rgba(0,212,255,0.3);
+      animation:spin 8s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .my-name{font-size:14px;color:var(--g);letter-spacing:2px;margin-bottom:3px;}
+    .my-rank{font-size:10px;color:var(--muted);letter-spacing:1px;}
+    .my-stats{
+      display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;
+    }
+    .my-stat{
+      background:rgba(0,255,136,0.04);border:1px solid var(--border);
+      border-radius:8px;padding:8px;text-align:center;
+    }
+    .my-stat-val{font-size:16px;color:var(--g);font-weight:bold;}
+    .my-stat-label{font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+
+    /* Nav links in sidebar */
+    .s-nav-link{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 12px;border-radius:8px;
+      font-size:11px;letter-spacing:1px;color:var(--muted);
+      text-decoration:none;border:1px solid transparent;
+      transition:.2s;cursor:pointer;
+    }
+    .s-nav-link:hover,.s-nav-link.active{
+      color:var(--g);background:rgba(0,255,136,0.06);
+      border-color:rgba(0,255,136,0.2);
+    }
+    .s-nav-link .icon{font-size:14px;}
+
+    /* Online users */
+    .online-user{
+      display:flex;align-items:center;gap:10px;
+      padding:8px 0;border-bottom:1px solid rgba(0,255,136,0.06);
+    }
+    .online-user:last-child{border-bottom:none;}
+    .ou-avatar{
+      width:32px;height:32px;border-radius:50%;
+      background:rgba(0,255,136,0.08);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;flex-shrink:0;position:relative;
+    }
+    .ou-dot{
+      position:absolute;bottom:0;right:0;
+      width:8px;height:8px;border-radius:50%;
+      background:var(--g);border:1.5px solid var(--dark);
+      box-shadow:0 0 4px var(--g);
+    }
+    .ou-name{font-size:11px;color:var(--text);letter-spacing:.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .ou-country{font-size:14px;}
+
+    /* Tags */
+    .tag-cloud{display:flex;flex-wrap:wrap;gap:7px;}
+    .tag{
+      font-size:10px;letter-spacing:1px;
+      padding:4px 10px;border-radius:20px;
+      border:1px solid var(--border);color:var(--muted);
+      cursor:pointer;transition:.2s;
+    }
+    .tag:hover,.tag.active{
+      border-color:var(--g);color:var(--g);
+      background:rgba(0,255,136,0.06);
+    }
+
+    /* Trending */
+    .trend-item{
+      display:flex;align-items:center;gap:10px;
+      padding:9px 0;border-bottom:1px solid rgba(0,255,136,0.06);
+      cursor:pointer;
+    }
+    .trend-item:last-child{border-bottom:none;}
+    .trend-num{
+      font-size:11px;color:var(--b);width:18px;flex-shrink:0;
+    }
+    .trend-text{font-size:11px;color:var(--text);flex:1;letter-spacing:.5px;}
+    .trend-count{font-size:10px;color:var(--muted);}
+
+    /* ── MAIN FEED ── */
+    .main-feed{display:flex;flex-direction:column;gap:16px;}
+
+    /* Post composer */
+    .composer{
+      border:1px solid var(--border);border-radius:16px;
+      padding:20px;background:var(--card);
+      backdrop-filter:blur(10px);
+    }
+    .composer-top{
+      display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;
+    }
+    .composer-avatar{
+      width:38px;height:38px;border-radius:50%;
+      background:rgba(0,255,136,0.08);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      font-size:16px;flex-shrink:0;
+    }
+    .composer-input{
+      flex:1;background:rgba(0,0,0,0.5);
+      border:1px solid var(--border);border-radius:10px;
+      padding:12px 14px;color:var(--g);
+      font-family:'Share Tech Mono',monospace;font-size:13px;
+      resize:none;min-height:80px;outline:none;
+      transition:.3s;line-height:1.6;
+    }
+    .composer-input:focus{
+      border-color:var(--g);box-shadow:0 0 12px rgba(0,255,136,0.1);
+    }
+    .composer-input::placeholder{color:rgba(0,255,136,0.2);}
+    .composer-actions{
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    }
+    .composer-btn{
+      display:flex;align-items:center;gap:5px;
+      padding:7px 13px;border-radius:8px;
+      font-size:11px;letter-spacing:1px;color:var(--muted);
+      border:1px solid var(--border);background:transparent;
+      cursor:pointer;font-family:'Share Tech Mono',monospace;
+      transition:.2s;
+    }
+    .composer-btn:hover{border-color:var(--g);color:var(--g);background:rgba(0,255,136,0.04);}
+    .post-btn{
+      margin-left:auto;
+      padding:8px 20px;border-radius:20px;
+      background:linear-gradient(to right,#00cc66,#00ff88);
+      color:#001208;font-weight:bold;font-size:12px;
+      border:none;cursor:pointer;
+      letter-spacing:2px;font-family:'Share Tech Mono',monospace;
+      transition:.2s;
+    }
+    .post-btn:hover{transform:scale(1.03);filter:brightness(1.1);}
+    .post-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+    /* image preview area */
+    #imgPreviewArea{
+      display:none;margin:10px 0 0;
+      border:1px dashed var(--border);border-radius:10px;
+      padding:10px;position:relative;
+    }
+    #imgPreviewArea img{
+      max-height:200px;border-radius:8px;max-width:100%;
+      display:block;
+    }
+    #removeImg{
+      position:absolute;top:6px;right:6px;
+      background:rgba(0,0,0,0.8);border:1px solid rgba(255,80,80,0.4);
+      color:#ff6666;font-size:12px;border-radius:6px;
+      padding:3px 8px;cursor:pointer;font-family:monospace;
+    }
+
+    /* Filter bar */
+    .filter-bar{
+      display:flex;gap:8px;flex-wrap:wrap;
+      padding:12px 0;border-bottom:1px solid var(--border);
+    }
+    .filter-tab{
+      padding:6px 14px;border-radius:20px;
+      font-size:10px;letter-spacing:1.5px;color:var(--muted);
+      border:1px solid var(--border);background:transparent;
+      cursor:pointer;font-family:'Share Tech Mono',monospace;
+      transition:.2s;
+    }
+    .filter-tab.active,.filter-tab:hover{
+      color:var(--g);border-color:var(--g);
+      background:rgba(0,255,136,0.06);
+    }
+
+    /* POST CARD */
+    .post-card{
+      border:1px solid var(--border);border-radius:16px;
+      background:var(--card);overflow:hidden;
+      transition:.2s;animation:fadeUp .4s ease both;
+    }
+    @keyframes fadeUp{
+      from{opacity:0;transform:translateY(12px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+    .post-card:hover{
+      border-color:rgba(0,255,136,0.25);
+      box-shadow:0 4px 24px rgba(0,255,136,0.05);
+    }
+    .post-header{
+      display:flex;align-items:center;gap:12px;
+      padding:16px 18px 10px;
+    }
+    .post-avatar{
+      width:40px;height:40px;border-radius:50%;
+      background:rgba(0,255,136,0.08);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;flex-shrink:0;
+    }
+    .post-meta{flex:1;}
+    .post-author{font-size:13px;color:var(--g);letter-spacing:1px;}
+    .post-info{font-size:10px;color:var(--muted);margin-top:2px;letter-spacing:.5px;}
+    .post-badge{
+      font-size:9px;padding:2px 8px;border-radius:10px;
+      border:1px solid;letter-spacing:1px;
+    }
+    .badge-top{color:#ffd700;border-color:rgba(255,215,0,0.3);background:rgba(255,215,0,0.06);}
+    .badge-new{color:var(--b);border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.06);}
+
+    .post-body{padding:0 18px 12px;}
+    .post-text{font-size:13px;line-height:1.8;color:var(--text);margin-bottom:10px;}
+    .post-tag{
+      display:inline-block;font-size:10px;color:var(--b);
+      margin-right:6px;letter-spacing:1px;
+    }
+
+    .post-image{
+      width:100%;max-height:380px;object-fit:cover;
+      display:block;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+      cursor:pointer;
+    }
+
+    .post-footer{
+      display:flex;align-items:center;gap:4px;
+      padding:10px 14px;border-top:1px solid rgba(0,255,136,0.06);
+    }
+    .action-btn{
+      display:flex;align-items:center;gap:5px;
+      padding:6px 12px;border-radius:20px;
+      font-size:11px;color:var(--muted);
+      border:none;background:transparent;cursor:pointer;
+      font-family:'Share Tech Mono',monospace;
+      transition:.2s;letter-spacing:.5px;
+    }
+    .action-btn:hover{color:var(--g);background:rgba(0,255,136,0.05);}
+    .action-btn.liked{color:#ff6b8a;}
+    .action-btn.liked:hover{color:#ff6b8a;background:rgba(255,107,138,0.08);}
+    .action-btn span{font-size:14px;}
+
+    .post-footer .spacer{flex:1;}
+
+    /* Comments section */
+    .comments-section{
+      display:none;
+      border-top:1px solid var(--border);
+      background:rgba(0,0,0,0.2);
+    }
+    .comments-section.open{display:block;}
+    .comment{
+      display:flex;gap:10px;
+      padding:10px 18px;border-bottom:1px solid rgba(0,255,136,0.04);
+    }
+    .comment:last-of-type{border-bottom:none;}
+    .comment-avatar{
+      width:28px;height:28px;border-radius:50%;
+      background:rgba(0,255,136,0.06);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      font-size:12px;flex-shrink:0;
+    }
+    .comment-body{flex:1;}
+    .comment-author{font-size:10px;color:var(--g);letter-spacing:1px;}
+    .comment-text{font-size:12px;color:var(--text);margin-top:3px;line-height:1.6;}
+    .comment-input-row{
+      display:flex;gap:10px;padding:10px 18px;
+    }
+    .comment-input{
+      flex:1;background:rgba(0,0,0,0.5);
+      border:1px solid var(--border);border-radius:8px;
+      padding:8px 12px;color:var(--g);
+      font-family:'Share Tech Mono',monospace;font-size:12px;
+      outline:none;transition:.3s;
+    }
+    .comment-input:focus{border-color:var(--g);}
+    .comment-input::placeholder{color:rgba(0,255,136,0.2);}
+    .comment-send{
+      padding:8px 14px;border-radius:8px;
+      background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);
+      color:var(--g);cursor:pointer;font-size:12px;
+      font-family:'Share Tech Mono',monospace;transition:.2s;
+    }
+    .comment-send:hover{background:rgba(0,255,136,0.2);}
+
+    /* Image lightbox */
+    #lightbox{
+      display:none;position:fixed;inset:0;z-index:99999;
+      background:rgba(0,0,0,0.95);
+      align-items:center;justify-content:center;
+      backdrop-filter:blur(6px);
+    }
+    #lightbox.open{display:flex;}
+    #lightbox img{
+      max-width:90vw;max-height:90vh;
+      border-radius:12px;border:1px solid var(--border);
+      box-shadow:0 0 60px rgba(0,255,136,0.15);
+    }
+    #lightboxClose{
+      position:fixed;top:20px;right:24px;
+      font-size:24px;color:var(--muted);cursor:pointer;
+      font-family:monospace;background:rgba(0,0,0,0.7);
+      border:1px solid var(--border);border-radius:8px;
+      padding:4px 10px;transition:.2s;
+    }
+    #lightboxClose:hover{color:var(--g);}
+
+    /* Toast */
+    #toast{
+      position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+      background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);
+      color:var(--g);font-size:12px;letter-spacing:1.5px;
+      padding:10px 22px;border-radius:30px;z-index:9999;
+      opacity:0;pointer-events:none;transition:.3s;white-space:nowrap;
+      font-family:'Share Tech Mono',monospace;
+    }
+    #toast.show{opacity:1;}
+
+    /* Empty state */
+    .empty-state{
+      text-align:center;padding:40px;color:var(--muted);
+      font-size:13px;letter-spacing:1px;
+    }
+    .empty-state .icon{font-size:36px;margin-bottom:12px;}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:1024px){
+      .page-wrap{grid-template-columns:220px 1fr;}
+      .sidebar-right{display:none;}
+    }
+    @media(max-width:700px){
+      .page-wrap{grid-template-columns:1fr;padding:70px 12px 50px;}
+      .sidebar-left{display:none;}
+      .page-header{flex-direction:column;gap:10px;align-items:flex-start;}
+    }
+  </style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<script src="config.js"></script>
+<script src="navbar.js"></script>
+<script src="sounds.js"></script>
+<script src="transitions.js"></script>
+<script src="settings-apply.js"></script>
+
+<!-- Lightbox -->
+<div id="lightbox">
+  <span id="lightboxClose" onclick="closeLightbox()">✕</span>
+  <img id="lightboxImg" src="" alt="post image">
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<div class="page-wrap">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-title">🌐 MATRIXON <span>COMMUNITY</span></div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span id="onlineCount">...</span> ONLINE
+    </div>
+  </div>
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <aside class="sidebar-left">
+
+    <!-- My Profile -->
+    <div class="s-card my-profile">
+      <div class="my-avatar" id="myAvatarEl">🤖</div>
+      <div class="my-name" id="myNameEl">—</div>
+      <div class="my-rank">🟢 OPERATIVE</div>
+      <div class="my-stats">
+        <div class="my-stat">
+          <div class="my-stat-val" id="myPostCount">0</div>
+          <div class="my-stat-label">POSTS</div>
+        </div>
+        <div class="my-stat">
+          <div class="my-stat-val" id="myLikeCount">0</div>
+          <div class="my-stat-label">LIKES</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="s-card">
+      <div class="s-card-title">NAVIGATE</div>
+      <div class="s-nav-link active" onclick="filterFeed('all')">
+        <span class="icon">🌐</span> ALL POSTS
+      </div>
+      <div class="s-nav-link" onclick="filterFeed('media')">
+        <span class="icon">🖼</span> MEDIA
+      </div>
+      <div class="s-nav-link" onclick="filterFeed('mine')">
+        <span class="icon">👤</span> MY POSTS
+      </div>
+      <div class="s-nav-link" onclick="filterFeed('liked')">
+        <span class="icon">❤️</span> LIKED
+      </div>
+    </div>
+
+    <!-- Topics -->
+    <div class="s-card">
+      <div class="s-card-title">TOPICS</div>
+      <div class="tag-cloud" id="topicTags">
+        <span class="tag active" onclick="filterTopic('')">ALL</span>
+        <span class="tag" onclick="filterTopic('math')">MATH</span>
+        <span class="tag" onclick="filterTopic('physics')">PHYSICS</span>
+        <span class="tag" onclick="filterTopic('code')">CODE</span>
+        <span class="tag" onclick="filterTopic('ai')">AI/ML</span>
+        <span class="tag" onclick="filterTopic('tips')">TIPS</span>
+        <span class="tag" onclick="filterTopic('wins')">WINS 🏆</span>
+        <span class="tag" onclick="filterTopic('memes')">MEMES</span>
+      </div>
+    </div>
+
+    <!-- Who's Online -->
+    <div class="s-card">
+      <div class="s-card-title">WHO'S ONLINE</div>
+      <div id="onlineList">
+        <!-- dynamically populated -->
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── MAIN FEED ── -->
+  <main class="main-feed">
+
+    <!-- Composer -->
+    <div class="composer">
+      <div class="composer-top">
+        <div class="composer-avatar" id="composerAvatar">🤖</div>
+        <textarea class="composer-input" id="postInput" placeholder="Share something with the MATRIXON community... 🌐" maxlength="1000"></textarea>
+      </div>
+      <div id="imgPreviewArea">
+        <img id="imgPreview" src="" alt="preview">
+        <button id="removeImg" onclick="removeImage()">✕ Remove</button>
+      </div>
+      <div class="composer-actions">
+        <button class="composer-btn" onclick="document.getElementById('imgInput').click()">
+          🖼 PHOTO
+        </button>
+        <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImage(event)">
+        <button class="composer-btn" onclick="insertTag('#code')">💻 #CODE</button>
+        <button class="composer-btn" onclick="insertTag('#wins')">🏆 #WINS</button>
+        <button class="composer-btn" onclick="insertTag('#tips')">💡 #TIPS</button>
+        <button class="post-btn" id="postBtn" onclick="submitPost()">⬡ POST</button>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <button class="filter-tab active" onclick="setSort(this,'new')">🕐 LATEST</button>
+      <button class="filter-tab" onclick="setSort(this,'top')">🔥 TOP</button>
+      <button class="filter-tab" onclick="setSort(this,'media')">🖼 MEDIA</button>
+    </div>
+
+    <!-- Feed -->
+    <div id="feedContainer">
+      <div class="empty-state">
+        <div class="icon">📡</div>
+        Loading community feed...
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── RIGHT SIDEBAR ── -->
+  <aside class="sidebar-right">
+
+    <!-- Trending -->
+    <div class="s-card">
+      <div class="s-card-title">TRENDING</div>
+      <div id="trendingList">
+        <div class="trend-item"><span class="trend-num">01</span><span class="trend-text">#machinelearning</span><span class="trend-count">24</span></div>
+        <div class="trend-item"><span class="trend-num">02</span><span class="trend-text">#matrixonwins</span><span class="trend-count">19</span></div>
+        <div class="trend-item"><span class="trend-num">03</span><span class="trend-text">#codinglife</span><span class="trend-count">15</span></div>
+        <div class="trend-item"><span class="trend-num">04</span><span class="trend-text">#dailystreak</span><span class="trend-count">11</span></div>
+        <div class="trend-item"><span class="trend-num">05</span><span class="trend-text">#physics101</span><span class="trend-count">8</span></div>
+      </div>
+    </div>
+
+    <!-- Community Rules -->
+    <div class="s-card">
+      <div class="s-card-title">COMMUNITY RULES</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.9;letter-spacing:.3px;">
+        ▸ Be respectful & kind<br>
+        ▸ Stay on-topic<br>
+        ▸ No spam or self-promo<br>
+        ▸ Credit sources<br>
+        ▸ Help others grow<br>
+        ▸ No offensive content<br>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="s-card">
+      <div class="s-card-title">COMMUNITY STATS</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <div style="font-size:11px;color:var(--muted);letter-spacing:1px;">MEMBERS</div>
+          <div style="font-size:20px;color:var(--g);font-weight:bold;" id="statMembers">—</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);letter-spacing:1px;">TOTAL POSTS</div>
+          <div style="font-size:20px;color:var(--b);font-weight:bold;" id="statPosts">—</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);letter-spacing:1px;">TODAY'S POSTS</div>
+          <div style="font-size:20px;color:var(--g);font-weight:bold;" id="statToday">—</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+</div>
+
+<script>
+MatrixAuth.requireAuth();
+
+/* ── MATRIX RAIN ── */
+(function(){
+  const c=document.getElementById('rain'),ctx=c.getContext('2d');
+  function rs(){c.width=innerWidth;c.height=innerHeight;}rs();addEventListener('resize',rs);
+  const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&アイウエオ';const fs=14;let cols,drops;
+  function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(0).map(()=>Math.floor(Math.random()*-50));}
+  init();
+  setInterval(()=>{
+    ctx.fillStyle='rgba(0,0,0,0.07)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px monospace';ctx.fillStyle='#00ff88';
+    drops.forEach((d,i)=>{ctx.fillText(ch[Math.floor(Math.random()*ch.length)],i*fs,d*fs);
+      if(d*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;});
+  },55);
+})();
+
+/* ── STATE ── */
+const username = localStorage.getItem('matrixon_user') || 'Agent';
+const AVATARS = ['🤖','🧠','💻','🚀','⚡','🔮','🎯','🛸','🦾','🌌','🧬','🔬'];
+const userAvatar = AVATARS[username.charCodeAt(0) % AVATARS.length];
+const STORAGE_KEY = 'matrixon_community_posts';
+const LIKES_KEY   = 'matrixon_community_likes';
+
+let posts = [];
+let myLikes = new Set(JSON.parse(localStorage.getItem(LIKES_KEY) || '[]'));
+let currentFilter = 'all';
+let currentTopic  = '';
+let currentSort   = 'new';
+let pendingImage  = null; // base64
+
+/* ── FAKE SEED DATA (shown first time) ── */
+const SEED_POSTS = [
+  {
+    id:'seed1', author:'NeuralNomad', avatar:'🧠',
+    country:'🇮🇳', text:'Just hit a 30-day streak on MATRIXON! 🔥 The spaced repetition system really works. My calculus scores went from 42% → 87% in 3 weeks. #wins #math',
+    tags:['wins','math'], image:null, likes:47, comments:[
+      {author:'PixelPilot',avatar:'🚀',text:'Insane improvement! What\'s your daily routine?'},
+      {author:'DataDrifter',avatar:'💻',text:'The SR system is OP fr'},
+    ], ts: Date.now() - 3600000
+  },
+  {
+    id:'seed2', author:'CodeCipher', avatar:'💻',
+    country:'🇺🇸', text:'Built a neural net from scratch using only numpy — no TensorFlow, no PyTorch. Just raw backprop math. Posting the notebook for anyone who wants to deep dive 🤓 #code #ai',
+    tags:['code','ai'], image:null, likes:33, comments:[
+      {author:'NeuralNomad',avatar:'🧠',text:'Please do! Would love to see the implementation.'},
+    ], ts: Date.now() - 7200000
+  },
+  {
+    id:'seed3', author:'QuantumQuill', avatar:'🔮',
+    country:'🇯🇵', text:'Pro tip: When studying physics, always draw the free-body diagram BEFORE writing any equations. Sounds basic but it eliminates 80% of mistakes. #tips #physics',
+    tags:['tips','physics'], image:null, likes:61, comments:[], ts: Date.now() - 14400000
+  },
+  {
+    id:'seed4', author:'DataDrifter', avatar:'🎯',
+    country:'🇩🇪', text:'Anyone else find that studying between 10pm–midnight hits different? The matrix is most active at night 🌌 #memes',
+    tags:['memes'], image:null, likes:29, comments:[
+      {author:'QuantumQuill',avatar:'🔮',text:'Night owl solidarity ✊'},
+      {author:'CodeCipher',avatar:'💻',text:'Literally same, 11pm is peak productivity hour'},
+    ], ts: Date.now() - 86400000
+  },
+];
+
+/* ── LOAD POSTS ── */
+function loadPosts() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  posts = raw ? JSON.parse(raw) : [...SEED_POSTS];
+  if (!raw) savePosts();
+}
+
+function savePosts() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+}
+
+/* ── INIT UI ── */
+function initUI() {
+  // Set my profile info
+  document.getElementById('myNameEl').textContent = username;
+  document.getElementById('myAvatarEl').textContent = userAvatar;
+  document.getElementById('composerAvatar').textContent = userAvatar;
+  // Post count
+  const myPosts = posts.filter(p=>p.author===username).length;
+  document.getElementById('myPostCount').textContent = myPosts;
+  // Likes received
+  const myLikesRcvd = posts.filter(p=>p.author===username).reduce((s,p)=>s+p.likes,0);
+  document.getElementById('myLikeCount').textContent = myLikesRcvd;
+  // Stats
+  document.getElementById('statMembers').textContent = (127 + posts.length).toLocaleString();
+  document.getElementById('statPosts').textContent   = (posts.length).toLocaleString();
+  document.getElementById('statToday').textContent   = posts.filter(p=>Date.now()-p.ts<86400000).length;
+  // Online list
+  renderOnlineUsers();
+  // Online count
+  document.getElementById('onlineCount').textContent = Math.floor(Math.random()*40)+15;
+}
+
+const FAKE_ONLINE = [
+  {name:'NeuralNomad',avatar:'🧠',country:'🇮🇳'},
+  {name:'CodeCipher',avatar:'💻',country:'🇺🇸'},
+  {name:'QuantumQuill',avatar:'🔮',country:'🇯🇵'},
+  {name:'DataDrifter',avatar:'🎯',country:'🇩🇪'},
+  {name:'PixelPilot',avatar:'🚀',country:'🇧🇷'},
+  {name:'MatrixMind',avatar:'🌌',country:'🇰🇷'},
+];
+function renderOnlineUsers(){
+  const list = document.getElementById('onlineList');
+  const shown = [...FAKE_ONLINE].sort(()=>Math.random()-.5).slice(0,5);
+  list.innerHTML = shown.map(u=>`
+    <div class="online-user">
+      <div class="ou-avatar">${u.avatar}<div class="ou-dot"></div></div>
+      <div class="ou-name">${u.name}</div>
+      <div class="ou-country">${u.country}</div>
+    </div>
+  `).join('');
+}
+
+/* ── RENDER FEED ── */
+function getFilteredPosts() {
+  let filtered = [...posts];
+
+  if (currentFilter === 'media')  filtered = filtered.filter(p=>p.image);
+  if (currentFilter === 'mine')   filtered = filtered.filter(p=>p.author===username);
+  if (currentFilter === 'liked')  filtered = filtered.filter(p=>myLikes.has(p.id));
+  if (currentTopic)               filtered = filtered.filter(p=>p.tags&&p.tags.includes(currentTopic));
+
+  if (currentSort === 'top')      filtered.sort((a,b)=>b.likes-a.likes);
+  else if (currentSort === 'media') filtered = filtered.filter(p=>p.image);
+  else                            filtered.sort((a,b)=>b.ts-a.ts);
+
+  return filtered;
+}
+
+function timeAgo(ts) {
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s < 60)   return s+'s ago';
+  if (s < 3600) return Math.floor(s/60)+'m ago';
+  if (s < 86400)return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
+function renderFeed() {
+  const fc = document.getElementById('feedContainer');
+  const filtered = getFilteredPosts();
+
+  if (!filtered.length) {
+    fc.innerHTML = `<div class="empty-state"><div class="icon">📭</div>No posts here yet. Be the first!</div>`;
+    return;
+  }
+
+  fc.innerHTML = filtered.map((p,i)=>`
+    <div class="post-card" id="post-${p.id}" style="animation-delay:${i*60}ms">
+      <div class="post-header">
+        <div class="post-avatar">${p.avatar}</div>
+        <div class="post-meta">
+          <div class="post-author">${p.author} ${p.country||''}</div>
+          <div class="post-info">${timeAgo(p.ts)} ${p.author===username?'· <span style="color:var(--b)">YOU</span>':''}</div>
+        </div>
+        ${p.likes>40 ? '<span class="post-badge badge-top">🔥 TRENDING</span>' : ''}
+        ${Date.now()-p.ts<3600000 ? '<span class="post-badge badge-new">✦ NEW</span>' : ''}
+        ${p.author===username ? `<button onclick="deletePost('${p.id}')" style="margin-left:auto;background:none;border:none;color:rgba(255,80,80,0.4);cursor:pointer;font-size:16px;transition:.2s;" title="Delete post">🗑</button>` : ''}
+      </div>
+      <div class="post-body">
+        <div class="post-text">${escHtml(p.text)}</div>
+        ${(p.tags||[]).map(t=>`<span class="post-tag">#${t}</span>`).join('')}
+      </div>
+      ${p.image ? `<img class="post-image" src="${p.image}" alt="post image" onclick="openLightbox(this.src)" loading="lazy">` : ''}
+      <div class="post-footer">
+        <button class="action-btn ${myLikes.has(p.id)?'liked':''}" onclick="toggleLike('${p.id}',this)">
+          <span>${myLikes.has(p.id)?'❤️':'🤍'}</span> <span id="likes-${p.id}">${p.likes}</span>
+        </button>
+        <button class="action-btn" onclick="toggleComments('${p.id}')">
+          <span>💬</span> ${p.comments.length}
+        </button>
+        <button class="action-btn" onclick="sharePost('${p.id}')">
+          <span>🔗</span> Share
+        </button>
+        <div class="spacer"></div>
+        <button class="action-btn" onclick="copyPost('${p.id}')">📋</button>
+      </div>
+      <div class="comments-section" id="comments-${p.id}">
+        ${p.comments.map(c=>`
+          <div class="comment">
+            <div class="comment-avatar">${c.avatar}</div>
+            <div class="comment-body">
+              <div class="comment-author">${c.author}</div>
+              <div class="comment-text">${escHtml(c.text)}</div>
+            </div>
+          </div>
+        `).join('')}
+        <div class="comment-input-row">
+          <input class="comment-input" id="cmtInput-${p.id}" placeholder="Write a reply..." maxlength="300">
+          <button class="comment-send" onclick="addComment('${p.id}')">↩</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // enter keypress on comment inputs
+  filtered.forEach(p=>{
+    const inp = document.getElementById(`cmtInput-${p.id}`);
+    if (inp) inp.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();addComment(p.id);}});
+  });
+}
+
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── ACTIONS ── */
+function toggleLike(id, btn) {
+  const post = posts.find(p=>p.id===id);
+  if (!post) return;
+  if (myLikes.has(id)) {
+    myLikes.delete(id);
+    post.likes = Math.max(0, post.likes-1);
+    btn.classList.remove('liked');
+    btn.querySelector('span').textContent = '🤍';
+  } else {
+    myLikes.add(id);
+    post.likes++;
+    btn.classList.add('liked');
+    btn.querySelector('span').textContent = '❤️';
+    if (window.MatrixSounds) MatrixSounds.click();
+  }
+  document.getElementById(`likes-${id}`).textContent = post.likes;
+  localStorage.setItem(LIKES_KEY, JSON.stringify([...myLikes]));
+  savePosts();
+}
+
+function toggleComments(id) {
+  const el = document.getElementById(`comments-${id}`);
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) {
+    const inp = document.getElementById(`cmtInput-${id}`);
+    if (inp) setTimeout(()=>inp.focus(),100);
+  }
+}
+
+function addComment(id) {
+  const inp = document.getElementById(`cmtInput-${id}`);
+  const text = inp.value.trim();
+  if (!text) return;
+  const post = posts.find(p=>p.id===id);
+  if (!post) return;
+  post.comments.push({author:username, avatar:userAvatar, text});
+  inp.value='';
+  savePosts();
+  renderFeed();
+  // Re-open comments
+  const el = document.getElementById(`comments-${id}`);
+  if (el) el.classList.add('open');
+  showToast('💬 Comment posted!');
+}
+
+function deletePost(id) {
+  if (!confirm('Delete this post?')) return;
+  posts = posts.filter(p=>p.id!==id);
+  savePosts();
+  renderFeed();
+  initUI();
+  showToast('🗑 Post deleted');
+}
+
+function sharePost(id) {
+  const post = posts.find(p=>p.id===id);
+  if (!post) return;
+  const text = `${post.author} on MATRIXON Community:\n"${post.text}"`;
+  navigator.clipboard.writeText(text).then(()=>showToast('🔗 Link copied!')).catch(()=>showToast('🔗 Copied!'));
+}
+
+function copyPost(id) {
+  const post = posts.find(p=>p.id===id);
+  if (!post) return;
+  navigator.clipboard.writeText(post.text).then(()=>showToast('📋 Text copied!')).catch(()=>{});
+}
+
+/* ── COMPOSER ── */
+function handleImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5*1024*1024) { showToast('⚠ Image must be under 5MB'); return; }
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    pendingImage = ev.target.result;
+    document.getElementById('imgPreview').src = pendingImage;
+    document.getElementById('imgPreviewArea').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage() {
+  pendingImage = null;
+  document.getElementById('imgPreview').src='';
+  document.getElementById('imgPreviewArea').style.display='none';
+  document.getElementById('imgInput').value='';
+}
+
+function insertTag(tag) {
+  const inp = document.getElementById('postInput');
+  const val = inp.value;
+  inp.value = val + (val&&!val.endsWith(' ')?' ':'') + tag + ' ';
+  inp.focus();
+}
+
+function submitPost() {
+  const text = document.getElementById('postInput').value.trim();
+  if (!text && !pendingImage) { showToast('⚠ Write something first!'); return; }
+  if (text.length < 3) { showToast('⚠ Too short!'); return; }
+
+  const btn = document.getElementById('postBtn');
+  btn.disabled = true; btn.textContent = '⟳ Posting...';
+
+  // Extract tags from hashtags in text
+  const tags = [...text.matchAll(/#(\w+)/g)].map(m=>m[1].toLowerCase());
+
+  const country = localStorage.getItem('matrixon_country_flag') || '';
+  const post = {
+    id: 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2),
+    author: username,
+    avatar: userAvatar,
+    country,
+    text,
+    tags,
+    image: pendingImage,
+    likes: 0,
+    comments: [],
+    ts: Date.now()
+  };
+
+  posts.unshift(post);
+  savePosts();
+
+  document.getElementById('postInput').value='';
+  removeImage();
+  btn.disabled=false; btn.textContent='⬡ POST';
+
+  currentFilter='all'; currentSort='new';
+  renderFeed();
+  initUI();
+  if (window.MatrixSounds) MatrixSounds.xpGain();
+  showToast('✅ Post shared with the community!');
+}
+
+/* ── FILTERS ── */
+function filterFeed(mode) {
+  currentFilter = mode;
+  document.querySelectorAll('.s-nav-link').forEach(el=>{
+    el.classList.remove('active');
+    if(el.textContent.toLowerCase().includes(mode==='all'?'all':mode==='media'?'media':mode==='mine'?'my':mode==='liked'?'liked':'')) el.classList.add('active');
+  });
+  // reset to ALL nav link for 'all'
+  if(mode==='all') document.querySelector('.s-nav-link').classList.add('active');
+  renderFeed();
+}
+
+function filterTopic(topic) {
+  currentTopic = topic;
+  document.querySelectorAll('.tag').forEach(t=>{
+    t.classList.remove('active');
+    if((topic===''&&t.textContent==='ALL')||(topic&&t.textContent.toLowerCase()===topic)) t.classList.add('active');
+  });
+  renderFeed();
+}
+
+function setSort(btn, sort) {
+  currentSort = sort;
+  document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFeed();
+}
+
+/* ── LIGHTBOX ── */
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+document.getElementById('lightbox').addEventListener('click',function(e){
+  if(e.target===this) closeLightbox();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeLightbox(); });
+
+/* ── TOAST ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+/* ── BOOT ── */
+loadPosts();
+renderFeed();
+initUI();
+</script>
+</body>
+</html>

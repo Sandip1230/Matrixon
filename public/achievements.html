@@ -53,8 +53,6 @@ canvas#rain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;}
 
 /* ── TOP BAR ── */
 .top-bar{display:flex;align-items:center;gap:14px;margin-bottom:24px;flex-wrap:wrap;}
-#backBtn{padding:9px 18px;background:#000;border:1px solid var(--green);color:var(--green);border-radius:10px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:13px;transition:.2s;}
-#backBtn:hover{background:var(--green);color:#000;}
 .page-title{font-family:'Orbitron',monospace;font-weight:900;font-size:20px;letter-spacing:4px;text-shadow:0 0 12px var(--green);flex:1;}
 .stats-pills{display:flex;gap:8px;flex-wrap:wrap;}
 .stat-pill{padding:6px 14px;border-radius:20px;font-size:12px;border:1px solid;letter-spacing:1px;}
@@ -181,7 +179,6 @@ canvas#rain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;}
 
 <div class="aw">
   <div class="top-bar">
-    <button id="backBtn" onclick="window.location.href='learning.html'">&#8592; Learning</button>
     <div class="page-title">🎖️ ACHIEVEMENTS</div>
     <div class="stats-pills">
       <div class="stat-pill sp-total">Total: <span id="statTotal">55</span></div>
@@ -210,6 +207,8 @@ canvas#rain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;}
 </div>
 
 <script src="config.js"></script>
+<script src="navbar.js"></script>
+<script src="sounds.js"></script>
 <script>
 /* ── MATRIX RAIN ── */
 (function(){

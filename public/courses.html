@@ -839,11 +839,31 @@ body:hover #cursor { background: rgba(157,78,221,0.08); }
       </div>
     </div>
 
+    <!-- LEADERBOARD MINI -->
+    <div class="section-header fade-up fade-up-5" style="margin-top:8px;">
+      <div class="section-title">🏆 TOP PLAYERS THIS MONTH</div>
+      <a href="Leaderboard.html" style="font-size:11px;font-family:var(--font-code);color:var(--pu3);letter-spacing:1px;text-decoration:none;opacity:0.7;">VIEW ALL →</a>
+    </div>
+    <div class="skill-panel fade-up fade-up-5" style="margin-bottom:36px;">
+      <div id="lbMiniList">
+        <div style="font-size:11px;color:var(--text-dim);font-family:var(--font-code);text-align:center;padding:16px;">Loading leaderboard…</div>
+      </div>
+    </div>
+
   </main>
 </div>
 
 <script src="config.js"></script>
+<script src="navbar.js"></script>
+<script src="sounds.js"></script>
 <script>
+/* ═══════════════════════════════════════════════════════════
+   AUTH GUARD
+   ═══════════════════════════════════════════════════════════ */
+MatrixAuth.requireAuth();
+const _username = MatrixAuth.getUser();
+const _API      = window.MATRIXON_API;
+
 /* ═══════════════════════════════════════════════════════════
    COURSE DATA
    ═══════════════════════════════════════════════════════════ */
@@ -1021,24 +1041,26 @@ const COURSES = [
   }
 ];
 
-const SKILLS = [
-  { name: 'Circuit Analysis', val: 85 },
-  { name: 'Digital Design', val: 92 },
-  { name: 'Embedded Systems', val: 54 },
-  { name: 'Signal Processing', val: 76 },
-  { name: 'PCB Design', val: 35 },
-  { name: 'RF Engineering', val: 12 },
+// SKILLS are derived live from course progress — see buildDerivedSkills()
+let SKILLS = [
+  { name: 'Circuit Analysis',  val: 0 },
+  { name: 'Digital Design',    val: 0 },
+  { name: 'Embedded Systems',  val: 0 },
+  { name: 'Signal Processing', val: 0 },
+  { name: 'PCB Design',        val: 0 },
+  { name: 'RF Engineering',    val: 0 },
 ];
 
-const PATH_NODES = [
-  { name: 'Electronics Fundamentals', xp: 200, done: true },
-  { name: 'Digital Logic', xp: 250, done: true },
-  { name: 'Signal Processing', xp: 320, done: true },
-  { name: 'Semiconductor Physics', xp: 400, done: false, current: true },
-  { name: 'Microcontrollers', xp: 520, done: false },
-  { name: 'PCB Design', xp: 380, done: false },
-  { name: 'RF Systems', xp: 600, done: false },
-  { name: 'AI Hardware', xp: 700, done: false },
+// PATH_NODES are rebuilt after API load — see buildPathFromCourses()
+let PATH_NODES = [
+  { name: 'Electronics Fundamentals', xp: 200, done: false },
+  { name: 'Digital Logic',            xp: 250, done: false },
+  { name: 'Signal Processing',        xp: 320, done: false },
+  { name: 'Semiconductor Physics',    xp: 400, done: false, current: true },
+  { name: 'Microcontrollers',         xp: 520, done: false },
+  { name: 'PCB Design',               xp: 380, done: false },
+  { name: 'RF Systems',               xp: 600, done: false },
+  { name: 'AI Hardware',              xp: 700, done: false },
 ];
 
 const AI_MESSAGES = [
@@ -1279,7 +1301,7 @@ function openModal(id) {
         </div>`).join('')}
       </div>
     </div>` : ''}
-    <button class="enroll-btn" onclick="closeModal(); showAchievement()">
+    <button class="enroll-btn" onclick="closeModal(); ${course.status !== 'completed' ? 'markCourseComplete(' + course.id + ');' : ''} showAchievement()">
       ${course.status === 'completed' ? '🔄 REVIEW COURSE' : course.status === 'inprogress' ? '⚡ CONTINUE COURSE' : '🚀 ENROLL NOW'}
     </button>
   `;
@@ -1373,22 +1395,6 @@ function renderSkills() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   STREAK CALENDAR
-   ═══════════════════════════════════════════════════════════ */
-function renderCalendar() {
-  const grid = document.getElementById('calGrid');
-  const data = Array.from({length:49}, () => {
-    const r = Math.random();
-    if (r < 0.2) return 'empty';
-    if (r < 0.45) return 'low';
-    if (r < 0.7) return 'mid';
-    return 'high';
-  });
-  data[48] = 'today'; // today
-  grid.innerHTML = data.map(d => `<div class="cal-cell ${d}" title="${d === 'today' ? 'Today' : d === 'empty' ? 'No activity' : 'Studied'}"></div>`).join('');
-}
-
-/* ═══════════════════════════════════════════════════════════
    LEARNING PATH
    ═══════════════════════════════════════════════════════════ */
 function renderPath() {
@@ -1411,25 +1417,233 @@ function renderPath() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   INIT
+   LIVE DATA HELPERS
    ═══════════════════════════════════════════════════════════ */
-renderCourses('all');
-renderSkills();
-renderCalendar();
-renderPath();
 
-// XP counter animation
+/** Animate a numeric counter from 0 → target */
 function animateCount(el, target) {
-  let start = 0; const step = target / 60;
+  let start = 0; const step = Math.max(1, target / 60);
   const timer = setInterval(() => {
     start += step;
     if (start >= target) { el.textContent = target.toLocaleString(); clearInterval(timer); }
     else el.textContent = Math.floor(start).toLocaleString();
   }, 16);
 }
-setTimeout(() => {
-  animateCount(document.getElementById('xpCount'), 4280);
-}, 500);
+
+/**
+ * Map server courses_completed names back to COURSES entries.
+ * Server stores course_name (the title string).
+ */
+function syncCourseStatuses(completedNames) {
+  const set = new Set(completedNames.map(n => n.trim().toLowerCase()));
+  COURSES.forEach(c => {
+    if (set.has(c.title.trim().toLowerCase())) {
+      c.status   = 'completed';
+      c.progress = 100;
+      c.syllabus = c.syllabus.map(m => ({ ...m, done: true }));
+    }
+  });
+}
+
+/** Build skill values from course progress (0-100) */
+function buildDerivedSkills(completedNames) {
+  const completed = new Set(completedNames.map(n => n.trim().toLowerCase()));
+  const find = title => COURSES.find(c => c.title.trim().toLowerCase() === title.trim().toLowerCase());
+
+  // Map each skill to relevant courses and compute weighted average
+  const skillMap = [
+    { name: 'Circuit Analysis',  courses: ['Fundamentals of Electronics', 'Signal Processing 101'] },
+    { name: 'Digital Design',    courses: ['Digital Logic & Boolean Algebra', 'Computer Architecture'] },
+    { name: 'Embedded Systems',  courses: ['Microcontrollers & Embedded Systems'] },
+    { name: 'Signal Processing', courses: ['Signal Processing 101', 'RF & Wireless Systems'] },
+    { name: 'PCB Design',        courses: ['PCB Design with KiCad'] },
+    { name: 'RF Engineering',    courses: ['RF & Wireless Systems'] },
+  ];
+
+  SKILLS = skillMap.map(s => {
+    const total = s.courses.reduce((sum, title) => {
+      const c = find(title);
+      if (!c) return sum;
+      return sum + (completed.has(title.trim().toLowerCase()) ? 100 : c.progress);
+    }, 0);
+    return { name: s.name, val: Math.round(total / s.courses.length) };
+  });
+}
+
+/** Rebuild path node done/current state from completed courses */
+function buildPathFromCourses(completedNames) {
+  const completed = new Set(completedNames.map(n => n.trim().toLowerCase()));
+  // Map path nodes to course titles
+  const pathToTitle = {
+    'Electronics Fundamentals': 'Fundamentals of Electronics',
+    'Digital Logic':            'Digital Logic & Boolean Algebra',
+    'Signal Processing':        'Signal Processing 101',
+    'Semiconductor Physics':    'Semiconductor Physics',
+    'Microcontrollers':         'Microcontrollers & Embedded Systems',
+    'PCB Design':               'PCB Design with KiCad',
+    'RF Systems':               'RF & Wireless Systems',
+    'AI Hardware':              'AI Hardware Accelerators',
+  };
+  let firstIncomplete = null;
+  PATH_NODES = PATH_NODES.map(node => {
+    const title = pathToTitle[node.name] || node.name;
+    const done = completed.has(title.trim().toLowerCase());
+    return { ...node, done, current: false };
+  });
+  // Mark first undone as current
+  for (let n of PATH_NODES) {
+    if (!n.done) { n.current = true; break; }
+  }
+}
+
+/** Compute streak count from login_days (total logins as proxy) */
+function estimateStreak(loginDays) {
+  // The server tracks login_days as total unique login days.
+  // Use it as a best-effort streak display.
+  return Math.min(loginDays, 999);
+}
+
+/** Update stats row from profile data */
+function updateStatsRow(profile, completedCourses) {
+  const totalEnrolled  = COURSES.filter(c => c.status !== 'locked').length;
+  const totalCompleted = completedCourses.length;
+  const hoursStudied   = Math.round(completedCourses.reduce((sum, name) => {
+    const c = COURSES.find(x => x.title.trim().toLowerCase() === name.trim().toLowerCase());
+    return sum + (c ? parseFloat(c.duration) || 0 : 0);
+  }, 0));
+  const skillPoints = profile.points || 0;
+  const completionPct = totalEnrolled ? Math.round((totalCompleted / totalEnrolled) * 100) : 0;
+
+  const statsData = [
+    { label: 'COURSES ENROLLED', value: totalEnrolled, sub: `+${Math.max(0, totalEnrolled - totalCompleted)} active`, bar: Math.round((totalEnrolled / COURSES.length) * 100) },
+    { label: 'COMPLETED', value: totalCompleted, sub: `${completionPct}% completion rate`, bar: completionPct, cls: 'green' },
+    { label: 'HOURS STUDIED', value: hoursStudied + 'h', sub: 'Avg across courses', bar: Math.min(100, hoursStudied), cls: 'amber' },
+    { label: 'SKILL POINTS', value: skillPoints.toLocaleString(), sub: 'Lifetime points', bar: Math.min(100, Math.round(skillPoints / 50)), cls: 'cyan' },
+  ];
+
+  const cards = document.querySelectorAll('.stat-card');
+  cards.forEach((card, i) => {
+    const d = statsData[i];
+    if (!d) return;
+    card.querySelector('.stat-label').textContent = d.label;
+    const valEl = card.querySelector('.stat-value');
+    valEl.textContent = d.value;
+    valEl.className   = 'stat-value' + (d.cls ? ' ' + d.cls : '');
+    card.querySelector('.stat-sub').textContent  = d.sub;
+    card.querySelector('.stat-bar-fill').style.width = d.bar + '%';
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COURSE COMPLETION — wire enroll/continue/review buttons
+   ═══════════════════════════════════════════════════════════ */
+async function markCourseComplete(courseId) {
+  const course = COURSES.find(c => c.id === courseId);
+  if (!course || course.status === 'locked') return;
+  try {
+    await fetch(`${_API}/course/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: _username, course_name: course.title })
+    });
+    // Award XP for the course
+    await fetch(`${_API}/profile/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: _username, xp: course.xp })
+    });
+    // Update local state
+    course.status   = 'completed';
+    course.progress = 100;
+    course.syllabus = course.syllabus.map(m => ({ ...m, done: true }));
+    renderCourses(currentFilter);
+    // Refresh profile data
+    loadProfile();
+  } catch (e) { console.warn('[COURSES] Could not mark complete:', e); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INIT — fetch profile + completed courses, then render
+   ═══════════════════════════════════════════════════════════ */
+async function loadProfile() {
+  try {
+    const resp    = await fetch(`${_API}/profile/${encodeURIComponent(_username)}`, { cache: 'no-store' });
+    const profile = await resp.json();
+
+    const xp              = profile.xp        || 0;
+    const streak          = estimateStreak(profile.login_days || 0);
+    const completedCourses = profile.courses_completed || [];
+
+    // Update topbar pills
+    const xpEl = document.getElementById('xpCount');
+    if (xpEl) animateCount(xpEl, xp);
+    const streakEl = document.getElementById('streakCount');
+    if (streakEl) streakEl.textContent = streak;
+
+    // Sync course states & derived data
+    syncCourseStatuses(completedCourses);
+    buildDerivedSkills(completedCourses);
+    buildPathFromCourses(completedCourses);
+
+    // Re-render everything
+    renderCourses(currentFilter);
+    renderSkills();
+    renderCalendar(profile.login_days || 0);
+    renderPath();
+    updateStatsRow(profile, completedCourses);
+
+  } catch (e) {
+    console.warn('[COURSES] Profile fetch failed, using local data:', e);
+    // Graceful fallback: render with defaults
+    renderCourses('all');
+    renderSkills();
+    renderCalendar(0);
+    renderPath();
+  }
+}
+
+async function loadLeaderboardMini() {
+  try {
+    const resp = await fetch(`${_API}/leaderboard/global`, { cache: 'no-store' });
+    const rows = await resp.json();
+    const container = document.getElementById('lbMiniList');
+    if (!container || !rows.length) return;
+    const rankClass = ['gold', 'silver', 'bronze'];
+    container.innerHTML = rows.slice(0, 5).map((r, i) => `
+      <div class="lb-item">
+        <div class="lb-rank ${rankClass[i] || ''}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</div>
+        <div class="lb-avatar">${(r.country_flag || r.nickname || '?')[0]}</div>
+        <div class="lb-name ${r.username === _username ? 'you' : ''}">${r.nickname || r.username}</div>
+        <div class="lb-xp">⚡ ${(r.xp || 0).toLocaleString()}</div>
+      </div>
+    `).join('');
+  } catch (e) { /* silently skip mini-lb if offline */ }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CALENDAR — use login_days as heat intensity hint
+   ═══════════════════════════════════════════════════════════ */
+function renderCalendar(loginDays) {
+  const grid = document.getElementById('calGrid');
+  if (!grid) return;
+  // Generate 49-day grid, bias activity toward recent days based on loginDays
+  const activityRatio = Math.min(1, (loginDays || 0) / 49);
+  const data = Array.from({ length: 49 }, (_, i) => {
+    const recencyBoost = (i / 49) * 0.3;
+    const r = Math.random();
+    const threshold = 0.2 + activityRatio * 0.5 + recencyBoost;
+    if (r > threshold) return 'empty';
+    if (r > threshold * 0.5) return 'low';
+    if (r > threshold * 0.25) return 'mid';
+    return 'high';
+  });
+  data[48] = 'today';
+  grid.innerHTML = data.map(d => `<div class="cal-cell ${d}" title="${d === 'today' ? 'Today' : d === 'empty' ? 'No activity' : 'Studied'}"></div>`).join('');
+}
+
+/* INIT */
+loadProfile();
+loadLeaderboardMini();
 
 // Keyboard shortcut
 document.addEventListener('keydown', e => {

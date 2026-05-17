@@ -15,13 +15,11 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
 // ── DATABASE ──────────────────────────────────────────────────────────────────
-// Reads env vars injected by Railway/Render/etc. Falls back to localhost for dev.
 const db = mysql.createConnection({
-  host:     process.env.MYSQLHOST     || 'localhost',
-  port:     parseInt(process.env.MYSQLPORT || '3306'),
-  user:     process.env.MYSQLUSER     || 'root',
-  password: process.env.MYSQLPASSWORD || '',
-  database: process.env.MYSQLDATABASE || 'matrix'
+  host:     'localhost',
+  user:     'root',
+  password: process.env.DB_PASSWORD || 'sandipmaitra@1338',
+  database: 'matrix'
 });
 db.connect(err => { if (err) throw err; console.log('MySQL Connected'); initTables(); });
 
@@ -164,6 +162,8 @@ function initTables() {
     { col: 'country_code', def: "VARCHAR(5) DEFAULT ''" },
     { col: 'country_flag', def: "VARCHAR(10) DEFAULT ''" },
     { col: 'country_name', def: "VARCHAR(60) DEFAULT ''" },
+    { col: 'email',        def: "VARCHAR(120) DEFAULT ''" },
+    { col: 'phone',        def: "VARCHAR(20) DEFAULT ''" },
   ];
 
   function addColumnIfMissing(index) {
@@ -428,13 +428,15 @@ app.get('/profile/:username', (req, res) => {
 });
 
 app.post('/profile/update', (req, res) => {
-  const { username, nickname, photo, level, xp, country_code, country_flag, country_name } = req.body;
+  const { username, nickname, photo, level, xp, country_code, country_flag, country_name, email, phone } = req.body;
   if (!username) return res.json({ success: false });
   let fields = [], values = [];
   if (nickname     !== undefined) { fields.push('nickname=?');      values.push(nickname); }
   if (photo        !== undefined) { fields.push('photo=?');         values.push(photo); }
   if (country_code !== undefined) { fields.push('country_code=?');  values.push(country_code); }
   if (country_flag !== undefined) { fields.push('country_flag=?');  values.push(country_flag); }
+  if (email        !== undefined) { fields.push('email=?');         values.push(email); }
+  if (phone        !== undefined) { fields.push('phone=?');         values.push(phone); }
   if (country_name !== undefined) { fields.push('country_name=?');  values.push(country_name); }
   if (xp           !== undefined) { fields.push('xp=xp+?','weekly_xp=weekly_xp+?','monthly_xp=monthly_xp+?'); values.push(xp, xp, xp); }
   if (level        !== undefined) { fields.push('level=?','league=?'); values.push(level, getLeague(level)); }
@@ -583,5 +585,33 @@ app.post('/account/delete', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`MATRIXON Server → http://localhost:${PORT}`));
+// ── SUPPORT TICKETS ───────────────────────────────────────────────────────────
+// Create table on startup (safe — IF NOT EXISTS)
+db.query(`CREATE TABLE IF NOT EXISTS support_tickets (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  username    VARCHAR(50),
+  type        ENUM('bug','feature','account','other') DEFAULT 'other',
+  subject     VARCHAR(200),
+  priority    ENUM('low','medium','high') DEFAULT 'medium',
+  message     TEXT,
+  status      ENUM('open','in_progress','resolved') DEFAULT 'open',
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`, err => { if (err) console.error('support_tickets:', err.message); });
+
+app.post('/support/submit', (req, res) => {
+  const { username, type, subject, priority, message } = req.body;
+  if (!subject || !message) return res.status(400).json({ success: false, error: 'Missing fields' });
+  if (message.length < 10) return res.status(400).json({ success: false, error: 'Message too short' });
+  const safeType = ['bug','feature','account','other'].includes(type) ? type : 'other';
+  const safePrio = ['low','medium','high'].includes(priority) ? priority : 'medium';
+  db.query(
+    'INSERT INTO support_tickets (username,type,subject,priority,message) VALUES (?,?,?,?,?)',
+    [username||'anonymous', safeType, subject.slice(0,200), safePrio, message.slice(0,2000)],
+    (err, result) => {
+      if (err) return res.status(500).json({ success: false, error: err.message });
+      res.json({ success: true, ticket_id: result.insertId });
+    }
+  );
+});
+
+app.listen(3000, () => console.log('MATRIXON Server → http://localhost:3000'));

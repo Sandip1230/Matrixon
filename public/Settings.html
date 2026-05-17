@@ -32,11 +32,6 @@ canvas#rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer
 
 /* ── TOP BAR ── */
 .top-bar{display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
-#backBtn{
-  padding:9px 18px;background:#000;border:1px solid var(--border);color:var(--green);
-  border-radius:10px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:13px;transition:.2s;
-}
-#backBtn:hover{background:var(--green);color:#000;}
 
 /* ── DEFAULT SETTINGS BUTTON ── */
 #defaultBtn {
@@ -270,7 +265,10 @@ canvas#rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer
 </head>
 <body>
 <script src="config.js"></script>
+<script src="navbar.js"></script>
+<script src="sounds.js"></script>
 <script src="settings-apply.js"></script>
+<script src="push.js"></script>
 <canvas id="rain"></canvas>
 <div id="savedToast">✓ &nbsp;Saved</div>
 <div id="confirmModal">
@@ -287,7 +285,6 @@ canvas#rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer
 <div class="sw">
   <!-- TOP BAR -->
   <div class="top-bar">
-    <button id="backBtn" onclick="window.location.href='learning.html'">&#8592; Learning</button>
     <div class="page-title">⚙ SETTINGS</div>
     <button id="defaultBtn" onclick="resetToDefaults()" title="Reset all settings to factory defaults">
       <span class="def-icon">↺</span>DEFAULTS
@@ -907,6 +904,24 @@ function toggler(key){
   const newVal=!el.classList.contains('on');
   el.classList.toggle('on',newVal);
   saveSetting(key,newVal);
+
+  // Wire push notifications to the real browser API
+  if(key==='pushNotif' && window.MatrixPush){
+    if(newVal){
+      MatrixPush.subscribe().then(result=>{
+        if(result==='denied'){
+          el.classList.remove('on');
+          saveSetting('pushNotif',false);
+          showSaved('⚠ Permission denied in browser');
+        } else if(result==='subscribed'){
+          showSaved('🔔 Push notifications enabled!');
+        }
+      });
+    } else {
+      MatrixPush.unsubscribe();
+      showSaved('🔕 Push notifications disabled');
+    }
+  }
 }
 
 /* ══ SLIDER ══ */

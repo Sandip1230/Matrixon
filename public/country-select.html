@@ -1,166 +1,436 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>MATRIXON — Select Your Country</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MATRIXON — Setup Your Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
     :root{
-      --green:#00ff00;--dark-green:#00aa00;--bg:#020d02;
-      --card:#0a140a;--border:rgba(0,255,0,0.25);
+      --g:#00ff88;--b:#00d4ff;--bg:#000508;
+      --card:rgba(0,255,136,0.03);--border:rgba(0,255,136,0.18);
+      --muted:rgba(0,255,136,0.45);--text:#c8ffe0;
     }
     body{
-      font-family:'Courier New',monospace;
-      background:var(--bg); color:var(--green);
-      min-height:100vh; overflow-x:hidden;
+      font-family:'Share Tech Mono','Courier New',monospace;
+      background:var(--bg);color:var(--text);
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
+      padding:30px 16px;overflow-x:hidden;
     }
-    canvas#rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+    canvas#rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.22;}
 
-    /* ── WRAPPER ── */
-    .cs-wrap{
+    /* ── CARD ── */
+    .setup-card{
       position:relative;z-index:1;
-      min-height:100vh;display:flex;flex-direction:column;align-items:center;
-      padding:36px 20px 60px;
+      width:100%;max-width:540px;
+      background:rgba(0,8,4,0.97);
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:36px 36px 32px;
+      box-shadow:0 0 60px rgba(0,255,136,0.07),0 0 120px rgba(0,212,255,0.04);
     }
 
     /* ── HEADER ── */
-    .cs-header{text-align:center;margin-bottom:30px;}
-    .cs-title{
-      font-size:28px;letter-spacing:4px;
-      text-shadow:0 0 12px var(--green);margin-bottom:8px;
+    .card-logo{
+      font-family:'Orbitron',monospace;font-weight:900;
+      font-size:22px;letter-spacing:8px;color:var(--g);
+      text-shadow:0 0 16px rgba(0,255,136,0.5);
+      text-align:center;margin-bottom:6px;
     }
-    .cs-sub{font-size:13px;color:#558855;letter-spacing:2px;}
-
-    /* ── USER DISPLAY (flag lands here) ── */
-    #userDisplay{
-      display:inline-flex;align-items:center;gap:10px;
-      background:rgba(0,0,0,0.7);border:1px solid var(--border);
-      border-radius:30px;padding:10px 22px;margin-bottom:28px;
-      font-size:16px;letter-spacing:1px;
-    }
-    #flyTarget{display:inline-block;font-size:22px;min-width:28px;text-align:center;}
-
-    /* ── SEARCH ── */
-    #countrySearch{
-      width:100%;max-width:480px;padding:12px 18px;
-      background:rgba(0,0,0,0.7);border:1px solid var(--border);
-      border-radius:30px;color:var(--green);font-family:monospace;
-      font-size:14px;outline:none;margin-bottom:24px;
-      transition:.3s;
-    }
-    #countrySearch:focus{border-color:var(--green);box-shadow:0 0 12px rgba(0,255,0,0.3);}
-    #countrySearch::placeholder{color:#336633;}
-
-    /* ── GRID ── */
-    #countryGrid{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
-      gap:12px;width:100%;max-width:1000px;
-      margin-bottom:36px;
+    .card-logo span{color:var(--b);}
+    .card-sub{
+      text-align:center;font-size:11px;color:var(--muted);
+      letter-spacing:3px;margin-bottom:32px;
     }
 
-    /* ── COUNTRY CARD ── */
+    /* ── STEP INDICATOR ── */
+    .steps{
+      display:flex;align-items:center;justify-content:center;
+      gap:0;margin-bottom:32px;
+    }
+    .step{
+      display:flex;flex-direction:column;align-items:center;gap:5px;
+      flex:1;
+    }
+    .step-circle{
+      width:32px;height:32px;border-radius:50%;
+      border:2px solid rgba(0,255,136,0.2);
+      background:rgba(0,0,0,0.6);
+      display:flex;align-items:center;justify-content:center;
+      font-size:12px;color:var(--muted);
+      transition:.3s;position:relative;z-index:1;
+    }
+    .step.done .step-circle{
+      border-color:var(--g);background:rgba(0,255,136,0.15);color:var(--g);
+      box-shadow:0 0 10px rgba(0,255,136,0.3);
+    }
+    .step.active .step-circle{
+      border-color:var(--b);background:rgba(0,212,255,0.12);color:var(--b);
+      box-shadow:0 0 12px rgba(0,212,255,0.4);
+      animation:stepPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes stepPulse{0%,100%{box-shadow:0 0 12px rgba(0,212,255,0.4)}50%{box-shadow:0 0 20px rgba(0,212,255,0.7)}}
+    .step-label{font-size:9px;color:var(--muted);letter-spacing:1px;white-space:nowrap;}
+    .step.active .step-label{color:var(--b);}
+    .step.done .step-label{color:var(--g);}
+    .step-line{flex:1;height:1px;background:rgba(0,255,136,0.12);margin:0 -1px;margin-bottom:20px;transition:.3s;}
+    .step-line.done{background:rgba(0,255,136,0.4);}
+
+    /* ── PANELS ── */
+    .panel{display:none;animation:fadeIn .35s ease;}
+    .panel.active{display:block;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    .panel-title{
+      font-size:15px;color:var(--g);letter-spacing:3px;
+      margin-bottom:6px;
+    }
+    .panel-desc{font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:24px;line-height:1.7;}
+
+    /* ── FIELD ── */
+    .field{margin-bottom:18px;}
+    .field label{
+      display:block;font-size:10px;color:var(--muted);
+      letter-spacing:2px;margin-bottom:7px;
+    }
+    .field input,.field select{
+      width:100%;padding:12px 16px;
+      background:rgba(0,0,0,0.7);
+      border:1px solid var(--border);border-radius:10px;
+      color:var(--g);font-family:'Share Tech Mono',monospace;font-size:13px;
+      outline:none;transition:.3s;
+    }
+    .field input:focus,.field select:focus{
+      border-color:var(--g);box-shadow:0 0 12px rgba(0,255,136,0.12);
+    }
+    .field input::placeholder{color:rgba(0,255,136,0.2);}
+    .field select option{background:#001208;color:var(--g);}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .field-hint{font-size:10px;color:rgba(0,212,255,0.4);margin-top:5px;letter-spacing:.5px;}
+    .field-error{font-size:10px;color:#ff6666;margin-top:5px;letter-spacing:.5px;display:none;}
+
+    /* ── PHONE ROW ── */
+    .phone-row{display:grid;grid-template-columns:130px 1fr;gap:8px;align-items:center;}
+    .phone-code{
+      width:100%;
+      padding:12px 8px;
+      background:rgba(0,0,0,0.7);
+      border:1px solid var(--border);border-radius:10px;
+      color:var(--g);font-family:'Share Tech Mono',monospace;font-size:11px;
+      outline:none;transition:.3s;cursor:pointer;
+      appearance:none;-webkit-appearance:none;
+      text-overflow:ellipsis;overflow:hidden;
+    }
+    .phone-code:focus{border-color:var(--g);}
+    .phone-code option{background:#001208;color:var(--g);}
+    #f-phone{
+      width:100%;padding:12px 14px;
+      background:rgba(0,0,0,0.7);
+      border:1px solid var(--border);border-radius:10px;
+      color:var(--g);font-family:'Share Tech Mono',monospace;font-size:13px;
+      outline:none;transition:.3s;
+    }
+    #f-phone:focus{border-color:var(--g);box-shadow:0 0 12px rgba(0,255,136,0.12);}
+    #f-phone::placeholder{color:rgba(0,255,136,0.2);}
+
+    /* ── COUNTRY GRID ── */
+    .country-search{
+      width:100%;padding:10px 14px;margin-bottom:12px;
+      background:rgba(0,0,0,0.7);border:1px solid var(--border);border-radius:10px;
+      color:var(--g);font-family:'Share Tech Mono',monospace;font-size:12px;
+      outline:none;transition:.3s;
+    }
+    .country-search:focus{border-color:var(--g);}
+    .country-search::placeholder{color:rgba(0,255,136,0.2);}
+    .country-grid{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+      gap:8px;max-height:280px;overflow-y:auto;
+      padding-right:4px;margin-bottom:4px;
+    }
+    .country-grid::-webkit-scrollbar{width:4px;}
+    .country-grid::-webkit-scrollbar-track{background:transparent;}
+    .country-grid::-webkit-scrollbar-thumb{background:rgba(0,255,136,0.2);border-radius:2px;}
     .cc{
-      background:var(--card);border:1px solid var(--border);
-      border-radius:14px;padding:18px 10px;text-align:center;
-      cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+      border:1px solid var(--border);border-radius:10px;
+      padding:12px 6px;text-align:center;cursor:pointer;
+      transition:.2s;background:rgba(0,255,136,0.02);
     }
-    .cc:hover{
-      border-color:var(--green);background:rgba(0,255,0,0.06);
-      transform:translateY(-4px) scale(1.04);
-      box-shadow:0 0 18px rgba(0,255,0,0.25);
-    }
+    .cc:hover{border-color:rgba(0,255,136,0.35);background:rgba(0,255,136,0.05);}
     .cc.selected{
-      border-color:var(--green);background:rgba(0,255,0,0.12);
-      box-shadow:0 0 24px rgba(0,255,0,0.5);
-      transform:translateY(-4px) scale(1.06);
+      border-color:var(--g);background:rgba(0,255,136,0.1);
+      box-shadow:0 0 12px rgba(0,255,136,0.2);
     }
-    .cc-flag{font-size:38px;display:block;margin-bottom:8px;line-height:1;}
-    .cc-name{font-size:11px;color:#aaffaa;letter-spacing:.5px;line-height:1.3;}
+    .cc-flag{font-size:28px;display:block;margin-bottom:4px;}
+    .cc-name{font-size:9px;color:var(--muted);letter-spacing:.3px;line-height:1.3;}
 
-    /* ── FLYING CLONE ── */
-    .flying-flag{
-      position:fixed;z-index:9999;pointer-events:none;font-size:38px;
-      animation:flyAnim .8s cubic-bezier(.22,1,.36,1) forwards;
+    /* ── SELECTED COUNTRY BADGE ── */
+    .selected-badge{
+      display:none;align-items:center;gap:10px;
+      padding:10px 14px;border-radius:10px;
+      border:1px solid rgba(0,255,136,0.3);
+      background:rgba(0,255,136,0.06);
+      margin-bottom:12px;font-size:13px;
     }
-    @keyframes flyAnim{
-      0%  {transform:translate(0,0) scale(1);opacity:1;}
-      40% {transform:translate(calc(var(--tx)*0.4),calc(var(--ty)*0.4)) scale(1.6);opacity:1;}
-      100%{transform:translate(var(--tx),var(--ty)) scale(0.7);opacity:0;}
+    .selected-badge.show{display:flex;}
+    .selected-badge .change-btn{
+      margin-left:auto;font-size:10px;color:var(--b);
+      cursor:pointer;letter-spacing:1px;border:none;background:none;
+      font-family:'Share Tech Mono',monospace;
     }
 
-    /* ── CONFIRM BUTTON ── */
-    #confirmBtn{
-      display:none;padding:14px 50px;
-      background:linear-gradient(to right,#00cc44,#00ff88);
-      color:#001a00;font-weight:bold;font-size:16px;
-      border:none;border-radius:40px;cursor:pointer;
-      letter-spacing:2px;font-family:monospace;
-      transition:.3s;box-shadow:0 0 20px rgba(0,255,0,0.4);
-      animation:pulsBtn 1.5s infinite;
+    /* ── AVATAR PICKER ── */
+    .avatar-grid{
+      display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:4px;
     }
-    @keyframes pulsBtn{
-      0%,100%{box-shadow:0 0 20px rgba(0,255,0,0.4);}
-      50%{box-shadow:0 0 35px rgba(0,255,0,0.8);}
+    .av{
+      aspect-ratio:1;border-radius:12px;border:2px solid var(--border);
+      background:rgba(0,255,136,0.03);display:flex;align-items:center;
+      justify-content:center;font-size:26px;cursor:pointer;transition:.2s;
     }
-    #confirmBtn.show{display:block;}
-    #confirmBtn:hover{transform:scale(1.08);}
+    .av:hover{border-color:rgba(0,255,136,0.4);background:rgba(0,255,136,0.06);}
+    .av.selected{
+      border-color:var(--g);background:rgba(0,255,136,0.12);
+      box-shadow:0 0 12px rgba(0,255,136,0.25);
+    }
 
-    /* Selected indicator */
-    #selectedInfo{
-      font-size:14px;color:var(--dark-green);margin-bottom:12px;
-      opacity:0;transition:.4s;text-align:center;
+    /* ── BUTTONS ── */
+    .btn-row{display:flex;gap:10px;margin-top:24px;}
+    .btn-back{
+      padding:12px 20px;border-radius:30px;
+      background:transparent;border:1px solid var(--border);
+      color:var(--muted);cursor:pointer;font-size:12px;
+      font-family:'Share Tech Mono',monospace;letter-spacing:1px;
+      transition:.2s;flex-shrink:0;
     }
-    #selectedInfo.show{opacity:1;}
+    .btn-back:hover{border-color:var(--g);color:var(--g);}
+    .btn-next{
+      flex:1;padding:13px;border-radius:30px;
+      background:linear-gradient(to right,#00cc66,#00ff88);
+      color:#001208;font-weight:bold;font-size:13px;
+      border:none;cursor:pointer;letter-spacing:2px;
+      font-family:'Share Tech Mono',monospace;transition:.2s;
+    }
+    .btn-next:hover{transform:scale(1.02);filter:brightness(1.1);}
+    .btn-next:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+    /* ── SUCCESS ── */
+    .success-screen{
+      text-align:center;padding:20px 0;
+      display:none;animation:fadeIn .4s ease;
+    }
+    .success-screen.show{display:block;}
+    .success-icon{font-size:64px;margin-bottom:16px;animation:popIn .5s cubic-bezier(.22,1,.36,1);}
+    @keyframes popIn{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0)}}
+    .success-title{
+      font-family:'Orbitron',monospace;font-size:20px;
+      color:var(--g);letter-spacing:4px;margin-bottom:8px;
+      text-shadow:0 0 16px rgba(0,255,136,0.4);
+    }
+    .success-sub{font-size:12px;color:var(--muted);letter-spacing:1px;line-height:1.8;}
+    .success-bar{
+      height:3px;background:rgba(0,255,136,0.1);border-radius:2px;
+      margin:24px 0 8px;overflow:hidden;
+    }
+    .success-bar-fill{
+      height:100%;width:0%;border-radius:2px;
+      background:linear-gradient(to right,var(--g),var(--b));
+      transition:width 2.5s linear;
+    }
+    .success-redirect{font-size:10px;color:rgba(0,212,255,0.4);letter-spacing:1px;}
+
+    @media(max-width:480px){
+      .setup-card{padding:24px 18px;}
+      .avatar-grid{grid-template-columns:repeat(5,1fr);}
+      .field-row{grid-template-columns:1fr;}
+    }
   </style>
 </head>
 <body>
 <canvas id="rain"></canvas>
+<script src="config.js"></script>
 
-<div class="cs-wrap">
-  <div class="cs-header">
-    <div class="cs-title">⚑ SELECT YOUR COUNTRY</div>
-    <div class="cs-sub">This will be shown on the leaderboard — choose once</div>
+<div class="setup-card">
+
+  <!-- Header -->
+  <div class="card-logo">MATRIX<span>ON</span></div>
+  <div class="card-sub">▸ COMPLETE YOUR PROFILE ◂</div>
+
+  <!-- Step indicator -->
+  <div class="steps">
+    <div class="step active" id="step1">
+      <div class="step-circle">01</div>
+      <div class="step-label">IDENTITY</div>
+    </div>
+    <div class="step-line" id="line1"></div>
+    <div class="step" id="step2">
+      <div class="step-circle">02</div>
+      <div class="step-label">CONTACT</div>
+    </div>
+    <div class="step-line" id="line2"></div>
+    <div class="step" id="step3">
+      <div class="step-circle">03</div>
+      <div class="step-label">COUNTRY</div>
+    </div>
   </div>
 
-  <!-- User + flag landing spot -->
-  <div id="userDisplay">
-    <span id="flyTarget">🌐</span>
-    <span id="usernameLabel">Player</span>
+  <!-- ── PANEL 1: Identity ── -->
+  <div class="panel active" id="panel1">
+    <div class="panel-title">⚡ WHO ARE YOU?</div>
+    <div class="panel-desc">Set your display name and pick an avatar that represents you on the leaderboard.</div>
+
+    <div class="field">
+      <label>USERNAME (locked)</label>
+      <input type="text" id="f-username" readonly>
+    </div>
+    <div class="field">
+      <label>DISPLAY NAME / NICKNAME</label>
+      <input type="text" id="f-nickname" placeholder="How others will see you..." maxlength="30">
+      <div class="field-hint">Leave blank to use your username</div>
+    </div>
+
+    <div class="field">
+      <label>CHOOSE YOUR AVATAR</label>
+      <div class="avatar-grid" id="avatarGrid"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-next" onclick="goStep(2)">NEXT →</button>
+    </div>
   </div>
 
-  <!-- Search -->
-  <input id="countrySearch" type="text" placeholder="🔍  Search country..." autocomplete="off">
+  <!-- ── PANEL 2: Contact ── -->
+  <div class="panel" id="panel2">
+    <div class="panel-title">📡 CONTACT DETAILS</div>
+    <div class="panel-desc">Optional but recommended — used for streak reminders and account recovery.</div>
 
-  <!-- Grid -->
-  <div id="countryGrid"></div>
+    <div class="field">
+      <label>EMAIL ADDRESS</label>
+      <input type="email" id="f-email" placeholder="your@email.com">
+      <div class="field-error" id="err-email">Please enter a valid email</div>
+    </div>
 
-  <div id="selectedInfo"></div>
-  <button id="confirmBtn" onclick="confirmCountry()">✓ &nbsp;CONFIRM SELECTION</button>
+    <div class="field">
+      <label>PHONE NUMBER</label>
+      <div class="phone-row">
+        <select class="phone-code" id="f-dialcode">
+          <option value="+91">🇮🇳 +91</option>
+          <option value="+1">🇺🇸 +1</option>
+          <option value="+44">🇬🇧 +44</option>
+          <option value="+86">🇨🇳 +86</option>
+          <option value="+81">🇯🇵 +81</option>
+          <option value="+49">🇩🇪 +49</option>
+          <option value="+33">🇫🇷 +33</option>
+          <option value="+55">🇧🇷 +55</option>
+          <option value="+61">🇦🇺 +61</option>
+          <option value="+7">🇷🇺 +7</option>
+          <option value="+82">🇰🇷 +82</option>
+          <option value="+39">🇮🇹 +39</option>
+          <option value="+34">🇪🇸 +34</option>
+          <option value="+52">🇲🇽 +52</option>
+          <option value="+62">🇮🇩 +62</option>
+          <option value="+90">🇹🇷 +90</option>
+          <option value="+966">🇸🇦 +966</option>
+          <option value="+27">🇿🇦 +27</option>
+          <option value="+92">🇵🇰 +92</option>
+          <option value="+880">🇧🇩 +880</option>
+          <option value="+65">🇸🇬 +65</option>
+          <option value="+60">🇲🇾 +60</option>
+          <option value="+66">🇹🇭 +66</option>
+          <option value="+31">🇳🇱 +31</option>
+          <option value="+46">🇸🇪 +46</option>
+          <option value="+47">🇳🇴 +47</option>
+          <option value="+41">🇨🇭 +41</option>
+          <option value="+32">🇧🇪 +32</option>
+          <option value="+48">🇵🇱 +48</option>
+          <option value="+20">🇪🇬 +20</option>
+          <option value="+234">🇳🇬 +234</option>
+          <option value="+254">🇰🇪 +254</option>
+        </select>
+        <input type="tel" id="f-phone" placeholder="Enter phone number...">
+      </div>
+      <div class="field-error" id="err-phone">Please enter a valid phone number</div>
+      <div class="field-hint">Used only for streak reminders — never shared</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(1)">← BACK</button>
+      <button class="btn-next" onclick="goStep(3)">NEXT →</button>
+    </div>
+  </div>
+
+  <!-- ── PANEL 3: Country ── -->
+  <div class="panel" id="panel3">
+    <div class="panel-title">🌐 YOUR COUNTRY</div>
+    <div class="panel-desc">Shown on the leaderboard. Choose once — contact support to change later.</div>
+
+    <div class="selected-badge" id="selectedBadge">
+      <span id="selectedFlag">🌐</span>
+      <span id="selectedName">None selected</span>
+      <button class="change-btn" onclick="clearCountry()">✕ CHANGE</button>
+    </div>
+
+    <input class="country-search" id="countrySearch" type="text" placeholder="🔍  Search country..." autocomplete="off">
+    <div class="country-grid" id="countryGrid"></div>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(2)">← BACK</button>
+      <button class="btn-next" id="finishBtn" onclick="finish()" disabled>⬡ &nbsp;LAUNCH</button>
+    </div>
+  </div>
+
+  <!-- ── SUCCESS ── -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon" id="successAvatar">🤖</div>
+    <div class="success-title">PROFILE READY</div>
+    <div class="success-sub" id="successMsg">Welcome to MATRIXON.<br>Your identity has been initialized.</div>
+    <div class="success-bar"><div class="success-bar-fill" id="successBarFill"></div></div>
+    <div class="success-redirect">Redirecting to learning hub...</div>
+  </div>
+
 </div>
 
-<script src="config.js"></script>
 <script>
 MatrixAuth.requireAuth();
 
-/* ── MATRIX RAIN ── */
+/* ── RAIN ── */
 (function(){
   const c=document.getElementById('rain'),ctx=c.getContext('2d');
-  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
-  resize();window.addEventListener('resize',()=>{resize();init();});
-  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&アイウエオカキク';
-  const fs=14;let cols,drops;
+  function rs(){c.width=innerWidth;c.height=innerHeight;}rs();addEventListener('resize',rs);
+  const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&';const fs=14;let cols,drops;
   function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(0).map(()=>Math.floor(Math.random()*-40));}
   init();
   setInterval(()=>{
-    ctx.fillStyle='rgba(0,0,0,0.06)';ctx.fillRect(0,0,c.width,c.height);
-    ctx.font=fs+'px monospace';
-    drops.forEach((d,i)=>{
-      ctx.fillStyle=d*fs<80?'#ccffcc':'#00ff00';
-      ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*fs,d*fs);
-      if(d*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;
-    });
-  },45);
+    ctx.fillStyle='rgba(0,0,0,0.08)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px monospace';ctx.fillStyle='#00ff88';
+    drops.forEach((d,i)=>{ctx.fillText(ch[Math.floor(Math.random()*ch.length)],i*fs,d*fs);
+      if(d*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;});
+  },50);
 })();
+
+/* ── STATE ── */
+const username = localStorage.getItem('matrixon_user') || '';
+const API = window.MATRIXON_API;
+let selectedCountry = null;
+let selectedAvatar  = '🤖';
+let currentStep = 1;
+
+document.getElementById('f-username').value = username;
+
+/* ── AVATARS ── */
+const AVATARS = ['🤖','🧠','💻','🚀','⚡','🔮','🎯','🛸','🦾','🌌','🧬','🔬','🏆','🎓','👾','🦊','🐉','🌟','💎','⚔️','🧙','🕹️','🦅','🎭'];
+const grid = document.getElementById('avatarGrid');
+AVATARS.forEach(a=>{
+  const el=document.createElement('div');
+  el.className='av'+(a==='🤖'?' selected':'');
+  el.textContent=a;
+  el.onclick=()=>{
+    document.querySelectorAll('.av').forEach(v=>v.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedAvatar=a;
+  };
+  grid.appendChild(el);
+});
 
 /* ── COUNTRIES ── */
 const COUNTRIES = [
@@ -187,109 +457,150 @@ const COUNTRIES = [
   {code:'HU',name:'Hungary',flag:'🇭🇺'},{code:'UA',name:'Ukraine',flag:'🇺🇦'},
   {code:'IL',name:'Israel',flag:'🇮🇱'},{code:'AE',name:'UAE',flag:'🇦🇪'},
   {code:'QA',name:'Qatar',flag:'🇶🇦'},{code:'KE',name:'Kenya',flag:'🇰🇪'},
-  {code:'GH',name:'Ghana',flag:'🇬🇭'},{code:'ET',name:'Ethiopia',flag:'🇪🇹'},
-  {code:'NZ',name:'New Zealand',flag:'🇳🇿'},{code:'FI',name:'Finland',flag:'🇫🇮'},
-  {code:'DK',name:'Denmark',flag:'🇩🇰'},{code:'CO',name:'Colombia',flag:'🇨🇴'},
-  {code:'CL',name:'Chile',flag:'🇨🇱'},{code:'PE',name:'Peru',flag:'🇵🇪'},
-  {code:'IR',name:'Iran',flag:'🇮🇷'},{code:'IQ',name:'Iraq',flag:'🇮🇶'},
+  {code:'GH',name:'Ghana',flag:'🇬🇭'},{code:'NZ',name:'New Zealand',flag:'🇳🇿'},
+  {code:'FI',name:'Finland',flag:'🇫🇮'},{code:'DK',name:'Denmark',flag:'🇩🇰'},
+  {code:'CO',name:'Colombia',flag:'🇨🇴'},{code:'CL',name:'Chile',flag:'🇨🇱'},
   {code:'LK',name:'Sri Lanka',flag:'🇱🇰'},{code:'NP',name:'Nepal',flag:'🇳🇵'},
-  {code:'MM',name:'Myanmar',flag:'🇲🇲'},{code:'KZ',name:'Kazakhstan',flag:'🇰🇿'},
-];
-COUNTRIES.sort((a,b)=>a.name.localeCompare(b.name));
+  {code:'KZ',name:'Kazakhstan',flag:'🇰🇿'},{code:'IR',name:'Iran',flag:'🇮🇷'},
+].sort((a,b)=>a.name.localeCompare(b.name));
 
-let selectedCountry = null;
-const API = window.MATRIXON_API;
-const username = localStorage.getItem('matrixon_user') || 'player';
-
-document.getElementById('usernameLabel').textContent = username;
-
-function renderGrid(list){
-  const grid = document.getElementById('countryGrid');
-  grid.innerHTML='';
+function renderCountryGrid(list){
+  const g=document.getElementById('countryGrid');
+  g.innerHTML='';
   list.forEach(c=>{
-    const div=document.createElement('div');
-    div.className='cc'+(selectedCountry&&selectedCountry.code===c.code?' selected':'');
-    div.dataset.code=c.code;
-    div.innerHTML=`<span class="cc-flag">${c.flag}</span><span class="cc-name">${c.name}</span>`;
-    div.onclick=(e)=>selectCountry(c,div);
-    grid.appendChild(div);
+    const el=document.createElement('div');
+    el.className='cc'+(selectedCountry&&selectedCountry.code===c.code?' selected':'');
+    el.innerHTML=`<span class="cc-flag">${c.flag}</span><span class="cc-name">${c.name}</span>`;
+    el.onclick=()=>selectCountry(c);
+    g.appendChild(el);
   });
 }
-renderGrid(COUNTRIES);
+renderCountryGrid(COUNTRIES);
 
 document.getElementById('countrySearch').addEventListener('input',function(){
   const q=this.value.toLowerCase();
-  renderGrid(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);
+  renderCountryGrid(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);
 });
 
-function selectCountry(c, cardEl){
+function selectCountry(c){
   selectedCountry=c;
-  // Highlight card
-  document.querySelectorAll('.cc').forEach(el=>el.classList.remove('selected'));
-  cardEl.classList.add('selected');
-  // Animate flag flying to user display
-  flyFlag(c.flag, cardEl);
+  document.getElementById('selectedFlag').textContent=c.flag;
+  document.getElementById('selectedName').textContent=c.name;
+  document.getElementById('selectedBadge').classList.add('show');
+  document.getElementById('countrySearch').style.display='none';
+  document.getElementById('countryGrid').style.display='none';
+  document.getElementById('finishBtn').disabled=false;
 }
 
-function flyFlag(flag, fromEl){
-  const fromRect = fromEl.getBoundingClientRect();
-  const toEl = document.getElementById('flyTarget');
-  const toRect = toEl.getBoundingClientRect();
-
-  // Clone
-  const clone = document.createElement('div');
-  clone.className='flying-flag';
-  clone.textContent=flag;
-  clone.style.left = (fromRect.left + fromRect.width/2 - 19)+'px';
-  clone.style.top  = (fromRect.top  + fromRect.height/2 - 19)+'px';
-
-  const tx = (toRect.left + toRect.width/2 - 19) - (fromRect.left + fromRect.width/2 - 19);
-  const ty = (toRect.top  + toRect.height/2 - 19) - (fromRect.top  + fromRect.height/2 - 19);
-  clone.style.setProperty('--tx', tx+'px');
-  clone.style.setProperty('--ty', ty+'px');
-  document.body.appendChild(clone);
-
-  // Update target after animation
-  setTimeout(()=>{
-    clone.remove();
-    toEl.textContent = flag;
-    toEl.style.animation='none';
-    toEl.offsetHeight; // reflow
-    toEl.style.animation='flagPop .4s cubic-bezier(.22,1,.36,1)';
-  }, 800);
-
-  // Show confirm
-  const info=document.getElementById('selectedInfo');
-  info.textContent='Selected: '+selectedCountry.flag+' '+selectedCountry.name;
-  info.classList.add('show');
-  const btn=document.getElementById('confirmBtn');
-  btn.classList.add('show');
+function clearCountry(){
+  selectedCountry=null;
+  document.getElementById('selectedBadge').classList.remove('show');
+  document.getElementById('countrySearch').style.display='';
+  document.getElementById('countryGrid').style.display='';
+  document.getElementById('countrySearch').value='';
+  renderCountryGrid(COUNTRIES);
+  document.getElementById('finishBtn').disabled=true;
 }
 
-async function confirmCountry(){
+/* ── STEP NAVIGATION ── */
+function goStep(n){
+  // Validate before moving forward
+  if(n > currentStep){
+    if(currentStep===2){
+      const email=document.getElementById('f-email').value.trim();
+      const phone=document.getElementById('f-phone').value.trim();
+      // Email validation (if filled)
+      if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+        document.getElementById('err-email').style.display='block';
+        return;
+      }
+      document.getElementById('err-email').style.display='none';
+      // Phone validation (if filled)
+      if(phone && !/^\d{5,15}$/.test(phone.replace(/\s/g,''))){
+        document.getElementById('err-phone').style.display='block';
+        return;
+      }
+      document.getElementById('err-phone').style.display='none';
+    }
+  }
+
+  // Update steps UI
+  for(let i=1;i<=3;i++){
+    const s=document.getElementById('step'+i);
+    s.classList.remove('active','done');
+    if(i<n) s.classList.add('done');
+    else if(i===n) s.classList.add('active');
+  }
+  for(let i=1;i<=2;i++){
+    document.getElementById('line'+i).classList.toggle('done',i<n);
+  }
+
+  // Update step circles to checkmarks for done steps
+  for(let i=1;i<=3;i++){
+    const circle=document.getElementById('step'+i).querySelector('.step-circle');
+    if(i<n) circle.textContent='✓';
+    else circle.textContent='0'+i;
+  }
+
+  document.getElementById('panel'+currentStep).classList.remove('active');
+  document.getElementById('panel'+n).classList.add('active');
+  currentStep=n;
+}
+
+/* ── FINISH ── */
+async function finish(){
   if(!selectedCountry) return;
+
+  const btn=document.getElementById('finishBtn');
+  btn.disabled=true;btn.textContent='⟳  Saving...';
+
+  const nickname = document.getElementById('f-nickname').value.trim() || username;
+  const email    = document.getElementById('f-email').value.trim();
+  const dialcode = document.getElementById('f-dialcode').value;
+  const phoneNum = document.getElementById('f-phone').value.trim();
+  const phone    = phoneNum ? dialcode+phoneNum : '';
+
+  // Save to server
   try {
     await fetch(`${API}/profile/update`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-      username,
-      country_code: selectedCountry.code,
-      country_flag: selectedCountry.flag,
-      country_name: selectedCountry.name
-    })
+        username,
+        nickname,
+        email,
+        phone,
+        country_code: selectedCountry.code,
+        country_flag: selectedCountry.flag,
+        country_name: selectedCountry.name,
+      })
     });
-  } catch(e){}
-  localStorage.setItem('matrixon_country_set','1');  // FIXED: mark country as selected
-  localStorage.setItem('matrixon_country_code',selectedCountry.code);
-  localStorage.setItem('matrixon_country_flag',selectedCountry.flag);
-  localStorage.setItem('matrixon_country_name',selectedCountry.name);
-  window.location.href='learning.html'; // go to learning, not leaderboard, after first setup
-}
+  } catch(e){ console.warn('Profile save failed — stored locally only'); }
 
-// Flag pop keyframe injected
-const style=document.createElement('style');
-style.textContent=`@keyframes flagPop{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.4) rotate(5deg)}100%{transform:scale(1) rotate(0)}}`;
-document.head.appendChild(style);
+  // Store in localStorage
+  localStorage.setItem('matrixon_country_set',  '1');
+  localStorage.setItem('matrixon_country_code', selectedCountry.code);
+  localStorage.setItem('matrixon_country_flag', selectedCountry.flag);
+  localStorage.setItem('matrixon_country_name', selectedCountry.name);
+  localStorage.setItem('matrixon_nickname',     nickname);
+  localStorage.setItem('matrixon_avatar',       selectedAvatar);
+  localStorage.setItem('matrixon_email',        email);
+
+  // Show success screen
+  document.getElementById('panel3').classList.remove('active');
+  const ss=document.getElementById('successScreen');
+  ss.classList.add('show');
+  document.getElementById('successAvatar').textContent=selectedAvatar;
+  document.getElementById('successMsg').innerHTML=
+    `Welcome, <strong style="color:var(--g)">${nickname}</strong>.<br>${selectedCountry.flag} ${selectedCountry.name} · Your matrix journey begins now.`;
+
+  // Progress bar → redirect
+  setTimeout(()=>{
+    document.getElementById('successBarFill').style.width='100%';
+  },100);
+  setTimeout(()=>{
+    window.location.href='learning.html';
+  },2800);
+}
 </script>
 </body>
 </html>

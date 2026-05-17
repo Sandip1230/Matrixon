@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MATRIXON — Contact Support</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --green:#00ff88;--blue:#00d4ff;--bg:#000508;
+      --card:rgba(0,255,136,0.04);--border:rgba(0,255,136,0.18);
+      --muted:rgba(0,255,136,0.5);--text:#c8ffe0;
+    }
+    body{
+      font-family:'Share Tech Mono','Courier New',monospace;
+      background:var(--bg);color:var(--text);
+      min-height:100vh;padding:80px 20px 60px;
+    }
+    canvas#rain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.3;}
+    .wrap{position:relative;z-index:1;max-width:700px;margin:0 auto;}
+
+    .page-header{text-align:center;margin-bottom:40px;}
+    .page-title{font-size:clamp(22px,4vw,36px);letter-spacing:7px;color:var(--green);
+      text-shadow:0 0 20px rgba(0,255,136,0.4);margin-bottom:8px;}
+    .page-sub{font-size:13px;color:var(--muted);letter-spacing:2px;}
+
+    /* Type selector */
+    .type-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:32px;}
+    .type-card{
+      border:1px solid var(--border);border-radius:12px;padding:16px 12px;
+      text-align:center;cursor:pointer;transition:.2s;background:var(--card);
+    }
+    .type-card:hover{border-color:rgba(0,255,136,0.4);background:rgba(0,255,136,0.07);}
+    .type-card.selected{border-color:var(--green);background:rgba(0,255,136,0.1);
+      box-shadow:0 0 16px rgba(0,255,136,0.2);}
+    .type-icon{font-size:26px;margin-bottom:6px;}
+    .type-label{font-size:11px;color:var(--green);letter-spacing:1px;}
+
+    /* Form */
+    .form-card{
+      border:1px solid var(--border);border-radius:16px;
+      padding:28px;background:var(--card);
+    }
+    .field{margin-bottom:20px;}
+    .field label{display:block;font-size:11px;color:var(--muted);
+      letter-spacing:2px;margin-bottom:8px;}
+    .field input,.field select,.field textarea{
+      width:100%;padding:12px 16px;
+      background:rgba(0,0,0,0.7);border:1px solid var(--border);
+      border-radius:8px;color:var(--green);
+      font-family:'Share Tech Mono',monospace;font-size:13px;
+      outline:none;transition:.3s;resize:vertical;
+    }
+    .field input:focus,.field select,.field textarea:focus{
+      border-color:var(--green);box-shadow:0 0 12px rgba(0,255,136,0.15);}
+    .field input::placeholder,.field textarea::placeholder{color:rgba(0,255,136,0.25);}
+    .field select option{background:#001208;color:var(--green);}
+
+    .field textarea{min-height:130px;line-height:1.7;}
+
+    .char-count{text-align:right;font-size:10px;color:rgba(0,255,136,0.35);margin-top:4px;}
+
+    .submit-btn{
+      width:100%;padding:14px;margin-top:8px;
+      background:linear-gradient(to right,#00cc66,#00ff88);
+      color:#001208;font-weight:bold;font-size:14px;
+      border:none;border-radius:30px;cursor:pointer;
+      letter-spacing:2px;font-family:'Share Tech Mono',monospace;
+      transition:.3s;
+    }
+    .submit-btn:hover{transform:scale(1.02);filter:brightness(1.1);}
+    .submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+    /* Status messages */
+    .status{
+      display:none;text-align:center;padding:20px;border-radius:12px;
+      margin-top:20px;font-size:13px;letter-spacing:1px;
+    }
+    .status.success{
+      display:block;border:1px solid rgba(0,255,136,0.4);
+      background:rgba(0,255,136,0.08);color:var(--green);
+    }
+    .status.error{
+      display:block;border:1px solid rgba(255,80,80,0.4);
+      background:rgba(255,80,80,0.06);color:#ff8888;
+    }
+
+    /* Info boxes */
+    .info-boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:28px;}
+    .info-box{
+      border:1px solid var(--border);border-radius:12px;
+      padding:16px;background:var(--card);
+    }
+    .info-box-title{font-size:10px;color:var(--blue);letter-spacing:2px;margin-bottom:8px;}
+    .info-box-text{font-size:12px;color:var(--muted);line-height:1.7;}
+  </style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<script src="config.js"></script>
+<script src="navbar.js"></script>
+<script src="sounds.js"></script>
+<script src="transitions.js"></script>
+
+<div class="wrap">
+  <div class="page-header">
+    <div class="page-title">📨 CONTACT SUPPORT</div>
+    <div class="page-sub">We usually respond within 24 hours</div>
+  </div>
+
+  <!-- Ticket type -->
+  <div class="type-grid" id="typeGrid">
+    <div class="type-card selected" data-type="bug">
+      <div class="type-icon">🐛</div>
+      <div class="type-label">BUG REPORT</div>
+    </div>
+    <div class="type-card" data-type="feature">
+      <div class="type-icon">💡</div>
+      <div class="type-label">FEATURE REQUEST</div>
+    </div>
+    <div class="type-card" data-type="account">
+      <div class="type-icon">👤</div>
+      <div class="type-label">ACCOUNT ISSUE</div>
+    </div>
+    <div class="type-card" data-type="other">
+      <div class="type-icon">❓</div>
+      <div class="type-label">OTHER</div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="form-card">
+    <div class="field">
+      <label>YOUR USERNAME</label>
+      <input type="text" id="f-username" placeholder="auto-filled" readonly>
+    </div>
+    <div class="field">
+      <label>SUBJECT</label>
+      <input type="text" id="f-subject" placeholder="Brief description of your issue..." maxlength="100">
+    </div>
+    <div class="field">
+      <label>PRIORITY</label>
+      <select id="f-priority">
+        <option value="low">Low — general question or feedback</option>
+        <option value="medium" selected>Medium — feature broken or confusing</option>
+        <option value="high">High — can't use the app / data loss</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>DETAILS</label>
+      <textarea id="f-message" placeholder="Describe what happened, steps to reproduce, and what you expected..." maxlength="2000"></textarea>
+      <div class="char-count"><span id="charCount">0</span> / 2000</div>
+    </div>
+    <button class="submit-btn" id="submitBtn" onclick="submitTicket()">⬡ &nbsp;SUBMIT TICKET</button>
+  </div>
+
+  <div class="status" id="statusBox"></div>
+
+  <div class="info-boxes">
+    <div class="info-box">
+      <div class="info-box-title">⏱ RESPONSE TIME</div>
+      <div class="info-box-text">Bug reports: ~24 hrs<br>Feature requests: ~72 hrs<br>Account issues: ~12 hrs</div>
+    </div>
+    <div class="info-box">
+      <div class="info-box-title">📋 BEFORE SUBMITTING</div>
+      <div class="info-box-text">Check the <a href="help.html" style="color:var(--blue)">Help Center</a> first — your question may already be answered there.</div>
+    </div>
+    <div class="info-box">
+      <div class="info-box-title">🔒 PRIVACY</div>
+      <div class="info-box-text">Tickets are linked to your username only. No email required. We never share your data.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+MatrixAuth.requireAuth();
+
+/* Rain */
+(function(){
+  const c=document.getElementById('rain'),ctx=c.getContext('2d');
+  function rs(){c.width=innerWidth;c.height=innerHeight;}rs();addEventListener('resize',rs);
+  const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&';const fs=14;let cols,drops;
+  function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(0).map(()=>Math.floor(Math.random()*-40));}
+  init();
+  setInterval(()=>{
+    ctx.fillStyle='rgba(0,0,0,0.08)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px monospace';ctx.fillStyle='#00ff88';
+    drops.forEach((d,i)=>{ctx.fillText(ch[Math.floor(Math.random()*ch.length)],i*fs,d*fs);
+      if(d*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;});
+  },50);
+})();
+
+const username = localStorage.getItem('matrixon_user') || '';
+document.getElementById('f-username').value = username;
+
+let selectedType = 'bug';
+
+document.getElementById('typeGrid').addEventListener('click', function(e){
+  const card = e.target.closest('.type-card');
+  if (!card) return;
+  document.querySelectorAll('.type-card').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedType = card.dataset.type;
+});
+
+document.getElementById('f-message').addEventListener('input', function(){
+  document.getElementById('charCount').textContent = this.value.length;
+});
+
+async function submitTicket() {
+  const subject  = document.getElementById('f-subject').value.trim();
+  const message  = document.getElementById('f-message').value.trim();
+  const priority = document.getElementById('f-priority').value;
+
+  if (!subject) { alert('Please enter a subject.'); return; }
+  if (message.length < 20) { alert('Please provide more detail (at least 20 characters).'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '⟳  Sending...';
+
+  const status = document.getElementById('statusBox');
+  status.className = 'status';
+  status.style.display = 'none';
+
+  try {
+    const res = await fetch(window.MATRIXON_API + '/support/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, type: selectedType, subject, priority, message })
+    });
+
+    if (!res.ok) throw new Error('Server error ' + res.status);
+
+    status.className = 'status success';
+    status.innerHTML = '✅ &nbsp;Ticket submitted! Ticket ID: <strong>#MX' +
+      Date.now().toString(36).toUpperCase().slice(-6) + '</strong><br><br>' +
+      'We\'ll review it and get back to you. Thanks for the report!';
+    status.style.display = 'block';
+    document.getElementById('f-subject').value = '';
+    document.getElementById('f-message').value = '';
+    document.getElementById('charCount').textContent = '0';
+    btn.textContent = '✓  Submitted';
+
+  } catch (err) {
+    // Graceful offline fallback — store locally
+    const pending = JSON.parse(localStorage.getItem('matrixon_pending_tickets')||'[]');
+    pending.push({ username, type: selectedType, subject, priority, message, at: Date.now() });
+    localStorage.setItem('matrixon_pending_tickets', JSON.stringify(pending));
+
+    status.className = 'status error';
+    status.innerHTML = '⚠ &nbsp;Server unreachable — ticket saved locally and will auto-send when you reconnect.<br><small style="opacity:.6;margin-top:6px;display:block">Saved ' + pending.length + ' pending ticket(s).</small>';
+    status.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '⬡  Submit Ticket';
+  }
+}
+</script>
+</body>
+</html>

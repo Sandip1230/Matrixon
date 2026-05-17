@@ -51,8 +51,7 @@ body{font-family:'Share Tech Mono',monospace;background:var(--bg);color:var(--gr
 
 /* ─── LAYOUT ─── */
 .profile-wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 16px 80px;}
-#backBtn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:#000;border:1px solid var(--green);color:var(--green);border-radius:10px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:14px;transition:.25s;margin-bottom:20px;}
-#backBtn:hover{background:var(--green);color:#000;transform:scale(1.05);}
+
 .profile-card{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:32px 28px;box-shadow:0 0 40px rgba(0,255,0,.08);}
 
 /* ─── ARMY BADGE ROW ─── */
@@ -246,15 +245,231 @@ body{font-family:'Share Tech Mono',monospace;background:var(--bg);color:var(--gr
 
 /* ─── FRIENDS ─── */
 .friends-section{margin-bottom:16px;}
-.friend-search-row{display:flex;gap:10px;margin-bottom:16px;}
-#friendUIDInput{flex:1;background:#000;border:1px solid var(--border);color:var(--green);padding:10px 14px;border-radius:8px;font-family:monospace;font-size:13px;outline:none;}
-#friendUIDInput:focus{border-color:var(--green);box-shadow:0 0 8px rgba(0,255,0,.3);}
-#addFriendBtn{padding:10px 18px;background:linear-gradient(to right,#006622,#00ff44);color:#000;border:none;border-radius:8px;cursor:pointer;font-family:monospace;font-weight:bold;transition:.2s;}
-#addFriendBtn:hover{transform:scale(1.05);}
+
+/* ── Search bar ── */
+.friend-search-wrap{position:relative;margin-bottom:10px;}
+#friendSearchInput{
+  width:100%;padding:12px 44px 12px 16px;
+  background:#000;border:1px solid var(--border);
+  color:var(--green);border-radius:12px;font-family:monospace;font-size:13px;outline:none;
+  transition:.25s;letter-spacing:.5px;
+}
+#friendSearchInput:focus{border-color:var(--green);box-shadow:0 0 10px rgba(0,255,0,.3);}
+#friendSearchInput::placeholder{color:#2a5a2a;}
+.fsearch-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;opacity:.5;}
+.fsearch-hint{font-size:10px;color:#2a5a2a;letter-spacing:1px;margin-bottom:14px;padding-left:4px;}
+
+/* ── Search results dropdown ── */
+#searchResultsPanel{
+  background:rgba(0,8,0,0.97);border:1px solid var(--border);border-radius:12px;
+  margin-bottom:14px;overflow:hidden;display:none;
+  box-shadow:0 8px 32px rgba(0,255,0,.12);
+}
+#searchResultsPanel.open{display:block;}
+.sr-header{font-size:10px;color:#336633;letter-spacing:2px;padding:10px 16px 6px;border-bottom:1px solid rgba(0,255,0,.08);}
+.sr-loading{padding:18px;text-align:center;color:#2a5a2a;font-size:12px;letter-spacing:1px;}
+.sr-card{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  border-bottom:1px solid rgba(0,255,0,.06);cursor:pointer;transition:.2s;
+}
+.sr-card:last-child{border-bottom:none;}
+.sr-card:hover{background:rgba(0,255,0,.05);}
+.sr-avatar{width:42px;height:42px;border-radius:50%;background:rgba(0,255,0,.08);border:1px solid rgba(0,255,0,.3);
+  display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;
+  color:var(--green);flex-shrink:0;overflow:hidden;}
+.sr-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.sr-info{flex:1;min-width:0;}
+.sr-name{font-size:14px;color:var(--green);font-weight:bold;letter-spacing:.5px;margin-bottom:2px;}
+.sr-meta{font-size:10px;color:#558855;letter-spacing:.5px;}
+.sr-league-pill{
+  font-size:9px;padding:2px 8px;border-radius:20px;letter-spacing:1px;font-weight:bold;
+  background:rgba(0,255,0,.08);border:1px solid rgba(0,255,0,.2);color:#aaffaa;
+  white-space:nowrap;
+}
+.sr-actions{display:flex;gap:6px;flex-shrink:0;}
+.btn-peek,.btn-add-sr{
+  padding:7px 12px;border-radius:8px;border:none;cursor:pointer;
+  font-family:monospace;font-size:11px;font-weight:bold;transition:.2s;letter-spacing:.5px;
+}
+.btn-peek{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.35);color:#00d4ff;}
+.btn-peek:hover{background:rgba(0,212,255,.2);transform:scale(1.04);}
+.btn-add-sr{background:linear-gradient(to right,#006622,#00cc44);color:#000;}
+.btn-add-sr:hover{transform:scale(1.04);filter:brightness(1.1);}
+.btn-add-sr:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.sr-notfound{padding:20px;text-align:center;color:#336633;font-size:12px;letter-spacing:1px;}
+
+/* ── Tabs ── */
+.friends-tabs{display:flex;gap:0;margin-bottom:16px;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.ftab{
+  flex:1;padding:9px;text-align:center;font-size:11px;letter-spacing:1.5px;
+  cursor:pointer;background:rgba(0,0,0,.6);color:#336633;transition:.2s;border:none;
+  font-family:'Share Tech Mono',monospace;
+}
+.ftab.active{background:rgba(0,255,0,.08);color:var(--green);border-bottom:2px solid var(--green);}
+.ftab:hover:not(.active){background:rgba(0,255,0,.04);color:#aaffaa;}
+.ftab .ftab-count{
+  display:inline-block;background:rgba(0,255,0,.15);color:var(--green);
+  font-size:9px;padding:1px 6px;border-radius:10px;margin-left:6px;
+}
+
+/* ── Friends list ── */
 #friendsList{display:flex;flex-direction:column;gap:10px;}
-.friend-card{display:flex;align-items:center;gap:12px;background:rgba(0,255,0,.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;}
-.friend-avatar{font-size:28px;}.friend-name{font-size:14px;color:var(--green);}.friend-uid{font-size:11px;color:#558855;}
-#noFriends{color:#333;font-size:13px;font-style:italic;}
+#noFriends{color:#2a5a2a;font-size:13px;text-align:center;padding:24px;letter-spacing:1px;border:1px dashed rgba(0,255,0,.1);border-radius:10px;}
+
+/* ── Friend card (enhanced) ── */
+.friend-card{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(0,255,0,.03);border:1px solid rgba(0,255,0,.15);
+  border-radius:14px;padding:14px 16px;transition:.25s;position:relative;overflow:hidden;
+}
+.friend-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(0,255,0,.03),transparent);
+  transform:translateX(-100%);transition:.4s;
+}
+.friend-card:hover{border-color:rgba(0,255,0,.4);background:rgba(0,255,0,.06);box-shadow:0 0 14px rgba(0,255,0,.08);}
+.friend-card:hover::before{transform:translateX(100%);}
+
+/* avatar in friend card */
+.fc-avatar{
+  width:52px;height:52px;border-radius:50%;flex-shrink:0;
+  background:rgba(0,255,0,.08);border:2px solid rgba(0,255,0,.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:bold;color:var(--green);overflow:hidden;position:relative;
+}
+.fc-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.fc-online-dot{
+  position:absolute;bottom:2px;right:2px;width:10px;height:10px;
+  border-radius:50%;background:#333;border:2px solid #020d02;
+}
+.fc-online-dot.online{background:#00ff44;box-shadow:0 0 5px #00ff44;}
+
+/* info block */
+.fc-info{flex:1;min-width:0;}
+.fc-name{font-size:15px;color:var(--green);font-weight:bold;letter-spacing:.5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.fc-uid{font-size:10px;color:#336633;letter-spacing:.5px;margin-bottom:5px;}
+.fc-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.fc-level-badge{
+  font-size:9px;padding:2px 7px;border-radius:10px;
+  background:rgba(0,255,0,.1);border:1px solid rgba(0,255,0,.3);
+  color:var(--green);letter-spacing:.5px;font-weight:bold;
+}
+.fc-league-tag{font-size:9px;letter-spacing:.5px;}
+.league-trainee .fc-league-tag{color:#aaa;}
+.league-developer .fc-league-tag{color:#00ddff;}
+.league-senior .fc-league-tag{color:#88ff00;}
+.league-hacker .fc-league-tag{color:#ff9900;}
+.league-master .fc-league-tag{color:#ff44aa;}
+.league-ace .fc-league-tag{animation:rainbowText 2s linear infinite;}
+
+/* mini XP bar */
+.fc-xp-wrap{display:flex;align-items:center;gap:6px;}
+.fc-xp-bar{flex:1;height:4px;background:#0a0a0a;border-radius:3px;border:1px solid rgba(0,255,0,.1);overflow:hidden;max-width:100px;}
+.fc-xp-fill{height:100%;border-radius:3px;background:linear-gradient(to right,#006600,#00ff44);transition:width 1s ease;}
+.fc-xp-label{font-size:9px;color:#2a5a2a;white-space:nowrap;}
+
+/* action buttons */
+.fc-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.btn-view-profile,.btn-remove-friend{
+  padding:7px 13px;border-radius:8px;border:none;cursor:pointer;
+  font-family:monospace;font-size:10px;font-weight:bold;transition:.2s;
+  letter-spacing:.5px;white-space:nowrap;
+}
+.btn-view-profile{
+  background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:#00d4ff;
+}
+.btn-view-profile:hover{background:rgba(0,212,255,.2);transform:scale(1.04);}
+.btn-remove-friend{
+  background:rgba(255,50,50,.05);border:1px solid rgba(255,50,50,.2);color:#ff4444;
+}
+.btn-remove-friend:hover{background:rgba(255,50,50,.12);transform:scale(1.04);}
+
+/* ── PEEK PROFILE MODAL ── */
+#peekModal{
+  display:none;position:fixed;inset:0;z-index:9500;
+  background:rgba(0,0,0,.88);justify-content:center;align-items:center;padding:20px;
+}
+#peekModal.open{display:flex;}
+@keyframes peekIn{from{opacity:0;transform:scale(.93) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+#peekBox{
+  background:#010d01;border:1px solid rgba(0,255,0,.4);border-radius:20px;
+  width:100%;max-width:500px;max-height:88vh;overflow-y:auto;
+  box-shadow:0 0 60px rgba(0,255,0,.18),0 0 120px rgba(0,0,0,.8);
+  animation:peekIn .35s cubic-bezier(.22,1,.36,1);position:relative;
+}
+#peekBox::-webkit-scrollbar{width:4px;}
+#peekBox::-webkit-scrollbar-thumb{background:var(--dark-green);border-radius:4px;}
+.peek-close{
+  position:absolute;top:14px;right:16px;font-size:20px;color:#ff4444;
+  cursor:pointer;transition:.2s;background:none;border:none;font-family:monospace;z-index:2;
+}
+.peek-close:hover{transform:rotate(90deg) scale(1.2);}
+
+/* peek header */
+.peek-header{
+  background:linear-gradient(180deg,rgba(0,255,0,.06) 0%,transparent 100%);
+  padding:28px 28px 20px;border-bottom:1px solid rgba(0,255,0,.1);
+  display:flex;align-items:center;gap:20px;
+}
+.peek-avatar{
+  width:80px;height:80px;border-radius:50%;flex-shrink:0;
+  background:rgba(0,255,0,.06);border:2px solid rgba(0,255,0,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;font-weight:bold;color:var(--green);overflow:hidden;
+  box-shadow:0 0 20px rgba(0,255,0,.2);
+}
+.peek-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.peek-head-info{flex:1;min-width:0;}
+.peek-nickname{font-size:22px;color:var(--green);font-family:'Orbitron',monospace;
+  font-weight:700;letter-spacing:2px;text-shadow:0 0 10px rgba(0,255,0,.4);margin-bottom:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.peek-username{font-size:11px;color:#558855;margin-bottom:6px;letter-spacing:.5px;}
+.peek-uid-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.peek-uid{font-size:10px;color:#336633;font-family:monospace;letter-spacing:1px;}
+.peek-league-badge{
+  font-size:9px;padding:2px 9px;border-radius:12px;font-weight:bold;letter-spacing:1px;
+  background:rgba(0,255,0,.1);border:1px solid rgba(0,255,0,.3);color:var(--green);
+}
+
+/* peek stats row */
+.peek-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:18px 28px;border-bottom:1px solid rgba(0,255,0,.08);}
+.peek-stat{text-align:center;background:rgba(0,255,0,.03);border:1px solid rgba(0,255,0,.1);border-radius:10px;padding:12px 6px;}
+.peek-stat-val{font-size:20px;color:var(--green);font-weight:bold;margin-bottom:3px;}
+.peek-stat-label{font-size:9px;color:#336633;letter-spacing:1.5px;}
+
+/* peek XP bar */
+.peek-xp-section{padding:14px 28px;border-bottom:1px solid rgba(0,255,0,.08);}
+.peek-xp-label{font-size:10px;color:#336633;margin-bottom:6px;letter-spacing:1px;}
+.peek-xp-bar{height:8px;background:#0a0a0a;border-radius:5px;border:1px solid rgba(0,255,0,.15);overflow:hidden;}
+.peek-xp-fill{height:100%;border-radius:5px;background:linear-gradient(to right,#006600,#00ff44);transition:width 1s ease .2s;}
+
+/* peek achievements mini */
+.peek-body{padding:16px 28px 24px;}
+.peek-section-title{font-size:10px;color:#336633;letter-spacing:2px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(0,255,0,.08);}
+.peek-ach-mini{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+.peek-ach-chip{
+  display:flex;align-items:center;gap:5px;padding:5px 10px;
+  border-radius:20px;font-size:10px;border:1px solid;
+  background:rgba(0,0,0,.4);letter-spacing:.5px;
+}
+.peek-courses-mini{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+.peek-course-chip{
+  padding:4px 10px;border-radius:20px;font-size:10px;
+  background:rgba(0,255,0,.06);border:1px solid rgba(0,255,0,.2);color:#aaffaa;letter-spacing:.5px;
+}
+.peek-no-data{color:#2a5a2a;font-size:11px;padding:8px 0;letter-spacing:.5px;}
+
+/* peek action row */
+.peek-footer{padding:0 28px 24px;display:flex;gap:10px;}
+.peek-btn-add,.peek-btn-msg{
+  flex:1;padding:12px;border-radius:10px;border:none;cursor:pointer;
+  font-family:monospace;font-size:12px;font-weight:bold;letter-spacing:1px;transition:.25s;
+}
+.peek-btn-add{background:linear-gradient(to right,#006622,#00ff44);color:#000;}
+.peek-btn-add:hover{transform:scale(1.03);filter:brightness(1.1);}
+.peek-btn-add:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.peek-loading{padding:40px;text-align:center;color:#2a5a2a;font-size:13px;letter-spacing:1px;}
 
 /* ─── ACHIEVEMENT UNLOCK POPUP ─── */
 #achievePopup{
@@ -279,6 +494,8 @@ body{font-family:'Share Tech Mono',monospace;background:var(--bg);color:var(--gr
 </head>
 <body>
 <script src="config.js"></script>
+<script src="navbar.js"></script>
+<script src="sounds.js"></script>
 <script src="settings-apply.js"></script>
 <canvas id="matrixRain"></canvas>
 
@@ -319,7 +536,6 @@ body{font-family:'Share Tech Mono',monospace;background:var(--bg);color:var(--gr
 <input type="file" id="photoFileInput" accept="image/*">
 
 <div class="profile-wrap">
-  <button id="backBtn">&#8592; Back to Learning</button>
   <div class="profile-card">
 
     <!-- ═══ AVATAR (centered, no badges) ═══ -->
@@ -330,7 +546,7 @@ body{font-family:'Share Tech Mono',monospace;background:var(--bg);color:var(--gr
           <span id="avatarPlaceholder">👤</span>
         </div>
       </div>
-      <button class="change-photo-btn" onclick="document.getElementById('photoFileInput').click()">📷 Change Photo</button>
+      <button class="change-photo-btn" onclick="document.getElementById('photoFileInput').click()">Change Photo</button>
     </div>
 
     <!-- ═══ NICKNAME ═══ -->
@@ -450,12 +666,39 @@ body{font-family:'Share Tech Mono',monospace;background:var(--bg);color:var(--gr
 
     <!-- ═══ FRIENDS ═══ -->
     <div class="friends-section">
-      <div class="section-header">👥 Friends</div>
-      <div class="friend-search-row">
-        <input id="friendUIDInput" type="text" placeholder="Enter friend's UID...">
-        <button id="addFriendBtn" onclick="addFriend()">Add +</button>
+      <div class="section-header">👥 Friends <span id="friendCountBadge" style="margin-left:auto;font-size:10px;color:#336633;letter-spacing:1px;border:1px solid var(--border);padding:3px 10px;border-radius:8px;">0 FRIENDS</span></div>
+
+      <!-- Search bar -->
+      <div class="friend-search-wrap">
+        <input id="friendSearchInput" type="text" placeholder="Search player by username or UID..." autocomplete="off">
+        <span class="fsearch-icon">🔍</span>
       </div>
-      <div id="friendsList"><span id="noFriends">No friends added yet.</span></div>
+      <div class="fsearch-hint">Type a username to find & add players · Click a friend card to peek their profile</div>
+
+      <!-- Search results -->
+      <div id="searchResultsPanel">
+        <div class="sr-header">SEARCH RESULTS</div>
+        <div id="searchResultsBody"></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="friends-tabs">
+        <button class="ftab active" onclick="switchTab('all')" id="tab-all">ALL FRIENDS <span class="ftab-count" id="allCount">0</span></button>
+        <button class="ftab" onclick="switchTab('online')" id="tab-online">ONLINE <span class="ftab-count" id="onlineCount">0</span></button>
+      </div>
+
+      <!-- Friends list -->
+      <div id="friendsList">
+        <div id="noFriends">No friends added yet. Search a username above to connect!</div>
+      </div>
+    </div>
+
+    <!-- ═══ PEEK PROFILE MODAL ═══ -->
+    <div id="peekModal">
+      <div id="peekBox">
+        <button class="peek-close" onclick="closePeek()">✕</button>
+        <div id="peekContent"><div class="peek-loading">⟳ Loading profile...</div></div>
+      </div>
     </div>
 
   </div>
@@ -865,21 +1108,311 @@ function renderCourses(completed){
 }
 
 /* ── FRIENDS ── */
+let allFriends = [];
+let currentTab = 'all';
+
+function getLeagueForFriend(lv){
+  if(lv>=71)return{name:'Ace Developer',cls:'league-ace'};
+  if(lv>=51)return{name:'Master Hacker',cls:'league-master'};
+  if(lv>=36)return{name:'Hacker',cls:'league-hacker'};
+  if(lv>=21)return{name:'Senior Developer',cls:'league-senior'};
+  if(lv>=11)return{name:'Developer',cls:'league-developer'};
+  return{name:'Trainee',cls:'league-trainee'};
+}
+
+function getInitials(name){
+  return (name||'?').replace(/[^a-zA-Z0-9]/g,'').slice(0,2).toUpperCase()||'?';
+}
+
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  renderFriendsFiltered();
+}
+
 function renderFriends(friends){
-  const list=document.getElementById('friendsList');const no=document.getElementById('noFriends');
-  if(!friends||!friends.length){if(no)no.style.display='block';return;}
-  if(no)no.style.display='none';list.innerHTML='';
+  allFriends = friends || [];
+  const allC = allFriends.length;
+  document.getElementById('friendCountBadge').textContent = allC + (allC===1?' FRIEND':' FRIENDS');
+  document.getElementById('allCount').textContent = allC;
+  document.getElementById('onlineCount').textContent = 0; // real status would need a presence API
+  renderFriendsFiltered();
+}
+
+function renderFriendsFiltered(){
+  const list = document.getElementById('friendsList');
+  const no = document.getElementById('noFriends');
+  const friends = currentTab==='online' ? [] : allFriends; // online would need presence API
+  if(!friends.length){
+    list.innerHTML='';
+    if(!no){ const d=document.createElement('div');d.id='noFriends';
+      d.className='';d.style.color='#2a5a2a';d.style.fontSize='13px';d.style.textAlign='center';
+      d.style.padding='24px';d.style.border='1px dashed rgba(0,255,0,.1)';d.style.borderRadius='10px';
+      d.textContent = currentTab==='online'?'No friends currently online.':'No friends added yet. Search a username above to connect!';
+      list.appendChild(d);
+    } else {
+      no.style.display='block';
+      no.textContent = currentTab==='online'?'No friends currently online.':'No friends added yet. Search a username above to connect!';
+    }
+    return;
+  }
+  if(no) no.style.display='none';
+  list.innerHTML='';
   friends.forEach(f=>{
-    const card=document.createElement('div');card.className='friend-card';
-    card.innerHTML=`<div class="friend-avatar">👤</div><div><div class="friend-name">${f.friend_username||f}</div><div class="friend-uid">${f.friend_uid||''}</div></div>`;
+    const fname = f.friend_username || f;
+    const fuid  = f.friend_uid || '';
+    const flevel= f.level || 1;
+    const fxp   = f.xp || 0;
+    const fphoto= f.photo || null;
+    const xpInLevel = fxp - ((flevel-1)*1000);
+    const xpPct = Math.min(100, Math.max(0, (xpInLevel/1000)*100));
+    const lg = getLeagueForFriend(flevel);
+    const initials = getInitials(fname);
+
+    const card = document.createElement('div');
+    card.className = 'friend-card';
+    card.style.cursor='pointer';
+    card.onclick = ()=> peekProfile(fname);
+    card.innerHTML = `
+      <div class="fc-avatar">
+        ${fphoto ? `<img src="${fphoto}" alt="">` : initials}
+        <div class="fc-online-dot"></div>
+      </div>
+      <div class="fc-info">
+        <div class="fc-name">${fname}</div>
+        <div class="fc-uid">${fuid ? '# '+fuid : ''}</div>
+        <div class="fc-meta ${lg.cls}">
+          <span class="fc-level-badge">LVL ${flevel}</span>
+          <span class="fc-league-tag">${lg.name}</span>
+        </div>
+        <div class="fc-xp-wrap">
+          <div class="fc-xp-bar"><div class="fc-xp-fill" style="width:${xpPct}%"></div></div>
+          <span class="fc-xp-label">${xpInLevel} XP</span>
+        </div>
+      </div>
+      <div class="fc-actions" onclick="event.stopPropagation()">
+        <button class="btn-view-profile" onclick="peekProfile('${fname}')">👁 VIEW</button>
+        <button class="btn-remove-friend" onclick="removeFriend('${fname}')">✕ REMOVE</button>
+      </div>
+    `;
     list.appendChild(card);
   });
 }
-async function addFriend(){
-  const uid=document.getElementById('friendUIDInput').value.trim();if(!uid){alert('Enter a UID');return;}
-  try{const r=await fetch(`${API}/friends/add`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,friend_uid:uid})});const data=await r.json();if(data.success){document.getElementById('friendUIDInput').value='';loadProfile();}else alert(data.message||'Could not add friend');}
-  catch(e){alert('Server not reachable');}
+
+async function removeFriend(friendName){
+  if(!confirm(`Remove ${friendName} from friends?`)) return;
+  try{
+    const r = await fetch(`${API}/friends/remove`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username, friend_username: friendName})
+    });
+    // Regardless of response (endpoint may not exist yet), remove locally
+  }catch(e){}
+  allFriends = allFriends.filter(f=>(f.friend_username||f)!==friendName);
+  renderFriendsFiltered();
+  const allC = allFriends.length;
+  document.getElementById('friendCountBadge').textContent = allC+(allC===1?' FRIEND':' FRIENDS');
+  document.getElementById('allCount').textContent = allC;
 }
+
+async function addFriend(friendUsername){
+  const target = friendUsername || document.getElementById('friendSearchInput').value.trim();
+  if(!target){return;}
+  if(target === username){alert('You cannot add yourself!');return;}
+  if(allFriends.some(f=>(f.friend_username||f)===target)){alert('Already friends!');return;}
+  try{
+    const r = await fetch(`${API}/friends/add`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username, friend_uid: target})});
+    const data = await r.json();
+    if(data.success){
+      closeSearchPanel();
+      loadProfile();
+    } else { alert(data.message||'Could not add friend'); }
+  }catch(e){ alert('Server not reachable'); }
+}
+
+/* ── USER SEARCH ── */
+let searchTimer = null;
+
+document.getElementById('friendSearchInput').addEventListener('input', function(){
+  const q = this.value.trim();
+  clearTimeout(searchTimer);
+  if(!q){ closeSearchPanel(); return; }
+  document.getElementById('searchResultsPanel').classList.add('open');
+  document.getElementById('searchResultsBody').innerHTML = '<div class="sr-loading">⟳ Searching...</div>';
+  searchTimer = setTimeout(()=> doSearch(q), 420);
+});
+
+document.getElementById('friendSearchInput').addEventListener('keydown', function(e){
+  if(e.key==='Escape'){ closeSearchPanel(); this.value=''; }
+  if(e.key==='Enter'){ clearTimeout(searchTimer); doSearch(this.value.trim()); }
+});
+
+async function doSearch(q){
+  if(!q){ closeSearchPanel(); return; }
+  document.getElementById('searchResultsPanel').classList.add('open');
+  document.getElementById('searchResultsBody').innerHTML = '<div class="sr-loading">⟳ Searching...</div>';
+  try{
+    const r = await fetch(`${API}/profile/${encodeURIComponent(q)}`);
+    if(!r.ok) throw new Error('not found');
+    const p = await r.json();
+    renderSearchResult(p, q);
+  }catch(e){
+    document.getElementById('searchResultsBody').innerHTML =
+      `<div class="sr-notfound">⚠ No player found for "<b style="color:var(--green)">${q}</b>"</div>`;
+  }
+}
+
+function renderSearchResult(p, q){
+  const body = document.getElementById('searchResultsBody');
+  if(!p || !p.username){ body.innerHTML='<div class="sr-notfound">⚠ Player not found</div>'; return; }
+  const lg = getLeagueForFriend(p.level||1);
+  const initials = getInitials(p.username);
+  const isFriend = allFriends.some(f=>(f.friend_username||f)===p.username);
+  const isSelf = p.username === username;
+
+  body.innerHTML = `
+    <div class="sr-card">
+      <div class="sr-avatar">
+        ${p.photo ? `<img src="${p.photo}" alt="">` : initials}
+      </div>
+      <div class="sr-info">
+        <div class="sr-name">${p.nickname||p.username} <span style="font-size:10px;color:#336633;font-weight:normal">@${p.username}</span></div>
+        <div class="sr-meta">LVL ${p.level||1} &nbsp;·&nbsp; UID: ${p.uid||'—'} &nbsp;·&nbsp; ${(p.unlocked_achievements||[]).length} achievements</div>
+      </div>
+      <span class="sr-league-pill">${lg.name}</span>
+      <div class="sr-actions">
+        <button class="btn-peek" onclick="peekProfile('${p.username}')">👁 PEEK</button>
+        <button class="btn-add-sr" ${isSelf?'disabled title="That\'s you!"':''} ${isFriend?'disabled title="Already friends"':''} onclick="addFriend('${p.username}')">
+          ${isSelf?'YOU':isFriend?'✓ FRIENDS':'+ ADD'}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function closeSearchPanel(){
+  document.getElementById('searchResultsPanel').classList.remove('open');
+}
+
+// Close search panel on outside click
+document.addEventListener('click', function(e){
+  const panel = document.getElementById('searchResultsPanel');
+  const inp = document.getElementById('friendSearchInput');
+  if(!panel.contains(e.target) && e.target !== inp){ closeSearchPanel(); }
+});
+
+/* ── PEEK PROFILE MODAL ── */
+async function peekProfile(targetUser){
+  const modal = document.getElementById('peekModal');
+  const content = document.getElementById('peekContent');
+  modal.classList.add('open');
+  content.innerHTML = '<div class="peek-loading">⟳ Loading profile...</div>';
+
+  try{
+    const [profRes, achRes] = await Promise.all([
+      fetch(`${API}/profile/${encodeURIComponent(targetUser)}`),
+      fetch(`${API}/achievements/tiers/${encodeURIComponent(targetUser)}`)
+    ]);
+    const p = await profRes.json();
+    let achData = [];
+    try{ achData = await achRes.json(); if(!Array.isArray(achData)) achData=[]; }catch(e){}
+
+    const lg = getLeagueForFriend(p.level||1);
+    const lvl = p.level||1;
+    const totalXP = p.xp||0;
+    const xpInLevel = Math.max(0, totalXP - ((lvl-1)*1000));
+    const xpPct = Math.min(100,(xpInLevel/1000)*100);
+    const initials = getInitials(p.username);
+    const isFriend = allFriends.some(f=>(f.friend_username||f)===p.username);
+    const isSelf = p.username === username;
+
+    // Build achievements mini chips
+    const achChips = achData.slice(0,8).map(row=>{
+      const a = ACH_MAP[row.achievement_id];
+      if(!a) return '';
+      const col = tierColor(row.tier??0);
+      const tierName = TIERS[row.tier??0]||'Bronze';
+      return `<div class="peek-ach-chip" style="border-color:${col}33;color:${col};">${a.icon} ${a.name}</div>`;
+    }).join('');
+    const achMore = achData.length>8 ? `<div class="peek-ach-chip" style="border-color:rgba(0,255,0,.2);color:#558855;">+${achData.length-8} more</div>` : '';
+
+    // Courses mini
+    const courses = (p.courses_completed||[]);
+    const courseChips = courses.map(c=>`<div class="peek-course-chip">${c}</div>`).join('');
+
+    const flagHtml = p.country_flag ? `<span style="font-size:14px;">${p.country_flag}</span>` : '';
+
+    content.innerHTML = `
+      <!-- Header -->
+      <div class="peek-header">
+        <div class="peek-avatar">
+          ${p.photo ? `<img src="${p.photo}" alt="">` : initials}
+        </div>
+        <div class="peek-head-info">
+          <div class="peek-nickname">${p.nickname||p.username}</div>
+          <div class="peek-username">@${p.username} ${flagHtml}</div>
+          <div class="peek-uid-row">
+            <span class="peek-uid">UID: ${p.uid||'—'}</span>
+            <span class="peek-league-badge ${lg.cls}">${lg.name}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="peek-stats">
+        <div class="peek-stat">
+          <div class="peek-stat-val">${lvl}</div>
+          <div class="peek-stat-label">LEVEL</div>
+        </div>
+        <div class="peek-stat">
+          <div class="peek-stat-val">${achData.length}</div>
+          <div class="peek-stat-label">ACHIEVEMENTS</div>
+        </div>
+        <div class="peek-stat">
+          <div class="peek-stat-val">${p.login_days||0}</div>
+          <div class="peek-stat-label">DAY STREAK</div>
+        </div>
+      </div>
+
+      <!-- XP bar -->
+      <div class="peek-xp-section">
+        <div class="peek-xp-label">XP PROGRESS — ${xpInLevel} / 1000</div>
+        <div class="peek-xp-bar"><div class="peek-xp-fill" style="width:${xpPct}%"></div></div>
+      </div>
+
+      <!-- Body -->
+      <div class="peek-body">
+        ${achData.length ? `
+          <div class="peek-section-title">🎖️ RECENT ACHIEVEMENTS</div>
+          <div class="peek-ach-mini">${achChips}${achMore}</div>
+        ` : ''}
+
+        <div class="peek-section-title">📚 COURSES COMPLETED</div>
+        ${courses.length
+          ? `<div class="peek-courses-mini">${courseChips}</div>`
+          : '<div class="peek-no-data">No courses completed yet.</div>'}
+      </div>
+
+      <!-- Footer -->
+      <div class="peek-footer">
+        ${!isSelf ? `<button class="peek-btn-add" ${isFriend?'disabled':''} onclick="addFriend('${p.username}')">
+          ${isFriend?'✓ ALREADY FRIENDS':'+ ADD FRIEND'}
+        </button>` : `<div style="flex:1;text-align:center;color:#336633;font-size:12px;padding-top:8px;">THIS IS YOUR PROFILE</div>`}
+      </div>
+    `;
+  }catch(e){
+    content.innerHTML = '<div class="peek-loading" style="color:#ff4444">⚠ Could not load profile.</div>';
+  }
+}
+
+function closePeek(){
+  document.getElementById('peekModal').classList.remove('open');
+}
+document.getElementById('peekModal').addEventListener('click', function(e){
+  if(e.target === this) closePeek();
+});
 
 /* ── NICKNAME EDIT ── */
 function startEditNick(){const inp=document.getElementById('nicknameEdit');inp.value=profileData?.nickname||username;inp.style.display='block';document.getElementById('editNickBtn').style.display='none';document.getElementById('saveNickBtn').style.display='inline-block';document.getElementById('nicknameDisplay').style.display='none';inp.focus();}
@@ -895,7 +1428,6 @@ document.getElementById('saveCropBtn').onclick=function(){const out=document.cre
 document.getElementById('cancelCropBtn').onclick=function(){document.getElementById('cropModal').classList.remove('show');};
 async function applyAndSavePhoto(dataURL){document.getElementById('avatarImg').src=dataURL;document.getElementById('avatarImg').style.display='block';document.getElementById('avatarPlaceholder').style.display='none';try{await fetch(`${API}/profile/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,photo:dataURL})});}catch(e){}}
 
-document.getElementById('backBtn').onclick=()=>window.location.href='learning.html';
 loadProfile();
 fetch(`${API}/streak/record`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username})}).catch(()=>{});
 </script>
